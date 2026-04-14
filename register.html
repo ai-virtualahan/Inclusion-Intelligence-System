@@ -1,32 +1,382 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Register - Inclusion Intelligence</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register | Inclusion Intelligence System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0b1f3a, #10345f, #159e9a);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1200px;
+      min-height: 760px;
+      background: linear-gradient(to bottom, #eef7f8, #f8fcfc);
+      border-radius: 28px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.20);
+      padding: 50px 70px;
+    }
+
+    .dots {
+      position: absolute;
+      top: 35px;
+      left: 35px;
+      width: 90px;
+      height: 60px;
+      background-image: radial-gradient(#b8dedd 1.5px, transparent 1.5px);
+      background-size: 12px 12px;
+    }
+
+    .top-circle {
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 250px;
+      height: 250px;
+      background: rgba(21, 158, 154, 0.10);
+      border-radius: 50%;
+    }
+
+    .top-circle2 {
+      position: absolute;
+      top: 20px;
+      right: 100px;
+      width: 120px;
+      height: 120px;
+      background: rgba(11, 31, 58, 0.05);
+      border-radius: 50%;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      position: relative;
+      z-index: 2;
+      margin-top: 45px;
+      margin-bottom: 45px;
+    }
+
+    .logo {
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0b1f3a, #159e9a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 34px;
+      font-weight: bold;
+      box-shadow: 0 8px 20px rgba(11,31,58,0.18);
+    }
+
+    .brand-text h1 {
+      font-size: 38px;
+      color: #0b1f3a;
+      margin-bottom: 8px;
+    }
+
+    .brand-text p {
+      font-size: 20px;
+      color: #52707c;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 620px;
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 42px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      position: relative;
+      z-index: 2;
+    }
+
+    .card h2 {
+      text-align: center;
+      font-size: 38px;
+      color: #111827;
+      margin-bottom: 10px;
+    }
+
+    .card .sub {
+      text-align: center;
+      color: #6b7280;
+      font-size: 19px;
+      margin-bottom: 28px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .input-box {
+      margin-bottom: 18px;
+    }
+
+    .input-box input,
+    .input-box select {
+      width: 100%;
+      height: 58px;
+      border: 1px solid #d7dee4;
+      border-radius: 12px;
+      padding: 0 16px;
+      font-size: 17px;
+      outline: none;
+      background: #fff;
+    }
+
+    .input-box input:focus,
+    .input-box select:focus {
+      border-color: #159e9a;
+      box-shadow: 0 0 0 4px rgba(21, 158, 154, 0.12);
+    }
+
+    .terms {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 22px;
+      color: #374151;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .terms input {
+      margin-top: 3px;
+      accent-color: #159e9a;
+    }
+
+    .terms a {
+      color: #159e9a;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .terms a:hover {
+      color: #0b1f3a;
+    }
+
+    .btn {
+      width: 100%;
+      height: 58px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #0b1f3a, #159e9a);
+      color: white;
+      font-size: 21px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .divider {
+      text-align: center;
+      margin: 20px 0;
+      color: #8b95a1;
+      position: relative;
+      font-size: 16px;
+    }
+
+    .divider:before,
+    .divider:after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 40%;
+      height: 1px;
+      background: #d7dee4;
+    }
+
+    .divider:before { left: 0; }
+    .divider:after { right: 0; }
+
+    .google-btn {
+      width: 100%;
+      height: 56px;
+      border: 2px solid #bfe9e6;
+      border-radius: 12px;
+      background: white;
+      color: #1f2937;
+      font-size: 20px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .bottom-text {
+      text-align: center;
+      margin-top: 24px;
+      color: #4b5563;
+      font-size: 18px;
+    }
+
+    .bottom-text a {
+      color: #159e9a;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .waves {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 180px;
+    }
+
+    .wave1, .wave2, .wave3 {
+      position: absolute;
+      width: 130%;
+      left: -15%;
+      border-radius: 50%;
+    }
+
+    .wave1 {
+      height: 120px;
+      bottom: 80px;
+      background: rgba(21, 158, 154, 0.18);
+    }
+
+    .wave2 {
+      height: 110px;
+      bottom: 40px;
+      background: rgba(21, 158, 154, 0.30);
+    }
+
+    .wave3 {
+      height: 110px;
+      bottom: -20px;
+      background: linear-gradient(90deg, #0b1f3a, #159e9a);
+    }
+
+    @media (max-width: 768px) {
+      .page {
+        padding: 30px 20px 160px;
+      }
+
+      .brand {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .brand-text h1 {
+        font-size: 28px;
+      }
+
+      .brand-text p {
+        font-size: 16px;
+      }
+
+      .card {
+        padding: 28px 20px;
+      }
+
+      .card h2 {
+        font-size: 30px;
+      }
+
+      .card .sub {
+        font-size: 16px;
+      }
+
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="page">
+    <div class="dots"></div>
+    <div class="top-circle"></div>
+    <div class="top-circle2"></div>
 
-<div class="login-container">
+    <div class="brand">
+      <div class="logo">I</div>
+      <div class="brand-text">
+        <h1>Inclusion Intelligence System</h1>
+        <p>Empowering Inclusion. Enriching Lives.</p>
+      </div>
+    </div>
 
-    <h2>Inclusion Intelligence</h2>
-    <h1>Register</h1>
-    <p>Create your account to get started.</p>
+    <div class="card">
+      <h2>Create Your Account</h2>
+      <p class="sub">Join us in building a more inclusive tomorrow</p>
 
-    <form>
-        <input type="text" placeholder="Full Name" required>
-        <input type="email" placeholder="Email" required>
-        <input type="password" placeholder="Password" required>
-        <input type="password" placeholder="Confirm Password" required>
+      <form>
+        <div class="two-col">
+          <div class="input-box">
+            <input type="text" placeholder="First Name">
+          </div>
+          <div class="input-box">
+            <input type="text" placeholder="Last Name">
+          </div>
+        </div>
 
-        <button type="submit">Register</button>
-    </form>
+        <div class="input-box">
+          <input type="email" placeholder="Email Address">
+        </div>
 
-    <p class="register-link">
-        Already have an account? <a href="login.html">Login</a>
-    </p>
+        <div class="input-box">
+          <input type="password" placeholder="Password">
+        </div>
 
-</div>
+        <div class="input-box">
+          <input type="password" placeholder="Confirm Password">
+        </div>
 
+        <div class="input-box">
+          <select>
+            <option selected disabled>Role</option>
+            <option>Admin</option>
+            <option>Staff</option>
+            <option>User</option>
+          </select>
+        </div>
+
+        <label class="terms">
+          <input type="checkbox">
+          <span>
+            I agree to the <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>
+          </span>
+        </label>
+
+        <button type="submit" class="btn">Register</button>
+
+        <div class="divider">or</div>
+
+        <button type="button" class="google-btn">Sign up with Google</button>
+
+        <p class="bottom-text">
+          Already have an account?
+          <a href="login.html">Login here</a>
+        </p>
+      </form>
+    </div>
+
+    <div class="waves">
+      <div class="wave1"></div>
+      <div class="wave2"></div>
+      <div class="wave3"></div>
+    </div>
+  </div>
 </body>
 </html>
