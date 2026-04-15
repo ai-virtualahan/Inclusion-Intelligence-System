@@ -357,7 +357,7 @@ body {
       <h2>Welcome Back!</h2>
       <p class="sub">Sign in to continue to your account</p>
 
-      <form>
+      <form onsubmit="loginUser(event)">
         <div class="input-box">
           <input type="email" placeholder="Email Address">
         </div>
@@ -394,5 +394,29 @@ body {
       <div class="wave3"></div>
     </div>
   </div>
+
+  <script>
+  function loginUser(e) {
+    e.preventDefault();
+
+    // kuhaon ang values (optional for now)
+    let email = document.querySelector('input[type="email"]').value;
+    let password = document.querySelector('input[type="password"]').value;
+
+    // simple validation (optional)
+    if (email === "" || password === "") {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    // SET LOGIN STATE
+    localStorage.setItem("loggedIn", "true");
+
+    alert("Login successful!");
+
+    // redirect to home page
+    window.location.href = "home.html";
+  }
+</script> 
 </body>
 </html>

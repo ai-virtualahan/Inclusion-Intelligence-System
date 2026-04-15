@@ -13,12 +13,7 @@
     <!-- HEADER -->
     <header class="navbar">
       <div class="logo-area">
-        <!-- <div class="logo-icon">
-          <span class="dot dot1"></span>
-          <span class="dot dot2"></span>
-          <span class="dot dot3"></span>
-          <span class="dot dot4"></span>
-        </div> -->
+        
         <h1>Inclusion Intelligence</h1>
       </div>
 
@@ -30,7 +25,7 @@
 
       <div class="nav-actions">
         
-        <button class="login-btn"><i class="fa-solid fa-magnifying-glass"></i> Login</button>
+        <button class="login-btn" onclick="handleAuth()">Login</button>
       </div>
     </header>
 
@@ -112,6 +107,34 @@
       </div>
     </footer>
   </div>
+
+  <script>
+    function handleAuth() {
+     let isLoggedIn = localStorage.getItem("loggedIn");
+
+      if (isLoggedIn === "true") {
+       // LOGOUT
+       localStorage.setItem("loggedIn", "false");
+       alert("Logged out successfully!");
+       location.reload();
+      } else {
+       // GO TO LOGIN PAGE
+        window.location.href = "login.html";
+     }
+    }
+
+    // change button text
+    window.onload = function () {
+      let isLoggedIn = localStorage.getItem("loggedIn");
+      let btn = document.querySelector(".login-btn");
+
+      if (isLoggedIn === "true") {
+        btn.textContent = "Logout";
+      } else {
+        btn.textContent = "Login";
+      }
+    };
+  </script>
 
 </body>
 </html>
