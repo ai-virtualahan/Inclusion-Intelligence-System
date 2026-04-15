@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Inclusion Intelligence</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="home-style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
@@ -13,18 +13,16 @@
     <!-- HEADER -->
     <header class="navbar">
       <div class="logo-area">
-        
         <h1>Inclusion Intelligence</h1>
       </div>
 
       <nav class="nav-links">
         <a href="#" class="active">Home</a>
-        <a href="#">Assessment</a>
+        <a href="#" onclick="goToAssessment(event)">Assessment</a>
         <a href="#">Results</a>
       </nav>
 
       <div class="nav-actions">
-        
         <button class="login-btn" onclick="handleAuth()">Login</button>
       </div>
     </header>
@@ -32,7 +30,7 @@
     <!-- HERO -->
     <section class="hero-section">
       <div class="hero-left">
-        <span class="welcome-badge">Welcome to</span>
+        <span class="welcome-badge" id="welcomeText">Welcome!</span>
 
         <h2>
           Track your progress.<br>
@@ -45,7 +43,7 @@
           inclusive future — one step at a time.
         </p>
 
-        <button class="start-btn">
+        <button class="start-btn" id="startBtn">
           <i class="fa-solid fa-arrow-right"></i>
           Start Assessment
         </button>
@@ -58,7 +56,6 @@
 
       <div class="hero-right">
         <img src="hero-right.png" alt="Dashboard Preview">
-        
       </div>
     </section>
 
@@ -110,29 +107,59 @@
 
   <script>
     function handleAuth() {
-     let isLoggedIn = localStorage.getItem("loggedIn");
+      let isLoggedIn = localStorage.getItem("loggedIn");
 
       if (isLoggedIn === "true") {
-       // LOGOUT
-       localStorage.setItem("loggedIn", "false");
-       alert("Logged out successfully!");
-       location.reload();
+        localStorage.setItem("loggedIn", "false");
+        alert("Logged out successfully!");
+        location.reload();
       } else {
-       // GO TO LOGIN PAGE
         window.location.href = "login.html";
-     }
+      }
     }
 
-    // change button text
-    window.onload = function () {
+    function goToAssessment(e) {
+      e.preventDefault();
+
       let isLoggedIn = localStorage.getItem("loggedIn");
-      let btn = document.querySelector(".login-btn");
 
       if (isLoggedIn === "true") {
-        btn.textContent = "Logout";
+        window.location.href = "templates/index.html";
       } else {
-        btn.textContent = "Login";
+        window.location.href = "login.html";
       }
+    }
+
+    window.onload = function () {
+      let btn = document.querySelector(".login-btn");
+      let welcome = document.getElementById("welcomeText");
+      let startBtn = document.getElementById("startBtn");
+
+      function updateUI() {
+        let isLoggedIn = localStorage.getItem("loggedIn");
+
+        if (isLoggedIn === "true") {
+          btn.textContent = "Logout";
+          welcome.textContent = "Welcome back!";
+          startBtn.innerHTML = '<i class="fa-solid fa-arrow-right"></i> Start Assessment';
+        } else {
+          btn.textContent = "Login";
+          welcome.textContent = "Welcome!";
+          startBtn.innerHTML = 'You may log in to start your Assessment';
+        }
+      }
+
+      updateUI();
+
+      startBtn.onclick = function () {
+        let isLoggedIn = localStorage.getItem("loggedIn");
+
+        if (isLoggedIn === "true") {
+          window.location.href = "templates/index.html";
+        } else {
+          window.location.href = "login.html";
+        }
+      };
     };
   </script>
 
