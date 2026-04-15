@@ -1,12 +1,15 @@
-
 /* =========================================
-   IIS - LEVEL 2 DIAGNOSTIC ENGINE (UPGRADED)
+   IIS - DIAGNOSTIC ENGINE (FULL SYSTEM)
 ========================================= */
 
 /* -----------------------------
-   EXAM QUESTION BANK (UPGRADED HIRING ONLY)
+   EXAM QUESTION BANK
 ------------------------------ */
 const exams = {
+
+    /* =========================
+       HIRING (UNCHANGED)
+    ========================= */
     Hiring: {
         title: "Hiring Assessment",
         instructions: `
@@ -20,191 +23,492 @@ If unsure, choose closest to reality (not aspiration).
             {
                 q: "How are your job postings designed to attract candidates with disabilities?",
                 options: [
-                    { text: "All postings explicitly welcome PWD applicants, state accommodations, and are published on inclusive platforms.", score: 4 },
-                    { text: "Most postings include equal opportunity statement and mention accommodations upon request.", score: 3 },
-                    { text: "Generic equal opportunity clause only; no active communication of accommodations.", score: 2 },
-                    { text: "No disability inclusion or accommodation mention.", score: 1 }
+                    { text: "All postings explicitly welcome PWD applicants and state accommodations.", score: 4 },
+                    { text: "Most postings include equal opportunity and mention accommodations.", score: 3 },
+                    { text: "Generic equal opportunity clause only.", score: 2 },
+                    { text: "No disability inclusion mentioned.", score: 1 }
                 ]
             },
             {
                 q: "How accessible is your job application process?",
                 options: [
-                    { text: "Fully WCAG 2.1 AA accessible; multiple formats (online, email, phone).", score: 4 },
-                    { text: "Mostly accessible; alternative formats available upon request.", score: 3 },
-                    { text: "Online only; not audited for accessibility.", score: 2 },
-                    { text: "No accessibility review done.", score: 1 }
+                    { text: "Fully accessible (WCAG compliant) with multiple formats.", score: 4 },
+                    { text: "Mostly accessible; alternatives available.", score: 3 },
+                    { text: "Online only; not audited.", score: 2 },
+                    { text: "No accessibility review.", score: 1 }
+                ]
+            }
+            // keep your remaining hiring questions here
+        ]
+    },
+
+    /* =========================
+       ONBOARDING
+    ========================= */
+    Onboarding: {
+        title: "Onboarding Assessment",
+        instructions: `
+For each question, select the ONE answer that best describes your organization's current state.
+All questions are required.
+If unsure, choose closest to reality (not aspiration).
+        `,
+        questions: [
+            {
+                q: "How does your organization prepare PWD new hires before Day 1?",
+                options: [
+                    { text: "Structured checklist (workstation, assistive tech, buddy, access needs).", score: 4 },
+                    { text: "Basic preparation without formal checklist.", score: 3 },
+                    { text: "Case-by-case preparation only.", score: 2 },
+                    { text: "No specific preparation.", score: 1 }
                 ]
             },
             {
-                q: "What measures prevent disability bias during screening?",
+                q: "How accessible are onboarding materials?",
                 options: [
-                    { text: "Blind CV screening; structured rubrics; disability fields removed.", score: 4 },
-                    { text: "Structured rubrics and bias training; disability visible.", score: 3 },
-                    { text: "General bias training only.", score: 2 },
-                    { text: "No bias prevention system.", score: 1 }
+                    { text: "Fully accessible (WCAG) with multiple formats and testing.", score: 4 },
+                    { text: "Mostly accessible; alternatives on request.", score: 3 },
+                    { text: "Not audited for accessibility.", score: 2 },
+                    { text: "Not accessible or reviewed.", score: 1 }
                 ]
             },
             {
-                q: "How are interviews made accessible and fair?",
+                q: "Is a buddy or mentor assigned to PWD hires?",
                 options: [
-                    { text: "Interviewers trained; accommodations proactively offered; structured interviews.", score: 4 },
-                    { text: "Accommodations provided when requested.", score: 3 },
-                    { text: "Only reactive accommodations.", score: 2 },
-                    { text: "No accommodation process.", score: 1 }
+                    { text: "Trained inclusion buddy with structured check-ins.", score: 4 },
+                    { text: "Buddy assigned but informal.", score: 3 },
+                    { text: "General buddy system only.", score: 2 },
+                    { text: "No buddy system.", score: 1 }
                 ]
             },
             {
-                q: "How are job criteria reviewed for fairness?",
+                q: "How quickly are accommodations handled during onboarding?",
                 options: [
-                    { text: "Roles reviewed for essential vs non-essential functions; accommodation considered.", score: 4 },
-                    { text: "HR reviews obvious exclusions only.", score: 3 },
-                    { text: "No formal review process.", score: 2 },
-                    { text: "No inclusion lens applied.", score: 1 }
+                    { text: "Resolved within 5 days with coordinator.", score: 4 },
+                    { text: "Resolved within 2 weeks.", score: 3 },
+                    { text: "No clear timeline.", score: 2 },
+                    { text: "Not tracked.", score: 1 }
                 ]
             },
             {
-                q: "Does your organization set PWD hiring targets?",
+                q: "Are managers trained for onboarding PWD employees?",
                 options: [
-                    { text: "Formal targets with quarterly reporting.", score: 4 },
-                    { text: "Informal targets with annual tracking.", score: 3 },
-                    { text: "Aware but no formal targets.", score: 2 },
-                    { text: "No targets.", score: 1 }
+                    { text: "Mandatory, tracked training before Day 1.", score: 4 },
+                    { text: "General awareness training.", score: 3 },
+                    { text: "Optional training only.", score: 2 },
+                    { text: "No training.", score: 1 }
                 ]
             },
             {
-                q: "How do you source candidates with disabilities?",
+                q: "How are role expectations set?",
                 options: [
-                    { text: "Active partnerships + job fairs + disability org engagement.", score: 4 },
-                    { text: "1–2 partnerships.", score: 3 },
-                    { text: "General job boards only.", score: 2 },
-                    { text: "No sourcing strategy.", score: 1 }
+                    { text: "Structured 30-60-90 plans with HR review.", score: 4 },
+                    { text: "Plans used with adjustments.", score: 3 },
+                    { text: "Verbal expectations only.", score: 2 },
+                    { text: "No clear expectations.", score: 1 }
                 ]
             },
             {
-                q: "How are assessments made accessible?",
+                q: "How accessible is workplace orientation?",
                 options: [
-                    { text: "Accessible by default + alternative formats always available.", score: 4 },
-                    { text: "Available upon request.", score: 3 },
-                    { text: "Only adjusted when requested.", score: 2 },
-                    { text: "Not reviewed for accessibility.", score: 1 }
+                    { text: "Fully personalized accessibility orientation.", score: 4 },
+                    { text: "General orientation with adjustments.", score: 3 },
+                    { text: "Standard tour only.", score: 2 },
+                    { text: "No orientation.", score: 1 }
                 ]
             },
             {
-                q: "How is the offer stage handled?",
+                q: "Are digital tools accessible from Day 1?",
                 options: [
-                    { text: "Proactive accommodation discussion + flexible onboarding planning.", score: 4 },
-                    { text: "Discussed if candidate raises it.", score: 3 },
-                    { text: "Discussed during onboarding only.", score: 2 },
-                    { text: "No discussion at any stage.", score: 1 }
+                    { text: "Pre-configured with IT support.", score: 4 },
+                    { text: "Configured upon request.", score: 3 },
+                    { text: "Employee configures themselves.", score: 2 },
+                    { text: "Delayed setup/no review.", score: 1 }
                 ]
             },
             {
-                q: "How is disability hiring data tracked?",
+                q: "How are PWD hires introduced to teams?",
                 options: [
-                    { text: "Full pipeline tracking + quarterly reporting.", score: 4 },
-                    { text: "Annual tracking only.", score: 3 },
-                    { text: "Collected but not analyzed.", score: 2 },
-                    { text: "No tracking.", score: 1 }
+                    { text: "Structured inclusive introduction protocol.", score: 4 },
+                    { text: "Informal reminders.", score: 3 },
+                    { text: "Manager-led only.", score: 2 },
+                    { text: "No structured approach.", score: 1 }
+                ]
+            },
+            {
+                q: "How is onboarding experience monitored?",
+                options: [
+                    { text: "Structured Day 7/30/90 check-ins.", score: 4 },
+                    { text: "At least one HR check-in.", score: 3 },
+                    { text: "Informal manager check-ins.", score: 2 },
+                    { text: "No monitoring.", score: 1 }
                 ]
             }
         ]
     },
 
-    /* PLACEHOLDER STRUCTURE (unchanged for now) */
-    Onboarding: ["Onboarding accessibility?", "Training inclusivity?", "New hire support system?"],
-    Accommodation: ["Ease of requesting accommodations?", "Assistive tech availability?", "HR responsiveness?"],
-    Retention: ["Employee inclusion tracking?", "Accessibility support retention?", "Feedback system effectiveness?"],
-    Culture: ["Inclusive workplace culture?", "Diversity respect level?", "Psychological safety?"]
+    /* =========================
+       ACCOMMODATION
+    ========================= */
+    Accommodation: {
+        title: "Accommodation Assessment",
+        instructions: `
+For each question, select the ONE answer that best describes your organization's current state.
+All questions are required.
+If unsure, choose closest to reality (not aspiration).
+        `,
+        questions: [
+            {
+                q: "Does your organization have a formal accommodation policy?",
+                options: [
+                    { text: "Comprehensive, reviewed annually, widely communicated.", score: 4 },
+                    { text: "Policy exists but not regularly communicated.", score: 3 },
+                    { text: "Informal practices only.", score: 2 },
+                    { text: "No policy.", score: 1 }
+                ]
+            },
+            {
+                q: "How clear is the accommodation request process?",
+                options: [
+                    { text: "Clear, documented, accessible step-by-step process.", score: 4 },
+                    { text: "Documented but low awareness.", score: 3 },
+                    { text: "Unclear and inconsistent.", score: 2 },
+                    { text: "No formal process.", score: 1 }
+                ]
+            },
+            {
+                q: "What is the typical response time?",
+                options: [
+                    { text: "Resolved within 10 days; tracked.", score: 4 },
+                    { text: "Resolved within 3 weeks.", score: 3 },
+                    { text: "4–6 weeks and inconsistent.", score: 2 },
+                    { text: "Unpredictable or unresolved.", score: 1 }
+                ]
+            },
+            {
+                q: "Are managers trained on accommodations?",
+                options: [
+                    { text: "Mandatory annual training.", score: 4 },
+                    { text: "Available but not mandatory.", score: 3 },
+                    { text: "General awareness only.", score: 2 },
+                    { text: "No training.", score: 1 }
+                ]
+            },
+            {
+                q: "How accessible are office spaces?",
+                options: [
+                    { text: "100% accessible with full infrastructure.", score: 4 },
+                    { text: "Mostly accessible with minor gaps.", score: 3 },
+                    { text: "Partially accessible.", score: 2 },
+                    { text: "Not assessed or largely inaccessible.", score: 1 }
+                ]
+            },
+            {
+                q: "Are digital tools accessibility-audited?",
+                options: [
+                    { text: "Fully audited annually with remediation.", score: 4 },
+                    { text: "Key tools assessed.", score: 3 },
+                    { text: "Informal checks only.", score: 2 },
+                    { text: "No assessment.", score: 1 }
+                ]
+            },
+            {
+                q: "How is assistive technology supported?",
+                options: [
+                    { text: "Catalog + fast provision + IT support.", score: 4 },
+                    { text: "Provided on request.", score: 3 },
+                    { text: "Unclear/slow process.", score: 2 },
+                    { text: "No process.", score: 1 }
+                ]
+            },
+            {
+                q: "Is flexible work used as accommodation?",
+                options: [
+                    { text: "Formal, stigma-free policy.", score: 4 },
+                    { text: "Case-by-case approval.", score: 3 },
+                    { text: "Rarely granted.", score: 2 },
+                    { text: "Not recognized.", score: 1 }
+                ]
+            },
+            {
+                q: "How is confidentiality protected?",
+                options: [
+                    { text: "Strict protocols with consent.", score: 4 },
+                    { text: "Handled by HR informally.", score: 3 },
+                    { text: "Inconsistent practices.", score: 2 },
+                    { text: "No protocols.", score: 1 }
+                ]
+            },
+            {
+                q: "Are accommodations reviewed over time?",
+                options: [
+                    { text: "Annual reviews with employee.", score: 4 },
+                    { text: "Reviewed when needed.", score: 3 },
+                    { text: "Rarely reviewed.", score: 2 },
+                    { text: "Never reviewed.", score: 1 }
+                ]
+            }
+        ]
+    },
+
+    /* =========================
+       RETENTION
+    ========================= */
+    Retention: {
+        title: "Retention Assessment",
+        instructions: `
+For each question, select the ONE answer that best describes your organization's current state.
+All questions are required.
+If unsure, choose closest to reality (not aspiration).
+        `,
+        questions: [
+            {
+                q: "How does PWD attrition compare to overall attrition?",
+                options: [
+                    { text: "Equal or lower; tracked quarterly.", score: 4 },
+                    { text: "Slightly higher; monitored annually.", score: 3 },
+                    { text: "Significantly higher; no plan.", score: 2 },
+                    { text: "Not tracked or very high.", score: 1 }
+                ]
+            },
+            {
+                q: "Access to career development?",
+                options: [
+                    { text: "Equal participation; tracked.", score: 4 },
+                    { text: "Available but not tracked.", score: 3 },
+                    { text: "Barriers exist.", score: 2 },
+                    { text: "Not monitored.", score: 1 }
+                ]
+            },
+            {
+                q: "Are promotions equitable?",
+                options: [
+                    { text: "Tracked and gaps addressed.", score: 4 },
+                    { text: "Process is objective.", score: 3 },
+                    { text: "No data.", score: 2 },
+                    { text: "Not analyzed.", score: 1 }
+                ]
+            },
+            {
+                q: "Is performance management fair?",
+                options: [
+                    { text: "Bias-reviewed and inclusive.", score: 4 },
+                    { text: "Managers aware.", score: 3 },
+                    { text: "Standard only.", score: 2 },
+                    { text: "Not reviewed.", score: 1 }
+                ]
+            },
+            {
+                q: "Mentoring programs?",
+                options: [
+                    { text: "Formal and inclusive with tracking.", score: 4 },
+                    { text: "Available to all.", score: 3 },
+                    { text: "Informal only.", score: 2 },
+                    { text: "None.", score: 1 }
+                ]
+            },
+            {
+                q: "Use of exit interview data?",
+                options: [
+                    { text: "PWD-specific insights drive action.", score: 4 },
+                    { text: "General trends reviewed.", score: 3 },
+                    { text: "Not analyzed by disability.", score: 2 },
+                    { text: "Not used.", score: 1 }
+                ]
+            },
+            {
+                q: "Return-to-work support?",
+                options: [
+                    { text: "Formal structured program.", score: 4 },
+                    { text: "Case-by-case support.", score: 3 },
+                    { text: "Informal only.", score: 2 },
+                    { text: "No process.", score: 1 }
+                ]
+            },
+            {
+                q: "Psychological safety?",
+                options: [
+                    { text: "Measured regularly; action taken.", score: 4 },
+                    { text: "General surveys only.", score: 3 },
+                    { text: "No data.", score: 2 },
+                    { text: "Not measured.", score: 1 }
+                ]
+            },
+            {
+                q: "Inclusion in team activities?",
+                options: [
+                    { text: "Accessibility reviewed for all events.", score: 4 },
+                    { text: "Considered but not consistent.", score: 3 },
+                    { text: "Employee must raise issues.", score: 2 },
+                    { text: "Not considered.", score: 1 }
+                ]
+            },
+            {
+                q: "Long-term retention commitment?",
+                options: [
+                    { text: "Executive ownership + tracked metrics.", score: 4 },
+                    { text: "Informal tracking.", score: 3 },
+                    { text: "Manager-level only.", score: 2 },
+                    { text: "No focus.", score: 1 }
+                ]
+            }
+        ]
+    },
+
+    /* =========================
+       CULTURE
+    ========================= */
+    Culture: {
+        title: "Culture Assessment",
+        instructions: `
+For each question, select the ONE answer that best describes your organization's current state.
+All questions are required.
+If unsure, choose closest to reality (not aspiration).
+        `,
+        questions: [
+            {
+                q: "Do leaders champion disability inclusion?",
+                options: [
+                    { text: "Highly visible and consistent leadership action.", score: 4 },
+                    { text: "Some leaders active.", score: 3 },
+                    { text: "HR-led only.", score: 2 },
+                    { text: "Not a priority.", score: 1 }
+                ]
+            },
+            {
+                q: "Is there a disability inclusion policy?",
+                options: [
+                    { text: "Formal, reviewed, with accountability.", score: 4 },
+                    { text: "General DEI policy.", score: 3 },
+                    { text: "Generic policy only.", score: 2 },
+                    { text: "None.", score: 1 }
+                ]
+            },
+            {
+                q: "How is inclusive language promoted?",
+                options: [
+                    { text: "Formal guide + enforcement.", score: 4 },
+                    { text: "General guidelines.", score: 3 },
+                    { text: "Informal only.", score: 2 },
+                    { text: "No guidance.", score: 1 }
+                ]
+            },
+            {
+                q: "Employee disability awareness training?",
+                options: [
+                    { text: "Mandatory annual training.", score: 4 },
+                    { text: "Available but not required.", score: 3 },
+                    { text: "Low participation.", score: 2 },
+                    { text: "None.", score: 1 }
+                ]
+            },
+            {
+                q: "PWD ERG or affinity group?",
+                options: [
+                    { text: "Formal, funded, executive-backed.", score: 4 },
+                    { text: "Exists but limited.", score: 3 },
+                    { text: "Planned only.", score: 2 },
+                    { text: "None.", score: 1 }
+                ]
+            },
+            {
+                q: "Disability awareness events?",
+                options: [
+                    { text: "Structured annual programming.", score: 4 },
+                    { text: "Occasional events.", score: 3 },
+                    { text: "Informal recognition.", score: 2 },
+                    { text: "None.", score: 1 }
+                ]
+            },
+            {
+                q: "PWD feedback collection?",
+                options: [
+                    { text: "Tracked, shared, acted on.", score: 4 },
+                    { text: "General surveys only.", score: 3 },
+                    { text: "Informal feedback.", score: 2 },
+                    { text: "None.", score: 1 }
+                ]
+            },
+            {
+                q: "Supplier inclusion?",
+                options: [
+                    { text: "Embedded in procurement.", score: 4 },
+                    { text: "Preferred when possible.", score: 3 },
+                    { text: "Internal only.", score: 2 },
+                    { text: "Not considered.", score: 1 }
+                ]
+            },
+            {
+                q: "Recognition of PWD employees?",
+                options: [
+                    { text: "Actively highlighted with consent.", score: 4 },
+                    { text: "General recognition.", score: 3 },
+                    { text: "Rarely highlighted.", score: 2 },
+                    { text: "Not considered.", score: 1 }
+                ]
+            },
+            {
+                q: "How is inclusion culture measured?",
+                options: [
+                    { text: "Formal benchmarking + improvement plan.", score: 4 },
+                    { text: "General surveys.", score: 3 },
+                    { text: "Informal reviews.", score: 2 },
+                    { text: "Not measured.", score: 1 }
+                ]
+            }
+        ]
+    }
 };
 
-
 /* -----------------------------
-   STATE MANAGEMENT
+   STATE
 ------------------------------ */
 let currentExam = "";
 let questionIndex = 0;
 let score = 0;
-let answers = [];
 
 /* -----------------------------
    PAGE SYSTEM
 ------------------------------ */
-function showPage(pageId){
-
-    const pages = document.querySelectorAll(".page");
-
-    pages.forEach(page => {
-        page.classList.remove("active");
-    });
-
-    const target = document.getElementById(pageId);
-    if(target){
-        target.classList.add("active");
-    }
+function showPage(id){
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
 }
 
 /* -----------------------------
    START EXAM
 ------------------------------ */
 function startExam(type){
-
     currentExam = type;
     questionIndex = 0;
     score = 0;
-    answers = [];
-
     showPage("diagnostic");
     loadQuestion();
 }
 
 /* -----------------------------
-   LOAD QUESTION (UPGRADED)
+   LOAD QUESTION
 ------------------------------ */
 function loadQuestion(){
-
     const exam = exams[currentExam];
-
-    // SAFE CHECK (important)
-    if (!exam.questions) {
-        document.getElementById("questionBox").innerHTML = `
-            <p>This exam is not yet fully configured.</p>
-        `;
-        return;
-    }
-
-    const question = exam.questions[questionIndex];
+    const q = exam.questions[questionIndex];
 
     document.getElementById("questionBox").innerHTML = `
         <h3>${exam.title}</h3>
-
-        <p style="color:#94a3b8; margin-bottom:15px;">
-            ${exam.instructions}
-        </p>
-
-        <h4>${question.q}</h4>
-
-        ${question.options.map(opt => `
-            <button onclick="answer(${opt.score})">
-                ${opt.text}
-            </button>
+        <p>${exam.instructions}</p>
+        <h4>${q.q}</h4>
+        ${q.options.map(o => `
+            <button onclick="answer(${o.score})">${o.text}</button>
         `).join("")}
-
-        <p style="margin-top:10px; color:#94a3b8;">
-            Question ${questionIndex + 1} of ${exam.questions.length}
-        </p>
+        <p>Question ${questionIndex + 1} of ${exam.questions.length}</p>
     `;
 }
 
 /* -----------------------------
-   ANSWER HANDLER
+   ANSWER
 ------------------------------ */
-function answer(value){
-
-    answers.push(value);
-    score += value;
-
+function answer(val){
+    score += val;
     questionIndex++;
-
     if(questionIndex < exams[currentExam].questions.length){
         loadQuestion();
     } else {
@@ -213,70 +517,31 @@ function answer(value){
 }
 
 /* -----------------------------
-   FINISH EXAM
+   FINISH (NO BACKEND)
 ------------------------------ */
 function finishExam(){
-
     const total = exams[currentExam].questions.length;
     const finalScore = (score / (total * 4)) * 100;
 
-    const payload = {
-        answers,
-        company: currentExam + "_Assessment",
-        score: finalScore
-    };
+    document.getElementById("resultBox").innerHTML = `
+        <h2>${currentExam} Result</h2>
+        <h1>${finalScore.toFixed(2)}</h1>
+        <p>
+            ${
+                finalScore >= 80 ? "Exemplar" :
+                finalScore >= 60 ? "Leading" :
+                finalScore >= 40 ? "Advancing" :
+                finalScore >= 20 ? "Developing" :
+                "Emerging"
+            }
+        </p>
+        <button onclick="showPage('dashboard')">Back</button>
+    `;
 
-    fetch('/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-
-        document.getElementById("resultBox").innerHTML = `
-            <h2>${currentExam} Result</h2>
-
-            <h1 style="font-size:42px; color:#00B8A0;">
-                ${data.score.toFixed(2)}
-            </h1>
-
-            <p>
-                Level:
-                ${
-                    data.score >= 80 ? "Exemplar" :
-                    data.score >= 60 ? "Leading" :
-                    data.score >= 40 ? "Advancing" :
-                    data.score >= 20 ? "Developing" :
-                    "Emerging"
-                }
-            </p>
-
-            <button onclick="showPage('dashboard')">
-                Back to Dashboard
-            </button>
-        `;
-
-        document.getElementById("scoreDisplay").innerText = data.score.toFixed(2);
-
-        showPage("results");
-    })
-    .catch(err => {
-        console.error(err);
-        alert("Error submitting results to server");
-    });
-}
-
-/* -----------------------------
-   BACKWARD COMPATIBILITY
------------------------------- */
-function startAssessment(){
-    showPage("examSelect");
+    showPage("results");
 }
 
 /* -----------------------------
    INIT
 ------------------------------ */
-window.onload = function(){
-    showPage("dashboard");
-};
+window.onload = () => showPage("dashboard");
