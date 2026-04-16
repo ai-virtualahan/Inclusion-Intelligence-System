@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Inclusion Intelligence</title>
-  <link rel="stylesheet" href="home-style.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
@@ -55,7 +55,7 @@
       </div>
 
       <div class="hero-right">
-        <img src="hero-right.png" alt="Dashboard Preview">
+        <img src="{{ url_for('static', filename='images/hero-right.png') }}" alt="Dashboard Preview">
       </div>
     </section>
 
@@ -114,7 +114,7 @@
         alert("Logged out successfully!");
         location.reload();
       } else {
-        window.location.href = "login.html";
+        window.location.href = "/login";
       }
     }
 
@@ -124,9 +124,9 @@
       let isLoggedIn = localStorage.getItem("loggedIn");
 
       if (isLoggedIn === "true") {
-        window.location.href = "index.html";
+        window.location.href = "/assessment";
       } else {
-        window.location.href = "login.html";
+        window.location.href = "/login";
       }
     }
 
@@ -155,9 +155,9 @@
         let isLoggedIn = localStorage.getItem("loggedIn");
 
         if (isLoggedIn === "true") {
-          window.location.href = "index.html";
+          window.location.href = "/assessment";
         } else {
-          window.location.href = "login.html";
+          window.location.href = "/login";
         }
       };
     };
