@@ -30,7 +30,7 @@
       position: relative;
       overflow: hidden;
       box-shadow: 0 20px 50px rgba(0,0,0,0.20);
-      padding: 42px 60px 140px;
+      padding: 28px 40px 90px;
     }
 
     .dots {
@@ -97,17 +97,47 @@
       font-size: 17px;
       color: #52707c;
     }
+    
+    .main-container {
+      display: flex;
+      /* width: 100%; */
+      max-width: 1100px;
+      /* background: #ffffff; */
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      min-height: 720px;
+      align-items: stretch;
+      gap: 60px;
+      padding: 10px 0;
+      max-width: 1700px;
+      
+      
+    }
+
+    /* LEFT SIDE IMAGE */
+    .left-side {
+      width: 45%;
+      background: #0b1f3a;
+      border-radius: 24px;
+      overflow: hidden;
+    }
+
+    .left-side img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
 
     .card {
-      width: 100%;
-      max-width: 900px;
+      justify-content: center;
+      width: 55%;
       background: #ffffff;
       border-radius: 24px;
-      padding: 20px;
+      padding: 30px 25px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.08);
       position: relative;
       z-index: 2;
-      margin: 0 auto;
     }
 
     .card h2 {
@@ -124,8 +154,7 @@
       margin-bottom: 22px;
       line-height: 1.5;
     }
-    
-    
+
     .two-col {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -251,7 +280,7 @@
       background: linear-gradient(90deg, #0b1f3a, #159e9a);
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 900px) {
       .page {
         padding: 28px 18px 120px;
       }
@@ -269,7 +298,18 @@
       .brand-text p {
         font-size: 15px;
       }
+      .main-container {
+        flex-direction: column;
+      }
 
+      .left-side {
+        width: 100%;
+        height: 200px;
+      }
+
+  .card {
+    width: 100%;
+  }
       .card {
         padding: 24px 18px;
       }
@@ -301,85 +341,97 @@
         <p>Empowering Inclusion. Enriching Lives.</p>
       </div>
     </div>
+     
+    <div class="main-container">
 
-    <div class="card">
-      <h2>Request Access</h2>
-      <p class="sub">Submit your organization details for review and approval</p>
+      <div class="left-side">
+        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978" alt="Team">
+      </div>
 
-      <form onsubmit="requestAccess(event)">
-        <div class="two-col">
-          <div class="input-box">
-            <input type="text" id="companyName" placeholder="Company Name" required>
+      <div class="card">
+        <h2>Create an Account</h2>
+        <p class="sub">Submit your organization details for review and approval</p>
+
+        <form onsubmit="requestAccess(event)">
+          <div class="two-col">
+            <div class="input-box">
+              <input type="text" id="fullName" placeholder="Full Name" required>
+            </div>
+            <div class="input-box">
+              <input type="text" id="position" placeholder="Position" required>
+            </div>
           </div>
 
-          <div class="input-box">
-            <select id="industry" required>
-              <option value="" disabled selected>Industry</option>
-              <option>Information Technology</option>
-              <option>Business Process Outsourcing</option>
-              <option>Retail</option>
-              <option>Healthcare</option>
-              <option>Education</option>
-              <option>Finance</option>
-              <option>Manufacturing</option>
-              <option>Other</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="two-col">
-          <div class="input-box">
-            <select id="companySize" required>
-              <option value="" disabled selected>Company Size</option>
-              <option>1–50 employees</option>
-              <option>51–200 employees</option>
-              <option>201–500 employees</option>
-              <option>501–1000 employees</option>
-              <option>1000+ employees</option>
-            </select>
+          <div class="two-col">
+            <div class="input-box">
+              <input type="email" id="email" placeholder="Work Email Address" required>
+            </div>
+            <div class="input-box">
+              <input type="text" id="contactNumber" placeholder="Contact Number" required>
+            </div>
           </div>
 
-          <div class="input-box">
-            <input type="text" id="fullName" placeholder="HR Head / Contact Person" required>
-          </div>
-        </div>
-
-        <div class="two-col">
-          <div class="input-box">
-            <input type="email" id="email" placeholder="Work Email Address" required>
-          </div>
-
-          <div class="input-box">
-            <input type="text" id="position" placeholder="Position / Job Title" required>
-          </div>
-        </div>
-
-        <div class="two-col">
-          <div class="input-box">
-            <input type="text" id="contactNumber" placeholder="Contact Number" required>
+          <div class="two-col">
+            <div class="input-box">
+              <input type="text" id="companyName" placeholder="Company Name" required>
+            </div>
+            <div class="input-box">
+              <select id="companySize" required>
+                <option value="" disabled selected>Company Size</option>
+                <option>1–50 employees</option>
+                <option>51–200 employees</option>
+                <option>201–500 employees</option>
+                <option>501–1000 employees</option>
+                <option>1000+ employees</option>
+              </select>
+            </div>
           </div>
 
-          <div class="input-box">
-            <textarea id="notes" placeholder="Optional message or additional details"></textarea>
+          <div class="two-col">
+            <div class="input-box">
+              <select id="industry" required>
+                <option value="" disabled selected>Industry</option>
+                <option>Information Technology</option>
+                <option>Business Process Outsourcing</option>
+                <option>Retail</option>
+                <option>Healthcare</option>
+                <option>Education</option>
+                <option>Finance</option>
+                <option>Manufacturing</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="input-box">
+              <input type="text" id="companyNumber" placeholder="Company Number" required>
+            </div>
           </div>
-        </div>
 
-        <label class="terms">
-          <input type="checkbox" id="terms" required>
-          <span>
-            I confirm that the submitted organization details are correct and I agree to the
-            <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>
-          </span>
-        </label>
+          <div class="two-col">
+            <div class="input-box">
+              <input type="password" id="password" placeholder="Password" required>
+            </div>
+            <div class="input-box">
+              <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+            </div>
+          </div>
 
-        <button type="submit" class="btn">Request Access</button>
+          <label class="terms">
+            <input type="checkbox" id="terms" required>
+            <span>
+              I confirm that the submitted organization details are correct and I agree to the
+              <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>
+            </span>
+          </label>
 
-        <p class="bottom-text">
-          Already have an account?
-          <a href="login.html">Login here</a>
-        </p>
-      </form>
-    </div>
+          <button type="submit" class="btn">Request Access</button>
+
+          <p class="bottom-text">
+            Already have an account?
+            <a href="/login">Login here</a>
+          </p>
+        </form>
+      </div>
+    </div>  
 
     <div class="waves">
       <div class="wave1"></div>
@@ -391,6 +443,14 @@
   <script>
     function requestAccess(e) {
       e.preventDefault();
+
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+
+      if (password !== confirmPassword) {
+        alert("Passwords do not match.");
+        return;
+      }
 
       alert("Your access request has been submitted for review.");
     }
