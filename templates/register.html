@@ -102,15 +102,16 @@
       display: flex;
       /* width: 100%; */
       max-width: 1100px;
-      /* background: #ffffff; */
+      background: transparent;
       border-radius: 24px;
       overflow: hidden;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       min-height: 720px;
       align-items: stretch;
-      gap: 60px;
-      padding: 10px 0;
+      gap: 80px;
+      padding: 15px;
       max-width: 1700px;
+      
       
       
     }
@@ -121,6 +122,7 @@
       background: #0b1f3a;
       border-radius: 24px;
       overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
     }
 
     .left-side img {
@@ -131,8 +133,10 @@
 
     .card {
       justify-content: center;
-      width: 55%;
-      background: #ffffff;
+      width: 50%;
+      background: rgba(255, 255, 255, 0.7);
+      /* backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px); */
       border-radius: 24px;
       padding: 30px 25px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.08);
@@ -142,7 +146,7 @@
 
     .card h2 {
       text-align: center;
-      font-size: 32px;
+      font-size: 35px;
       color: #111827;
       margin-bottom: 8px;
     }
@@ -163,6 +167,7 @@
 
     .input-box {
       margin-bottom: 14px;
+      padding: 6px;
     }
 
     .input-box input,
@@ -197,7 +202,7 @@
       gap: 10px;
       margin-bottom: 18px;
       color: #374151;
-      font-size: 14px;
+      font-size: 16px;
       line-height: 1.5;
     }
 
@@ -423,7 +428,7 @@
             </span>
           </label>
 
-          <button type="submit" class="btn">Request Access</button>
+          <button type="submit" class="btn">Submit</button>
 
           <p class="bottom-text">
             Already have an account?
