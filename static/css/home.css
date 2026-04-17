@@ -142,14 +142,9 @@ body {
 }
 
 .welcome-badge {
-  display: inline-block;
-  background: #17b8ae;
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  padding: 10px 18px;
-  border-radius: 14px;
-  margin-bottom: 18px;
+  font-size: 26px;
+  font-weight: bold;
+  color: #17b8ae;
 }
 
 .hero-left h2 {
@@ -193,7 +188,7 @@ body {
   color: white;
   border: none;
   border-radius: 16px;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   padding: 20px 34px;
   display: inline-flex;
@@ -201,6 +196,7 @@ body {
   gap: 16px;
   cursor: pointer;
   box-shadow: 0 10px 24px rgba(0, 196, 178, 0.18);
+  text-align: left;
 }
 
 .time-note {
