@@ -24,15 +24,20 @@ body {
 
 .page {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   height: 85vh;
-  max-height: 860px;
+  /* max-height: 860px; */
   background: linear-gradient(to bottom, #eef7f8, #f8fcfc);
   border-radius: 24px;
   position: relative;
   overflow: hidden;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
   padding: 34px 48px 120px;
+
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  
 }
 
 .dots {
@@ -66,13 +71,14 @@ body {
 }
 
 .brand {
+  position: absolute;
+  top: 40px;
+  left: 60px;
   display: flex;
   align-items: center;
   gap: 16px;
-  position: relative;
+
   z-index: 2;
-  margin-top: 20px;
-  margin-bottom: 20px;
 }
 
 .logo {
@@ -100,9 +106,69 @@ body {
   color: #52707c;
 }
 
+/* .left-section {
+  /* position: absolute; */
+  top: 140px;
+  left: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 4400px;
+  z-index: 2;
+
+  background-image: url("/static/images/login.png");
+} */
+
+.left-section {
+  position: absolute;
+  top: 120px;       /* ubos sa brand */
+  left: 60px;
+  width: 42%;
+  height: 420px;
+
+  border-radius: 20px;
+  overflow: hidden;
+
+  background-image: url("/static/images/login.png");
+  background-size: cover;
+  background-position: center;
+}
+
+/* .tagline {
+  position: absolute;
+  bottom: 140px;
+  left:80px;
+  transform: translateY(-90%);
+  overflow: hidden;
+
+  max-width: 100%;
+  font-size: 28px;
+  font-weight: 700;
+  color: #0b7f86;
+  line-height: 1.6;
+  white-space: nowrap;
+} */
+
+.tagline {
+  position: absolute;
+  z-index: 2; /* above overlay */
+
+  top: 50%;
+  left: 40px;
+  transform: translateY(-50%);
+
+  width: 80%;
+
+  font-size: 26px;
+  font-weight: 700;
+  color: #0b7f86;
+  line-height: 1.6;
+}
+
 .card {
   width: 100%;
   max-width: 580px;
+  max-height: 700px;
   background: #ffffff;
   border-radius: 22px;
   padding: 24px 26px 20px;
@@ -129,12 +195,6 @@ body {
   margin-bottom: 22px;
 }
 
-.page {
-  display: flex;
-  justify-content: flex-end; /* move card to right */
-  align-items: center;
-  padding: 50px;
-}
 
 .input-box {
   margin-bottom: 14px;
@@ -356,15 +416,23 @@ body {
     <div class="dots"></div>
     <div class="top-circle"></div>
     <div class="top-circle2"></div>
-
+    
     <div class="brand">
-      <div class="logo">I</div>
-      <div class="brand-text">
-        <h1>Inclusion Intelligence System</h1>
-        <p>Empowering Inclusion. Enriching Lives.</p>
+        <div class="logo">I</div>
+        <div class="brand-text">
+          <h1>Inclusion Intelligence System</h1>
+          <p>Empowering Inclusion. Enriching Lives.</p>
+        </div>
       </div>
-    </div>
 
+    <div class="left-section">
+      
+      <div class="tagline">
+        Where diversity thrives, equity leads,<br>
+        inclusion happens. . .
+      </div>
+
+    </div>
     <div class="card">
       <h2>Welcome Back!</h2>
       <p class="sub">Sign in to continue to your account</p>
@@ -424,7 +492,7 @@ body {
     // SET LOGIN STATE
     localStorage.setItem("loggedIn", "true");
 
-    alert("Login successful!");
+    // alert("Login successful!");
 
     // redirect to home page
     window.location.href = "/assessment";
