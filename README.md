@@ -16,11 +16,12 @@ across key dimensions such as hiring, onboarding, accommodation, retention and c
   Step 2: Create Database
           Run this command: CREATE DATABASE iis_db;
   Step 3: Import Database File
-          . Go to Server -> Data Import
-          . Select -> Import from Self-Contained File
-          . Browse and select -> iis_db.sql
-          . Under Default Target Schema, choose: -> iis_db
-          . Click -> Start Import
+
+          1. Go to Server -> Data Import
+          2. Select -> Import from Self-Contained File
+          3. Browse and select -> iis_db.sql
+          4. Under Default Target Schema, choose: -> iis_db
+          5. Click -> Start Import          
 
   Step 4: Verify Tables
           Run this command: SHOW TABLES;
