@@ -66,7 +66,7 @@ CREATE TABLE `assessment_answers` (
   `score_value` decimal(5,2) NOT NULL,
   `saved_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `fk_answer_assessment` (`assessment_id`),
+  UNIQUE KEY `uq_assessment_question` (`assessment_id`,`question_id`),
   KEY `fk_answer_question` (`question_id`),
   KEY `fk_answer_choice` (`selected_choice_id`),
   CONSTRAINT `fk_answer_assessment` FOREIGN KEY (`assessment_id`) REFERENCES `assessments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -97,7 +97,7 @@ CREATE TABLE `assessment_dimensions` (
   `description` text,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -144,6 +144,36 @@ LOCK TABLES `assessments` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `benchmark_snapshots`
+--
+
+DROP TABLE IF EXISTS `benchmark_snapshots`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `benchmark_snapshots` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `assessment_id` int NOT NULL,
+  `network_average_score` decimal(5,2) DEFAULT NULL,
+  `top_performer_score` decimal(5,2) DEFAULT NULL,
+  `organization_rank` int DEFAULT NULL,
+  `eligible_org_count` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_benchmark_assessment` (`assessment_id`),
+  CONSTRAINT `fk_benchmark_assessment` FOREIGN KEY (`assessment_id`) REFERENCES `assessments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `benchmark_snapshots`
+--
+
+LOCK TABLES `benchmark_snapshots` WRITE;
+/*!40000 ALTER TABLE `benchmark_snapshots` DISABLE KEYS */;
+/*!40000 ALTER TABLE `benchmark_snapshots` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `dimension_scores`
 --
 
@@ -156,8 +186,9 @@ CREATE TABLE `dimension_scores` (
   `dimension_id` int NOT NULL,
   `score` decimal(5,2) NOT NULL,
   `severity_flag` enum('none','moderate','critical') NOT NULL DEFAULT 'none',
+  `raw_score` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `fk_dimension_score_assessment` (`assessment_id`),
+  UNIQUE KEY `uq_assessment_dimension` (`assessment_id`,`dimension_id`),
   KEY `fk_dimension_score_dimension` (`dimension_id`),
   CONSTRAINT `fk_dimension_score_assessment` FOREIGN KEY (`assessment_id`) REFERENCES `assessments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_dimension_score_dimension` FOREIGN KEY (`dimension_id`) REFERENCES `assessment_dimensions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
@@ -171,6 +202,82 @@ CREATE TABLE `dimension_scores` (
 LOCK TABLES `dimension_scores` WRITE;
 /*!40000 ALTER TABLE `dimension_scores` DISABLE KEYS */;
 /*!40000 ALTER TABLE `dimension_scores` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `email_notifications`
+--
+
+DROP TABLE IF EXISTS `email_notifications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `email_notifications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int DEFAULT NULL,
+  `organization_id` int DEFAULT NULL,
+  `assessment_id` int DEFAULT NULL,
+  `notification_type` enum('account_approval','account_rejection','account_activation','reassessment_reminder','password_reset','report_ready') NOT NULL,
+  `recipient_email` varchar(150) NOT NULL,
+  `subject` varchar(255) NOT NULL,
+  `message_body` text,
+  `send_status` enum('pending','sent','failed') NOT NULL DEFAULT 'pending',
+  `sent_at` timestamp NULL DEFAULT NULL,
+  `error_message` text,
+  `triggered_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_email_user` (`user_id`),
+  KEY `fk_email_org` (`organization_id`),
+  KEY `fk_email_assessment` (`assessment_id`),
+  KEY `fk_email_triggered_by` (`triggered_by`),
+  CONSTRAINT `fk_email_assessment` FOREIGN KEY (`assessment_id`) REFERENCES `assessments` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_email_org` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_email_triggered_by` FOREIGN KEY (`triggered_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_email_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `email_notifications`
+--
+
+LOCK TABLES `email_notifications` WRITE;
+/*!40000 ALTER TABLE `email_notifications` DISABLE KEYS */;
+/*!40000 ALTER TABLE `email_notifications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `fellow_journey_tracking`
+--
+
+DROP TABLE IF EXISTS `fellow_journey_tracking`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `fellow_journey_tracking` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `fellow_id` int NOT NULL,
+  `organization_id` int NOT NULL,
+  `assessment_id` int DEFAULT NULL,
+  `status` enum('on_track','at_risk','offboarded') NOT NULL,
+  `notes` text,
+  `tracked_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_fjt_fellow` (`fellow_id`),
+  KEY `fk_fjt_org` (`organization_id`),
+  KEY `fk_fjt_assessment` (`assessment_id`),
+  CONSTRAINT `fk_fjt_assessment` FOREIGN KEY (`assessment_id`) REFERENCES `assessments` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_fjt_fellow` FOREIGN KEY (`fellow_id`) REFERENCES `fellows` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_fjt_org` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `fellow_journey_tracking`
+--
+
+LOCK TABLES `fellow_journey_tracking` WRITE;
+/*!40000 ALTER TABLE `fellow_journey_tracking` DISABLE KEYS */;
+/*!40000 ALTER TABLE `fellow_journey_tracking` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -200,6 +307,40 @@ CREATE TABLE `fellows` (
 LOCK TABLES `fellows` WRITE;
 /*!40000 ALTER TABLE `fellows` DISABLE KEYS */;
 /*!40000 ALTER TABLE `fellows` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `gap_flags`
+--
+
+DROP TABLE IF EXISTS `gap_flags`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `gap_flags` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `assessment_id` int NOT NULL,
+  `dimension_id` int NOT NULL,
+  `question_id` int DEFAULT NULL,
+  `severity` enum('moderate','critical') NOT NULL,
+  `description` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_gap_assessment` (`assessment_id`),
+  KEY `fk_gap_dimension` (`dimension_id`),
+  KEY `fk_gap_question` (`question_id`),
+  CONSTRAINT `fk_gap_assessment` FOREIGN KEY (`assessment_id`) REFERENCES `assessments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_gap_dimension` FOREIGN KEY (`dimension_id`) REFERENCES `assessment_dimensions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_gap_question` FOREIGN KEY (`question_id`) REFERENCES `question_bank` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `gap_flags`
+--
+
+LOCK TABLES `gap_flags` WRITE;
+/*!40000 ALTER TABLE `gap_flags` DISABLE KEYS */;
+/*!40000 ALTER TABLE `gap_flags` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -275,11 +416,11 @@ DROP TABLE IF EXISTS `question_choices`;
 CREATE TABLE `question_choices` (
   `id` int NOT NULL AUTO_INCREMENT,
   `question_id` int NOT NULL,
-  `choice_letter` char(1) NOT NULL,
+  `choice_letter` enum('A','B','C','D') NOT NULL,
   `choice_text` varchar(255) NOT NULL,
   `choice_score` decimal(5,2) NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `fk_choice_question` (`question_id`),
+  UNIQUE KEY `uq_question_choice` (`question_id`,`choice_letter`),
   CONSTRAINT `fk_choice_question` FOREIGN KEY (`question_id`) REFERENCES `question_bank` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=201 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -341,6 +482,10 @@ CREATE TABLE `users` (
   `status` enum('pending','approved','inactive') NOT NULL DEFAULT 'pending',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `last_login` timestamp NULL DEFAULT NULL,
+  `position` varchar(100) DEFAULT NULL,
+  `contact_number` varchar(50) DEFAULT NULL,
+  `reset_token` varchar(255) DEFAULT NULL,
+  `reset_token_expiry` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
   KEY `fk_users_organization` (`organization_id`),
@@ -366,4 +511,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-21 11:32:38
+-- Dump completed on 2026-04-22  8:59:12
