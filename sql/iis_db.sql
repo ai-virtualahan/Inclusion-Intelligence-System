@@ -29,6 +29,7 @@ CREATE TABLE `access_requests` (
   `company_size` varchar(50) NOT NULL,
   `contact_person` varchar(150) NOT NULL,
   `work_email` varchar(150) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
   `position_title` varchar(100) NOT NULL,
   `contact_number` varchar(50) NOT NULL,
   `notes` text,
@@ -39,7 +40,7 @@ CREATE TABLE `access_requests` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `work_email` (`work_email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -48,6 +49,7 @@ CREATE TABLE `access_requests` (
 
 LOCK TABLES `access_requests` WRITE;
 /*!40000 ALTER TABLE `access_requests` DISABLE KEYS */;
+INSERT INTO `access_requests` VALUES (1,'Virtualahan Incorporated ','Information Technology','201-500 employees','Jinalie C. Arbuis','intern3@virtualahan.com','','Skills Incubator','09531080123','09531080123','pending',NULL,NULL,NULL,'2026-04-23 06:28:47'),(2,'Jinah Corporation','Manufacturing','51-200 employees','Maria','jinah@testemail.com','scrypt:32768:8:1$xMn09DKAZ7q5RmDm$c061c6dff8ede97f2bbf16392cc3f03ddc3def8cb9b9288ea84fbaa7b1aa43a1d2ffd0fae7f0f8c1bc0af8c61054dc390829e75fab34d6ff59749bb7d48edf1c','Skills Incubator','12345678910','12345678910','pending',NULL,NULL,NULL,'2026-04-23 09:26:57');
 /*!40000 ALTER TABLE `access_requests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -511,4 +513,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-22  8:59:12
+-- Dump completed on 2026-04-23 17:42:20
