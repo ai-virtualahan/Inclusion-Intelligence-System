@@ -6,7 +6,7 @@
     }
 
     body {
-      min-height: 100vh;
+      min-height: 85vh;
       background: linear-gradient(135deg, #0b1f3a, #10345f, #159e9a);
       display: flex;
       justify-content: center;
@@ -16,7 +16,7 @@
 
     .page {
       width: 100%;
-      max-width: 1700px;
+      max-width: 1500px;
       min-height: 760px;
       background: linear-gradient(to bottom, #eef7f8, #f8fcfc);
       border-radius: 28px;

@@ -1,6 +1,8 @@
 function loginUser(e) {
       e.preventDefault();
 
+      console.log("login function triggered");
+
       // kuhaon ang values (optional for now)
       let email = document.querySelector('input[type="email"]').value;
       let password = document.querySelector('input[type="password"]').value;

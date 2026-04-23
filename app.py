@@ -14,6 +14,10 @@ def home():
 def login():
     return render_template('login.html')
 
+@app.route('/assessment')
+def assessment():
+    return render_template('assessment.html')
+
 
 from routes.register import *
 

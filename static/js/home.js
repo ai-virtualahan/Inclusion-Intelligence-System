@@ -3,7 +3,7 @@ function handleAuth() {
 
       if (isLoggedIn === "true") {
         localStorage.setItem("loggedIn", "false");
-        alert("Logged out successfully!");
+        // alert("Logged out successfully!");
         location.reload();
       } else {
         window.location.href = "/login";
