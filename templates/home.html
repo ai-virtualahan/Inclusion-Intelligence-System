@@ -135,16 +135,7 @@
       let welcome = document.getElementById("welcomeText");
       let startBtn = document.getElementById("startBtn");
 
-      function updateUI() {
-        let isLoggedIn = localStorage.getItem("loggedIn");
-
-        if (isLoggedIn === "true") {
-          btn.textContent = "Logout";
-          welcome.textContent = "Welcome back!";
-          startBtn.innerHTML = '<i class="fa-solid fa-arrow-right"></i> Start Assessment';
-        } 
-      }
-
+      
       updateUI();
 
       startBtn.onclick = function () {
