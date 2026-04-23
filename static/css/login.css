@@ -1,0 +1,441 @@
+
+    * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      /* background: linear-gradient(135deg, #0b1f3a, #10345f, #159e9a); */
+      background: linear-gradient(to right, #0B2A4A, #123B63);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 18px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1400px;
+      height: 85vh;
+      /* max-height: 860px; */
+      background: linear-gradient(to bottom, #eef7f8, #f8fcfc);
+      border-radius: 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+      padding: 34px 48px 120px;
+
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      
+    }
+
+    .dots {
+      position: absolute;
+      top: 38px;
+      left: 38px;
+      width: 90px;
+      height: 60px;
+      background-image: radial-gradient(#b8dedd 1.5px, transparent 1.5px);
+      background-size: 12px 12px;
+    }
+
+    .top-circle {
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 220px;
+      height: 220px;
+      background: rgba(21, 158, 154, 0.10);
+      border-radius: 50%;
+    }
+
+    .top-circle2 {
+      position: absolute;
+      top: 22px;
+      right: 120px;
+      width: 135px;
+      height: 135px;
+      background: rgba(11, 31, 58, 0.05);
+      border-radius: 50%;
+    }
+
+    .brand {
+      position: absolute;
+      top: 30px;
+      left: 60px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      z-index: 2;
+    }
+
+    .logo {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0b1f3a, #159e9a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 32px;
+      font-weight: bold;
+      box-shadow: 0 8px 18px rgba(11, 31, 58, 0.18);
+    }
+
+    .brand-text h1 {
+      font-size: 32px;
+      color: #0b1f3a;
+      margin-bottom: 6px;
+    }
+
+    .brand-text p {
+      font-size: 16px;
+      color: #52707c;
+    }
+
+
+    .left-section {
+      position: absolute;
+      top: 120px;       /* ubos sa brand */
+      left: 60px;
+      width: 42%;
+      height: 420px;
+
+      border-radius: 20px;
+      overflow: hidden;
+
+      background-image: url("/static/images/login.png");
+      background-size: cover;
+      background-position: center;
+    }
+
+    .left-section, .card{
+      margin-top: 0;
+    }
+
+    /* .tagline {
+      position: absolute;
+      bottom: 140px;
+      left:80px;
+      transform: translateY(-90%);
+      overflow: hidden;
+
+      max-width: 100%;
+      font-size: 28px;
+      font-weight: 700;
+      color: #0b7f86;
+      line-height: 1.6;
+      white-space: nowrap;
+    } */
+
+    .tagline {
+      position: absolute;
+      z-index: 2;
+
+      top: 40%;
+      left: 40px;
+      transform: translateY(-60%);
+
+      width: 80%;
+
+      font-size: 26px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.5;
+
+      background: linear-gradient(
+        to right,
+        rgba(0, 0, 0, 0.45),
+        rgba(0, 0, 0, 0.25),
+        transparent
+      );
+      padding: 14px 18px;
+      border-radius: 12px;
+      
+    }
+
+    .highlight {
+      font-size: 34px;
+      font-weight: 800;
+      box-shadow: 0 0 12px rgba(111, 228, 216, 0.15);
+
+      color: #ffffff;
+
+      /* layered shadow = mas natural kaysa stroke */
+      text-shadow:
+      0 2px 4px rgba(0,0,0,0.5),
+      0 6px 12px rgba(0,0,0,0.4);
+    }
+
+    .diversity,
+    .equity {
+      font-size: 30px;
+      font-weight: 700;
+      color: #7ee7db;
+
+    }
+
+    .inclusion {
+      font-size: 38px;
+      font-weight: 900;
+      color: #ffffff;
+
+      text-shadow:
+        0 4px 10px rgba(0,0,0,0.6),
+        0 0 18px rgba(111, 228, 216, 0.6);
+    }
+
+    .card {
+      width: 100%;
+      max-width: 580px;
+      max-height: 700px;
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(1.5px);
+      -webkit-backdrop-filter: blur(1.5px);
+      border-radius: 22px;
+      padding: 24px 26px 20px;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+      position: relative;
+      z-index: 2;
+      
+      
+      margin-right: 40px;
+      transform: translateY(60px);
+      
+    }
+
+    .card h2 {
+      text-align: center;
+      font-size: 26px;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+
+    .card .sub {
+      text-align: center;
+      color: #6b7280;
+      font-size: 15px;
+      margin-bottom: 22px;
+    }
+
+
+    .input-box {
+      margin-bottom: 14px;
+    }
+
+    .input-box input,
+    .input-box select {
+      width: 100%;
+      height: 48px;
+      border: 1px solid #d7dee4;
+      border-radius: 12px;
+      padding: 0 15px;
+      font-size: 15px;
+      outline: none;
+      background: #fff;
+    }
+
+    .input-box input:focus,
+    .input-box select:focus {
+      border-color: #00d4a1;
+      box-shadow: 0 0 0 4px rgba(0, 212, 161, 0.12);
+    }
+
+    .row-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .remember {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #374151;
+      font-size: 14px;
+    }
+
+    .remember input {
+      width: 16px;
+      height: 16px;
+      accent-color: #159e9a;
+    }
+
+    .link {
+      color: #00d4a1;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .link:hover {
+      color: #0b1f3a;
+    }
+
+    .btn {
+      width: 100%;
+      height: 54px;
+      border: none;
+      border-radius: 12px;
+      /* background: linear-gradient(90deg, #0b1f3a, #159e9a); */
+      background: linear-gradient(to right, #0B2A4A, #00d4a1);
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.96;
+    }
+
+    .divider {
+      text-align: center;
+      margin: 18px 0;
+      color: #8b95a1;
+      position: relative;
+      font-size: 15px;
+    }
+
+    .divider:before,
+    .divider:after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 39%;
+      height: 1px;
+      background: #d7dee4;
+    }
+
+    .divider:before {
+      left: 0;
+    }
+
+    .divider:after {
+      right: 0;
+    }
+
+    .google-btn {
+      width: 100%;
+      height: 52px;
+      border: 2px solid #bfe9e6;
+      border-radius: 12px;
+      background: white;
+      color: #1f2937;
+      font-size: 17px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .google-btn:hover {
+      border-color: #159e9a;
+      background: #f7ffff;
+    }
+
+    .bottom-text {
+      text-align: center;
+      margin-top: 18px;
+      color: #4b5563;
+      font-size: 15px;
+    }
+
+    .bottom-text a {
+      color: #159e9a;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .waves {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 130px;
+    }
+
+    .wave1,
+    .wave2,
+    .wave3 {
+      position: absolute;
+      width: 130%;
+      left: -15%;
+      border-radius: 50%;
+    }
+
+    .wave1 {
+      height: 70px;
+      bottom: 40px;
+      background: rgba(21, 158, 154, 0.18);
+    }
+
+    .wave2 {
+      height: 60px;
+      bottom: 20px;
+      background: rgba(21, 158, 154, 0.30);
+    }
+
+    .wave3 {
+      height: 60px;
+      bottom: -10px;
+      background: linear-gradient(90deg, #0b1f3a, #159e9a);
+    }
+
+    @media (max-width: 1024px) {
+      .page {
+        padding: 28px 28px 110px;
+        height: auto;
+        min-height: 92vh;
+      }
+
+      .brand-text h1 {
+        font-size: 28px;
+      }
+
+      .card {
+        max-width: 560px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .page {
+        padding: 24px 18px 100px;
+      }
+
+      .brand {
+        flex-direction: column;
+        text-align: center;
+        margin-top: 24px;
+      }
+
+      .brand-text h1 {
+        font-size: 24px;
+      }
+
+      .brand-text p {
+        font-size: 15px;
+      }
+
+      .card {
+        padding: 24px 18px;
+      }
+
+      .card h2 {
+        font-size: 26px;
+      }
+
+      .card .sub {
+        font-size: 14px;
+      }
+    }

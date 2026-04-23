@@ -4,334 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Request Access | Inclusion Intelligence System</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
-    }
-
-    body {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #0b1f3a, #10345f, #159e9a);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 24px;
-    }
-
-    .page {
-      width: 100%;
-      max-width: 1700px;
-      min-height: 760px;
-      background: linear-gradient(to bottom, #eef7f8, #f8fcfc);
-      border-radius: 28px;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.20);
-      padding: 28px 40px 90px;
-    }
-
-    .dots {
-      position: absolute;
-      top: 38px;
-      left: 38px;
-      width: 90px;
-      height: 60px;
-      background-image: radial-gradient(#b8dedd 1.5px, transparent 1.5px);
-      background-size: 12px 12px;
-    }
-
-    .top-circle {
-      position: absolute;
-      top: -40px;
-      right: -40px;
-      width: 240px;
-      height: 240px;
-      background: rgba(21, 158, 154, 0.10);
-      border-radius: 50%;
-    }
-
-    .top-circle2 {
-      position: absolute;
-      top: 24px;
-      right: 110px;
-      width: 120px;
-      height: 120px;
-      background: rgba(11, 31, 58, 0.05);
-      border-radius: 50%;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      position: relative;
-      z-index: 2;
-      margin-top: 18px;
-      margin-bottom: 26px;
-    }
-
-    .logo {
-      width: 76px;
-      height: 76px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #0b1f3a, #159e9a);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 34px;
-      font-weight: bold;
-      box-shadow: 0 8px 20px rgba(11,31,58,0.18);
-    }
-
-    .brand-text h1 {
-      font-size: 34px;
-      color: #0b1f3a;
-      margin-bottom: 6px;
-    }
-
-    .brand-text p {
-      font-size: 17px;
-      color: #52707c;
-    }
-    
-    .main-container {
-      display: flex;
-      /* width: 100%; */
-      max-width: 1100px;
-      background: transparent;
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      min-height: 720px;
-      align-items: stretch;
-      gap: 80px;
-      padding: 15px;
-      max-width: 1700px;
-      
-      
-      
-    }
-
-    /* LEFT SIDE IMAGE */
-    .left-side {
-      width: 45%;
-      background: #0b1f3a;
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
-    }
-
-    .left-side img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .card {
-      justify-content: center;
-      width: 50%;
-      background: rgba(255, 255, 255, 0.7);
-      /* backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px); */
-      border-radius: 24px;
-      padding: 30px 25px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-      position: relative;
-      z-index: 2;
-    }
-
-    .card h2 {
-      text-align: center;
-      font-size: 35px;
-      color: #111827;
-      margin-bottom: 8px;
-    }
-
-    .card .sub {
-      text-align: center;
-      color: #6b7280;
-      font-size: 16px;
-      margin-bottom: 22px;
-      line-height: 1.5;
-    }
-
-    .two-col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    .input-box {
-      margin-bottom: 14px;
-      padding: 6px;
-    }
-
-    .input-box input,
-    .input-box select,
-    .input-box textarea {
-      width: 100%;
-      height: 48px;
-      border: 1px solid #d7dee4;
-      border-radius: 12px;
-      padding: 0 15px;
-      font-size: 15px;
-      outline: none;
-      background: #fff;
-    }
-
-    .input-box textarea {
-      height: 92px;
-      padding: 14px 15px;
-      resize: none;
-    }
-
-    .input-box input:focus,
-    .input-box select:focus,
-    .input-box textarea:focus {
-      border-color: #159e9a;
-      box-shadow: 0 0 0 4px rgba(21, 158, 154, 0.12);
-    }
-
-    .terms {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 18px;
-      color: #374151;
-      font-size: 16px;
-      line-height: 1.5;
-    }
-
-    .terms input {
-      margin-top: 3px;
-      accent-color: #159e9a;
-    }
-
-    .terms a {
-      color: #159e9a;
-      font-weight: bold;
-      text-decoration: none;
-    }
-
-    .terms a:hover {
-      color: #0b1f3a;
-    }
-
-    .btn {
-      width: 100%;
-      height: 52px;
-      border: none;
-      border-radius: 12px;
-      background: linear-gradient(90deg, #0b1f3a, #159e9a);
-      color: white;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .btn:hover {
-      transform: translateY(-1px);
-      opacity: 0.96;
-    }
-
-    .bottom-text {
-      text-align: center;
-      margin-top: 18px;
-      color: #4b5563;
-      font-size: 15px;
-    }
-
-    .bottom-text a {
-      color: #159e9a;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .waves {
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      width: 100%;
-      height: 170px;
-    }
-
-    .wave1, .wave2, .wave3 {
-      position: absolute;
-      width: 130%;
-      left: -15%;
-      border-radius: 50%;
-    }
-
-    .wave1 {
-      height: 100px;
-      bottom: 70px;
-      background: rgba(21, 158, 154, 0.18);
-    }
-
-    .wave2 {
-      height: 90px;
-      bottom: 35px;
-      background: rgba(21, 158, 154, 0.30);
-    }
-
-    .wave3 {
-      height: 90px;
-      bottom: -18px;
-      background: linear-gradient(90deg, #0b1f3a, #159e9a);
-    }
-
-    @media (max-width: 900px) {
-      .page {
-        padding: 28px 18px 120px;
-      }
-
-      .brand {
-        flex-direction: column;
-        text-align: center;
-        margin-top: 26px;
-      }
-
-      .brand-text h1 {
-        font-size: 26px;
-      }
-
-      .brand-text p {
-        font-size: 15px;
-      }
-      .main-container {
-        flex-direction: column;
-      }
-
-      .left-side {
-        width: 100%;
-        height: 200px;
-      }
-
-  .card {
-    width: 100%;
-  }
-      .card {
-        padding: 24px 18px;
-      }
-
-      .card h2 {
-        font-size: 26px;
-      }
-
-      .card .sub {
-        font-size: 14px;
-      }
-
-      .two-col {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
   <div class="page">
@@ -357,71 +31,83 @@
         <h2>Create an Account</h2>
         <p class="sub">Submit your organization details for review and approval</p>
 
-        <form onsubmit="requestAccess(event)">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-container">
+              {% for category, message in messages %}
+                <div class="flash-message {{ category }}">
+                   {{ message }}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+      {% endwith %}
+
+        <form action="{{ url_for('submit_registration') }}" method="POST">
           <div class="two-col">
             <div class="input-box">
-              <input type="text" id="fullName" placeholder="Full Name" required>
+              <input type="text" id="fullName" name="full_name" placeholder="Full Name" required>
             </div>
             <div class="input-box">
-              <input type="text" id="position" placeholder="Position" required>
+              <input type="text" id="position" name="position" placeholder="Position" required>
             </div>
           </div>
 
           <div class="two-col">
             <div class="input-box">
-              <input type="email" id="email" placeholder="Work Email Address" required>
+              <input type="email" id="email" name="work_email" placeholder="Work Email Address" required>
             </div>
             <div class="input-box">
-              <input type="text" id="contactNumber" placeholder="Contact Number" required>
+              <input type="text" id="contactNumber" name="contact_number" placeholder="Contact Number" required>
             </div>
           </div>
 
           <div class="two-col">
             <div class="input-box">
-              <input type="text" id="companyName" placeholder="Company Name" required>
+              <input type="text" id="companyName" name="company_name" placeholder="Company Name" required>
             </div>
             <div class="input-box">
-              <select id="companySize" required>
+              <select id="companySize" name="company_size" required>
                 <option value="" disabled selected>Company Size</option>
-                <option>1–50 employees</option>
-                <option>51–200 employees</option>
-                <option>201–500 employees</option>
-                <option>501–1000 employees</option>
-                <option>1000+ employees</option>
+                <option value="1-50 employees">1–50 employees</option>
+                <option value="51-200 employees">51–200 employees</option>
+                <option value="201-500 employees">201–500 employees</option>
+                <option value="501-1000 employees">501–1000 employees</option>
+                <option value="1000+ employees">1000+ employees</option>
               </select>
             </div>
           </div>
 
           <div class="two-col">
             <div class="input-box">
-              <select id="industry" required>
+              <select id="industry" name="industry" required>
                 <option value="" disabled selected>Industry</option>
-                <option>Information Technology</option>
-                <option>Business Process Outsourcing</option>
-                <option>Retail</option>
-                <option>Healthcare</option>
-                <option>Education</option>
-                <option>Finance</option>
-                <option>Manufacturing</option>
-                <option>Other</option>
+                <option value="Information Technology">Information Technology</option>
+                <option value="Business Process Outsourcing">Business Process Outsourcing</option>
+                <option value="Retail">Retail</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Education">Education</option>
+                <option value="Finance">Finance</option>
+                <option value="Manufacturing">Manufacturing</option>
+                <option value="Other">Other</option>
               </select>
             </div>
             <div class="input-box">
-              <input type="text" id="companyNumber" placeholder="Company Number" required>
+              <input type="text" id="companyNumber" name="company_number" placeholder="Company Number" required>
             </div>
           </div>
 
           <div class="two-col">
             <div class="input-box">
-              <input type="password" id="password" placeholder="Password" required>
+              <input type="password" id="password" name="password" placeholder="Password" required>
             </div>
             <div class="input-box">
-              <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+              <input type="password" id="confirmPassword" name="confirm_password" placeholder="Confirm Password" required>
             </div>
           </div>
 
           <label class="terms">
-            <input type="checkbox" id="terms" required>
+            <input type="checkbox" id="terms" name="agree_terms" value="yes" required>
             <span>
               I confirm that the submitted organization details are correct and I agree to the
               <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>
@@ -432,7 +118,7 @@
 
           <p class="bottom-text">
             Already have an account?
-            <a href="/login">Login here</a>
+            <a href="{{ url_for('login') }}">Login here</a>
           </p>
         </form>
       </div>
@@ -445,20 +131,6 @@
     </div>
   </div>
 
-  <script>
-    function requestAccess(e) {
-      e.preventDefault();
-
-      const password = document.getElementById("password").value;
-      const confirmPassword = document.getElementById("confirmPassword").value;
-
-      if (password !== confirmPassword) {
-        alert("Passwords do not match.");
-        return;
-      }
-
-      alert("Your access request has been submitted for review.");
-    }
-  </script>
+  <script src="{{ url_for('static', filename='js/register.js') }}"></script>
 </body>
 </html>

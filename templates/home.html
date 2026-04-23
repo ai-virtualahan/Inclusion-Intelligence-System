@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Inclusion Intelligence</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
 </head>
 <body>
 
@@ -105,50 +107,6 @@
     </footer>
   </div>
 
-  <script>
-    function handleAuth() {
-      let isLoggedIn = localStorage.getItem("loggedIn");
-
-      if (isLoggedIn === "true") {
-        localStorage.setItem("loggedIn", "false");
-        alert("Logged out successfully!");
-        location.reload();
-      } else {
-        window.location.href = "/login";
-      }
-    }
-
-    function goToAssessment(e) {
-      e.preventDefault();
-
-      let isLoggedIn = localStorage.getItem("loggedIn");
-
-      if (isLoggedIn === "true") {
-        window.location.href = "/assessment";
-      } else {
-        window.location.href = "/login";
-      }
-    }
-
-    window.onload = function () {
-      let btn = document.querySelector(".login-btn");
-      let welcome = document.getElementById("welcomeText");
-      let startBtn = document.getElementById("startBtn");
-
-      
-      updateUI();
-
-      startBtn.onclick = function () {
-        let isLoggedIn = localStorage.getItem("loggedIn");
-
-        if (isLoggedIn === "true") {
-          window.location.href = "/assessment";
-        } else {
-          window.location.href = "/login";
-        }
-      };
-    };
-  </script>
-
+  <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 </body>
 </html>
