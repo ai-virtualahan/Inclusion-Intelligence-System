@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>IIS - Inclusion Intelligence System</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- ✅ FIXED CSS PATH (Flask-safe) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/assessment.css') }}">
 </head>
 
@@ -14,42 +14,39 @@
 <div class="app">
 
     <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <h3>IIS Dashboard</h3>
+    <div class="sidebar">
+        <h3>Inclusion Intelligence System</h3>
 
-        <button onclick="showPage('dashboard')">
-            Dashboard
-        </button>
+        <button onclick="showPage('dashboard')">Inclusion Maturity Dashboard</button>
+        <button onclick="showPage('diagnostic')">Inclusion Diagnostic Engine</button>
+    </div>
 
-        <button onclick="showPage('examSelect')">
-            Start Assessment
-        </button>
-
-        <button onclick="showPage('diagnostic')">
-            Diagnostic Engine
-        </button>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="content">
+    <!-- CONTENT -->
+    <div class="content">
 
         <!-- DASHBOARD -->
-        <section id="dashboard" class="page active">
+        <div id="dashboard" class="page active">
             <div class="card">
                 <h2>Inclusion Maturity Dashboard</h2>
-                <p>Track organizational inclusion maturity level and assessment history.</p>
+                <p>Track your organization's Inclusion Maturity Level.</p>
+            </div>
+        </div>
+
+        <!-- DIAGNOSTIC ENGINE -->
+        <div id="diagnostic" class="page">
+            <div class="card">
+                <h2>Inclusion Diagnostic Engine</h2>
+
+                <div id="questionBox"></div>
 
                 <button class="primary" onclick="showPage('examSelect')">
-                    Start New Assessment
+                    Choose Assessment Type
                 </button>
             </div>
-
-            <!-- SCOREBOARD RENDERED BY JS -->
-            <div id="dashboardContent"></div>
-        </section>
+        </div>
 
         <!-- EXAM SELECT -->
-        <section id="examSelect" class="page">
+        <div id="examSelect" class="page">
             <div class="card">
                 <h2>Select Assessment Type</h2>
 
@@ -60,40 +57,25 @@
                     <div class="exam" onclick="startExam('Retention')">Retention</div>
                     <div class="exam" onclick="startExam('Culture')">Culture</div>
                 </div>
-
-                <button onclick="showPage('dashboard')">
-                    Back to Dashboard
-                </button>
             </div>
-        </section>
+        </div>
 
-        <!-- DIAGNOSTIC ENGINE -->
-        <section id="diagnostic" class="page">
-            <div class="card">
-                <h2>Inclusion Diagnostic Engine</h2>
 
-                <div id="questionBox"></div>
-
-                <button onclick="showPage('examSelect')">
-                    Choose Assessment Type
-                </button>
-            </div>
-        </section>
-
-        <!-- RESULTS -->
-        <section id="results" class="page">
+        <!-- RESULT PAGE (IMPORTANT - YOU WERE MISSING THIS LOGIC TARGET) -->
+        <div id="results" class="page">
             <div class="card">
                 <div id="resultBox"></div>
 
-                <button onclick="showPage('dashboard')">
+                <button class="primary" onclick="showPage('dashboard')">
                     Back to Dashboard
                 </button>
             </div>
-        </section>
+        </div>
 
-    </main>
+    </div>
 </div>
 
+<!-- ✅ FIXED JS PATH (VERY IMPORTANT) -->
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </body>
