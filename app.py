@@ -16,12 +16,15 @@ def home():
 def login():
     return render_template('login.html')
 
+
 @app.route('/assessment')
 def assessment():
     return render_template('assessment.html')
 
 
-from routes.register import *
+# ❌ TEMPORARILY DISABLED (causing duplicate route issue)
+# from routes.register import *
+
 
 @app.route('/submit_assessment', methods=['POST'])
 def submit_assessment():
@@ -69,10 +72,10 @@ def submit_assessment():
                     VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
                 """, (assessment_id, q_id, selected_choice_id, score_value))
 
-        # 3. AUTO COMPUTE 🔥
+        # 3. AUTO COMPUTE
         compute_assessment_scores(cursor, assessment_id)
 
-        # 4. save tanan changes
+        # 4. save all changes
         conn.commit()
 
         return redirect(f'/assessment_result/{assessment_id}')
