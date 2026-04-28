@@ -19,7 +19,6 @@
 
         <button onclick="showPage('dashboard')">Inclusion Maturity Dashboard</button>
         <button onclick="showPage('diagnostic')">Inclusion Diagnostic Engine</button>
-        <button onclick="showPage('admin')">Admin & Access Control</button>
     </div>
 
     <!-- CONTENT -->
@@ -29,11 +28,7 @@
         <div id="dashboard" class="page active">
             <div class="card">
                 <h2>Inclusion Maturity Dashboard</h2>
-                <p>Track organizational inclusion maturity level.</p>
-
-                <button class="primary" onclick="showPage('examSelect')">
-                    Start Assessment
-                </button>
+                <p>Track your organization's Inclusion Maturity Level.</p>
             </div>
         </div>
 
@@ -65,18 +60,6 @@
             </div>
         </div>
 
-        <!-- ADMIN / RESULTS -->
-        <div id="admin" class="page">
-            <div class="card">
-                <h2>Admin & Access Control</h2>
-
-                <div id="resultBox"></div>
-
-                <button class="primary" onclick="showPage('dashboard')">
-                    Back to Dashboard
-                </button>
-            </div>
-        </div>
 
         <!-- RESULT PAGE (IMPORTANT - YOU WERE MISSING THIS LOGIC TARGET) -->
         <div id="results" class="page">
