@@ -3,13 +3,41 @@ from config import SECRET_KEY
 from db import get_db_connection
 from assessment_scoring import compute_assessment_scores
 
+
+
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
 
 @app.route('/')
 def home():
-    return render_template('home.html')
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT COUNT(DISTINCT organization_id) AS users_assessed
+        FROM assessments
+        WHERE status IN ('submitted', 'completed')
+    """)
+    users_assessed = cursor.fetchone()['users_assessed']
+
+    cursor.execute("""
+        SELECT COUNT(*) AS progress_tracked
+        FROM assessments
+    """)
+    progress_tracked = cursor.fetchone()['progress_tracked']
+
+    print("Users Assessed:", users_assessed)
+    print("Progress Tracked:", progress_tracked)
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        'home.html',
+        users_assessed=users_assessed,
+        progress_tracked=progress_tracked
+    )
 
 
 @app.route('/login')
@@ -21,7 +49,8 @@ def assessment():
     return render_template('assessment.html')
 
 
-from routes.register import *
+from routes.register import register_bp
+app.register_blueprint(register_bp)
 
 @app.route('/submit_assessment', methods=['POST'])
 def submit_assessment():

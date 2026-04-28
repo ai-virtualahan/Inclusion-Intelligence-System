@@ -3,16 +3,18 @@ from flask import render_template, request, redirect, url_for, flash
 from mysql.connector import Error
 from werkzeug.security import generate_password_hash
 
-from app import app
+from flask import Blueprint
 from db import get_db_connection
 
+register_bp = Blueprint('register', __name__)
 
-@app.route('/register')
+
+@register_bp.route('/register')
 def register():
     return render_template('register.html')
 
 
-@app.route('/submit_registration', methods=['POST'])
+@register_bp.route('/submit_registration', methods=['POST'])
 def submit_registration():
     full_name = request.form.get('full_name')
     position = request.form.get('position')
@@ -31,15 +33,15 @@ def submit_registration():
         company_name, company_size, industry, password, confirm_password
     ]):
         flash("Please fill out all required fields.", "danger")
-        return redirect(url_for('register'))
+        return redirect(url_for('register.register'))
 
     if password != confirm_password:
         flash("Passwords do not match.", "danger")
-        return redirect(url_for('register'))
+        return redirect(url_for('register.register'))
 
     if not agree_terms:
         flash("You must agree to the Terms of Use and Privacy Policy.", "danger")
-        return redirect(url_for('register'))
+        return redirect(url_for('register.register'))
 
     hashed_password = generate_password_hash(password)
 
@@ -56,7 +58,7 @@ def submit_registration():
 
         if existing_request:
             flash("A pending access request already exists for this email.", "warning")
-            return redirect(url_for('register'))
+            return redirect(url_for('register.register'))
 
         check_user_sql = """
             SELECT id FROM users
@@ -107,7 +109,7 @@ def submit_registration():
 
     except Error as e:
         flash(f"Database error: {e}", "danger")
-        return redirect(url_for('register'))
+        return redirect(url_for('register.register'))
 
     finally:
         if 'cursor' in locals():
