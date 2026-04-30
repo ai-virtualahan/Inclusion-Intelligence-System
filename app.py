@@ -2,11 +2,16 @@ from flask import Flask, render_template, request, redirect
 from config import SECRET_KEY
 from db import get_db_connection
 from assessment_scoring import compute_assessment_scores
+from routes.login import login_bp
+from routes.super_admin_dash import super_admin_bp
+
 
 
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+app.register_blueprint(login_bp)
+app.register_blueprint(super_admin_bp)
 
 
 @app.route('/')

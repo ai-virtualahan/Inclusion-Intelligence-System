@@ -39,13 +39,14 @@
         <h2>Welcome Back!</h2>
         <p class="sub">Sign in to continue to your account</p>
 
-        <form onsubmit="loginUser(event)">
+        <form method="POST" action="{{ url_for('login.login') }}">
           <div class="input-box">
-            <input type="email" placeholder="Email Address">
+            <input type="email" name="email" placeholder="Email Address" required>
+            
           </div>
 
           <div class="input-box">
-            <input type="password" placeholder="Password">
+            <input type="password" name="password" placeholder="Password" required>
           </div>
 
           <div class="row-between">
@@ -77,6 +78,6 @@
       </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/login.js') }}"></script>  
+    <!-- <script src="{{ url_for('static', filename='js/login.js') }}"></script>   -->
   </body>
 </html>

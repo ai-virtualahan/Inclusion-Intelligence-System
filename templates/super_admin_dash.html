@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Super Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ✅ IMPORT CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/super_admin_dash.css') }}">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div><strong>Inclusion Intelligence</strong></div>
+  <div>
+    <a href="#">Dashboard</a>
+    <a href="#">Users</a>
+    <a href="#">Reports</a>
+    <a href="{{ url_for('login.logout') }}">Logout</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Welcome, Super Admin 👋</h1>
+  <p>Manage users, assessments, reports, and system operations.</p>
+</div>
+
+<div class="container">
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="card">
+      <h2>120</h2>
+      <p>Total Organizations</p>
+    </div>
+
+    <div class="card">
+      <h2>15</h2>
+      <p>Pending Approvals</p>
+    </div>
+
+    <div class="card">
+      <h2>340</h2>
+      <p>Assessments Completed</p>
+    </div>
+
+    <div class="card">
+      <h2>89</h2>
+      <p>Active Users</p>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+
+    <div class="action-card">
+      <h3><i class = "fa-solid fa-users"></i>User Management</h3>
+      <p>Manage all users and roles</p>
+    </div>
+
+    <div class="action-card">
+      <h3>Organizations</h3>
+      <p>View and manage organizations</p>
+    </div>
+
+    <div class="action-card">
+      <h3>Assessment Questions</h3>
+      <p>Edit questions and scoring</p>
+    </div>
+
+    <div class="action-card">
+      <h3>Reports & Analytics</h3>
+      <p>View system insights</p>
+    </div>
+
+    <div class="action-card">
+      <h3>Email Logs</h3>
+      <p>Track notifications and emails</p>
+    </div>
+
+    <div class="action-card">
+      <h3>System Settings</h3>
+      <p>Configure platform settings</p>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>
