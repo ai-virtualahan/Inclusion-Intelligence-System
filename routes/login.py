@@ -47,7 +47,7 @@ def login():
 
         # 🔀 ROLE-BASED REDIRECT
         if user['role'] == 'org_admin':
-            return redirect(url_for('organization_dashboard'))
+            return redirect(url_for('assessment'))
 
         elif user['role'] == 'vhan_admin':
             return redirect(url_for('vhan_admin_dashboard'))

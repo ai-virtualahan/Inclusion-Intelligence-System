@@ -74,7 +74,7 @@ CREATE TABLE `assessment_answers` (
   CONSTRAINT `fk_answer_assessment` FOREIGN KEY (`assessment_id`) REFERENCES `assessments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_answer_choice` FOREIGN KEY (`selected_choice_id`) REFERENCES `question_choices` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_answer_question` FOREIGN KEY (`question_id`) REFERENCES `question_bank` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -83,6 +83,7 @@ CREATE TABLE `assessment_answers` (
 
 LOCK TABLES `assessment_answers` WRITE;
 /*!40000 ALTER TABLE `assessment_answers` DISABLE KEYS */;
+INSERT INTO `assessment_answers` VALUES (1,2,1,2,1.00,'2026-04-24 12:08:41'),(2,2,2,6,1.00,'2026-04-24 12:08:41'),(3,2,3,10,1.00,'2026-04-24 12:08:41'),(4,2,4,14,3.00,'2026-04-24 12:08:41'),(5,2,5,18,3.00,'2026-04-24 12:08:41'),(6,2,6,22,3.00,'2026-04-24 12:08:41'),(7,2,7,26,3.00,'2026-04-24 12:08:41'),(8,2,8,30,3.00,'2026-04-24 12:08:41'),(9,2,9,34,3.00,'2026-04-24 12:08:41'),(10,2,10,38,3.00,'2026-04-24 12:08:41'),(11,2,11,42,3.00,'2026-04-24 12:08:41'),(12,2,12,46,3.00,'2026-04-24 12:08:41'),(13,2,13,50,3.00,'2026-04-24 12:08:41'),(14,2,14,54,3.00,'2026-04-24 12:08:41'),(15,2,15,58,3.00,'2026-04-24 12:08:41'),(16,2,16,62,3.00,'2026-04-24 12:08:41'),(17,2,17,66,3.00,'2026-04-24 12:08:41'),(18,2,18,70,3.00,'2026-04-24 12:08:41'),(19,2,19,74,3.00,'2026-04-24 12:08:41'),(20,2,20,78,3.00,'2026-04-24 12:08:41'),(21,2,21,82,3.00,'2026-04-24 12:08:41'),(22,2,22,86,3.00,'2026-04-24 12:08:41'),(23,2,23,90,3.00,'2026-04-24 12:08:41'),(24,2,24,94,3.00,'2026-04-24 12:08:41'),(25,2,25,98,3.00,'2026-04-24 12:08:41'),(26,2,26,102,3.00,'2026-04-24 12:08:41'),(27,2,27,106,3.00,'2026-04-24 12:08:41'),(28,2,28,110,3.00,'2026-04-24 12:08:41'),(29,2,29,114,3.00,'2026-04-24 12:08:41'),(30,2,30,118,3.00,'2026-04-24 12:08:41'),(31,2,31,122,3.00,'2026-04-24 12:08:41'),(32,2,32,126,3.00,'2026-04-24 12:08:41'),(33,2,33,130,3.00,'2026-04-24 12:08:41'),(34,2,34,134,3.00,'2026-04-24 12:08:41'),(35,2,35,138,3.00,'2026-04-24 12:08:41'),(36,2,36,142,3.00,'2026-04-24 12:08:41'),(37,2,37,146,3.00,'2026-04-24 12:08:41'),(38,2,38,150,3.00,'2026-04-24 12:08:41'),(39,2,39,154,3.00,'2026-04-24 12:08:41'),(40,2,40,158,3.00,'2026-04-24 12:08:41'),(41,2,41,162,3.00,'2026-04-24 12:08:41'),(42,2,42,166,3.00,'2026-04-24 12:08:41'),(43,2,43,170,3.00,'2026-04-24 12:08:41'),(44,2,44,174,3.00,'2026-04-24 12:08:41'),(45,2,45,178,3.00,'2026-04-24 12:08:41'),(46,2,46,182,3.00,'2026-04-24 12:08:41'),(47,2,47,186,3.00,'2026-04-24 12:08:41'),(48,2,48,190,3.00,'2026-04-24 12:08:41'),(49,2,49,194,3.00,'2026-04-24 12:08:41'),(50,2,50,198,3.00,'2026-04-24 12:08:41');
 /*!40000 ALTER TABLE `assessment_answers` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -133,7 +134,7 @@ CREATE TABLE `assessments` (
   PRIMARY KEY (`id`),
   KEY `fk_assessment_organization` (`organization_id`),
   CONSTRAINT `fk_assessment_organization` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -142,6 +143,7 @@ CREATE TABLE `assessments` (
 
 LOCK TABLES `assessments` WRITE;
 /*!40000 ALTER TABLE `assessments` DISABLE KEYS */;
+INSERT INTO `assessments` VALUES (2,1,'baseline','submitted',1,75.00,'Advancing','2026-04-24 12:06:59',NULL,NULL);
 /*!40000 ALTER TABLE `assessments` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -194,7 +196,7 @@ CREATE TABLE `dimension_scores` (
   KEY `fk_dimension_score_dimension` (`dimension_id`),
   CONSTRAINT `fk_dimension_score_assessment` FOREIGN KEY (`assessment_id`) REFERENCES `assessments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_dimension_score_dimension` FOREIGN KEY (`dimension_id`) REFERENCES `assessment_dimensions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -203,6 +205,7 @@ CREATE TABLE `dimension_scores` (
 
 LOCK TABLES `dimension_scores` WRITE;
 /*!40000 ALTER TABLE `dimension_scores` DISABLE KEYS */;
+INSERT INTO `dimension_scores` VALUES (1,2,1,75.00,'moderate',30),(2,2,2,75.00,'moderate',30),(3,2,3,75.00,'moderate',30),(4,2,4,75.00,'moderate',30),(5,2,5,75.00,'moderate',30);
 /*!40000 ALTER TABLE `dimension_scores` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -333,7 +336,7 @@ CREATE TABLE `gap_flags` (
   CONSTRAINT `fk_gap_assessment` FOREIGN KEY (`assessment_id`) REFERENCES `assessments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_gap_dimension` FOREIGN KEY (`dimension_id`) REFERENCES `assessment_dimensions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_gap_question` FOREIGN KEY (`question_id`) REFERENCES `question_bank` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -342,6 +345,7 @@ CREATE TABLE `gap_flags` (
 
 LOCK TABLES `gap_flags` WRITE;
 /*!40000 ALTER TABLE `gap_flags` DISABLE KEYS */;
+INSERT INTO `gap_flags` VALUES (1,2,1,1,'critical','How are your job postings designed to attract candidates with disabilities?','2026-04-24 12:45:14'),(2,2,1,2,'critical','How accessible is your job application process to candidates with disabilities?','2026-04-24 12:45:14'),(3,2,1,3,'critical','What measures are in place to prevent disability bias during candidate screening','2026-04-24 12:45:14');
 /*!40000 ALTER TABLE `gap_flags` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -362,7 +366,7 @@ CREATE TABLE `organizations` (
   `approved_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -371,6 +375,7 @@ CREATE TABLE `organizations` (
 
 LOCK TABLES `organizations` WRITE;
 /*!40000 ALTER TABLE `organizations` DISABLE KEYS */;
+INSERT INTO `organizations` VALUES (1,'Mock Company','Information Technology','51-200','approved',NULL,NULL,'2026-04-24 11:41:43');
 /*!40000 ALTER TABLE `organizations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -480,7 +485,7 @@ CREATE TABLE `users` (
   `full_name` varchar(150) NOT NULL,
   `email` varchar(150) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `role` enum('super_admin','org_admin') NOT NULL,
+  `role` enum('org_admin','vhan_admin','super_admin') NOT NULL DEFAULT 'org_admin',
   `status` enum('pending','approved','inactive') NOT NULL DEFAULT 'pending',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `last_login` timestamp NULL DEFAULT NULL,
@@ -492,7 +497,7 @@ CREATE TABLE `users` (
   UNIQUE KEY `email` (`email`),
   KEY `fk_users_organization` (`organization_id`),
   CONSTRAINT `fk_users_organization` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -501,6 +506,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,1,'Mock HR User','mockher@example.com','mocked_hashed_password','org_admin','approved','2026-04-24 12:04:29',NULL,NULL,NULL,NULL,NULL),(2,NULL,'Mock Super Admin','superadmin@example.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','super_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL),(3,NULL,'Mock VHAN Admin','vhanadmin@example.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','vhan_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL),(4,NULL,'Mock HR User','hr@example.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','org_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -513,4 +519,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-23 17:42:20
+-- Dump completed on 2026-04-30 14:38:24
