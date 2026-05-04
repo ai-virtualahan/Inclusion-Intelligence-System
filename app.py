@@ -3,8 +3,8 @@ from config import SECRET_KEY
 from db import get_db_connection
 from assessment_scoring import compute_assessment_scores
 from routes.login import login_bp
-from routes.super_admin_dash import super_admin_bp
-
+from routes.super_dashboard import super_admin_bp
+from routes.vhan_dashboard import vhan_bp
 
 
 
@@ -12,6 +12,7 @@ app = Flask(__name__)
 app.secret_key = SECRET_KEY
 app.register_blueprint(login_bp)
 app.register_blueprint(super_admin_bp)
+app.register_blueprint(vhan_bp)
 
 
 @app.route('/')

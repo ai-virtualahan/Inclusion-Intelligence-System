@@ -27,11 +27,12 @@ CREATE TABLE `access_requests` (
   `company_name` varchar(150) NOT NULL,
   `industry` varchar(100) NOT NULL,
   `company_size` varchar(50) NOT NULL,
+  `company_number` varchar(50) DEFAULT NULL,
   `contact_person` varchar(150) NOT NULL,
+  `position_title` varchar(100) DEFAULT NULL,
+  `contact_number` varchar(50) DEFAULT NULL,
   `work_email` varchar(150) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
-  `position_title` varchar(100) NOT NULL,
-  `contact_number` varchar(50) NOT NULL,
   `notes` text,
   `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
   `reviewed_by` int DEFAULT NULL,
@@ -49,7 +50,7 @@ CREATE TABLE `access_requests` (
 
 LOCK TABLES `access_requests` WRITE;
 /*!40000 ALTER TABLE `access_requests` DISABLE KEYS */;
-INSERT INTO `access_requests` VALUES (1,'Virtualahan Incorporated ','Information Technology','201-500 employees','Jinalie C. Arbuis','intern3@virtualahan.com','','Skills Incubator','09531080123','09531080123','pending',NULL,NULL,NULL,'2026-04-23 06:28:47'),(2,'Jinah Corporation','Manufacturing','51-200 employees','Maria','jinah@testemail.com','scrypt:32768:8:1$xMn09DKAZ7q5RmDm$c061c6dff8ede97f2bbf16392cc3f03ddc3def8cb9b9288ea84fbaa7b1aa43a1d2ffd0fae7f0f8c1bc0af8c61054dc390829e75fab34d6ff59749bb7d48edf1c','Skills Incubator','12345678910','12345678910','pending',NULL,NULL,NULL,'2026-04-23 09:26:57');
+INSERT INTO `access_requests` VALUES (1,'Virtualahan Incorporated ','Information Technology','201-500 employees',NULL,'Jinalie C. Arbuis','Skills Incubator','09531080123','intern3@virtualahan.com','','09531080123','pending',NULL,NULL,NULL,'2026-04-23 06:28:47'),(2,'Jinah Corporation','Manufacturing','51-200 employees',NULL,'Maria','Skills Incubator','12345678910','jinah@testemail.com','scrypt:32768:8:1$xMn09DKAZ7q5RmDm$c061c6dff8ede97f2bbf16392cc3f03ddc3def8cb9b9288ea84fbaa7b1aa43a1d2ffd0fae7f0f8c1bc0af8c61054dc390829e75fab34d6ff59749bb7d48edf1c','12345678910','pending',NULL,NULL,NULL,'2026-04-23 09:26:57');
 /*!40000 ALTER TABLE `access_requests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -358,13 +359,14 @@ DROP TABLE IF EXISTS `organizations`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `organizations` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(150) NOT NULL,
+  `company_name` varchar(150) NOT NULL,
   `industry` varchar(100) NOT NULL,
-  `size` varchar(50) NOT NULL,
+  `company_size` varchar(50) NOT NULL,
   `status` enum('pending','approved','suspended','rejected') NOT NULL DEFAULT 'pending',
   `approved_at` timestamp NULL DEFAULT NULL,
   `approved_by` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `company_number` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -375,7 +377,7 @@ CREATE TABLE `organizations` (
 
 LOCK TABLES `organizations` WRITE;
 /*!40000 ALTER TABLE `organizations` DISABLE KEYS */;
-INSERT INTO `organizations` VALUES (1,'Mock Company','Information Technology','51-200','approved',NULL,NULL,'2026-04-24 11:41:43');
+INSERT INTO `organizations` VALUES (1,'Mock Company','Information Technology','51-200','approved',NULL,NULL,'2026-04-24 11:41:43',NULL);
 /*!40000 ALTER TABLE `organizations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -482,19 +484,19 @@ DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int NOT NULL AUTO_INCREMENT,
   `organization_id` int DEFAULT NULL,
-  `full_name` varchar(150) NOT NULL,
-  `email` varchar(150) NOT NULL,
-  `password` varchar(255) NOT NULL,
+  `contact_person` varchar(150) NOT NULL,
+  `work_email` varchar(150) NOT NULL,
+  `password_hash` varchar(255) DEFAULT NULL,
   `role` enum('org_admin','vhan_admin','super_admin') NOT NULL DEFAULT 'org_admin',
   `status` enum('pending','approved','inactive') NOT NULL DEFAULT 'pending',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `last_login` timestamp NULL DEFAULT NULL,
-  `position` varchar(100) DEFAULT NULL,
+  `position_title` varchar(100) DEFAULT NULL,
   `contact_number` varchar(50) DEFAULT NULL,
   `reset_token` varchar(255) DEFAULT NULL,
   `reset_token_expiry` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `email` (`work_email`),
   KEY `fk_users_organization` (`organization_id`),
   CONSTRAINT `fk_users_organization` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -506,7 +508,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,1,'Mock HR User','mockher@example.com','mocked_hashed_password','org_admin','approved','2026-04-24 12:04:29',NULL,NULL,NULL,NULL,NULL),(2,NULL,'Mock Super Admin','superadmin@example.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','super_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL),(3,NULL,'Mock VHAN Admin','vhanadmin@example.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','vhan_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL),(4,NULL,'Mock HR User','hr@example.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','org_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL);
+INSERT INTO `users` VALUES (1,1,'Mock HR User','mockher@example.com','mocked_hashed_password','org_admin','approved','2026-04-24 12:04:29',NULL,NULL,NULL,NULL,NULL),(2,NULL,'Mock Super Admin','superadmin@example.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','super_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL),(3,NULL,'Mock VHAN Admin','vhanadmin@example.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','vhan_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL),(4,NULL,'Mock HR User','hr@example.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','org_admin','pending','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -519,4 +521,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-30 14:38:24
+-- Dump completed on 2026-05-04 19:25:55

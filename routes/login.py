@@ -17,9 +17,9 @@ def login():
         cursor = conn.cursor(dictionary=True)
 
         cursor.execute("""
-            SELECT id, full_name, email, password, role, status
+            SELECT id, contact_person, work_email, password_hash, role, status
             FROM users
-            WHERE email = %s
+            WHERE work_email = %s
         """, (email,))
 
         user = cursor.fetchone()
@@ -31,7 +31,7 @@ def login():
             flash("Email not found.", "error")
             return redirect(url_for('login.login'))
 
-        if not check_password_hash(user['password'], password):
+        if not check_password_hash(user['password_hash'], password):
             flash("Incorrect password.", "error")
             return redirect(url_for('login.login'))
 
@@ -42,7 +42,7 @@ def login():
 
         # ✅ SESSION
         session['user_id'] = user['id']
-        session['full_name'] = user['full_name']
+        session['contact_person'] = user['contact_person']
         session['role'] = user['role']
 
         # 🔀 ROLE-BASED REDIRECT
@@ -50,10 +50,10 @@ def login():
             return redirect(url_for('assessment'))
 
         elif user['role'] == 'vhan_admin':
-            return redirect(url_for('vhan_admin_dashboard'))
+            return redirect(url_for('vhan.vhan_dashboard'))
 
         elif user['role'] == 'super_admin':
-            return redirect(url_for('super_admin.super_admin_dash'))
+            return redirect(url_for('super_admin.super_dashboard'))
 
     return render_template('login.html')
 

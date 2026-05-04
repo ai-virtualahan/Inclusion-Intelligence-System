@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>VHAN Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/super_admin.css') }}">
+</head>
+<body>
+
+<div class="navbar">
+  <strong>VHAN Admin</strong>
+  <a href="{{ url_for('login.logout') }}">Logout</a>
+</div>
+
+<div class="container">
+  <h2>Pending Approvals</h2>
+
+  <table border="1" cellpadding="10">
+    <tr>
+      <th>Company</th>
+      <th>Industry</th>
+      <th>Company Size</th>
+      <th>Company No.</th>
+      <th>Contact Person</th>
+      <th>Position</th>
+      <th>Contact No.</th>
+      <th>Work Email</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+
+    {% for req in requests %}
+    <tr>
+      <td>{{ req.company_name }}</td>
+      <td>{{ req.industry }}</td>
+      <td>{{ req.company_size }}</td>
+      <td>{{ req.company_number }}</td>
+      <td>{{ req.contact_person }}</td>
+      <td>{{ req.position_title }}</td>
+      <td>{{ req.contact_number }}</td>
+      <td>{{ req.work_email }}</td>
+      <td>{{ req.status }}</td>
+      <td>
+        <a href="{{ url_for('vhan.approve_request', req_id=req.id) }}">Approve</a> |
+        <a href="#">Reject</a>
+      </td>
+    </tr>
+    {% endfor %}
+
+  </table>
+</div>
+
+</body>
+</html>
