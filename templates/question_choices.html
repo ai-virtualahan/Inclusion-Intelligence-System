@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Question Choices</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/super_dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/question_choices.css') }}">
+</head>
+<body>
+
+<div class="navbar">
+  <div><strong>Inclusion Intelligence</strong></div>
+  <div>
+    <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('super_admin.assessment_questions') }}">Questions</a>
+    <a href="{{ url_for('login.logout') }}">Logout</a>
+  </div>
+</div>
+
+<div class="container">
+  <h1>Question Choices</h1>
+
+  <p><strong>Dimension:</strong> {{ question.dimension_name }}</p>
+  <p><strong>Question:</strong> {{ question.question_text }}</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Letter</th>
+        <th>Choice</th>
+        <th>Score</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for choice in choices %}
+      <tr>
+        <td>{{ choice.choice_letter }}</td>
+        <td>{{ choice.choice_text }}</td>
+        <td>{{ choice.choice_score }}</td>
+        <td>
+            <button onclick="openChoiceModal(
+                '{{ choice.id }}',
+                '{{ choice.choice_letter }}',
+                `{{ choice.choice_text }}`,
+                '{{ choice.choice_score }}'
+            )">
+                Edit
+            </button>
+    </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="4">No choices found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<script src="{{ url_for('static', filename='js/question_choices.js') }}"></script>
+
+<div id="editChoiceModal" class="modal">
+
+  <div class="modal-content">
+
+    <span class="close" onclick="closeChoiceModal()">&times;</span>
+
+    <h2>Edit Choice</h2>
+
+    <form id="editChoiceForm" method="POST">
+
+      <label>Choice Letter</label>
+      <input type="text" id="choiceLetter" readonly>
+
+      <label>Choice Text</label>
+      <textarea name="choice_text"
+                id="choiceText"
+                rows="5"></textarea>
+
+      <label>Score</label>
+      <input type="number"
+             step="0.01"
+             name="choice_score"
+             id="choiceScore">
+
+      <button type="submit">
+        Save Changes
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
+
+</body>
+</html>

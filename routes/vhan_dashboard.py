@@ -69,7 +69,7 @@ def approve_request(req_id):
         INSERT INTO users (
             organization_id,
             contact_person,
-            wor_email,
+            work_email,
             password_hash,
             role,
             status,

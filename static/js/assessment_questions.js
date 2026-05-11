@@ -1,0 +1,76 @@
+let currentQuestionId = null;
+
+function openChoicesModal(questionId, questionText) {
+  currentQuestionId = questionId;
+
+  document.getElementById("modalQuestionText").textContent = questionText;
+
+  fetch(`/super-admin/question/${questionId}/choices-data`)
+    .then(response => response.json())
+    .then(data => {
+      const tbody = document.getElementById("choicesTableBody");
+      tbody.innerHTML = "";
+
+      data.choices.forEach(choice => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${choice.choice_letter}</td>
+            <td>${choice.choice_text}</td>
+            <td>${choice.choice_score}</td>
+            <td>
+              <button type="button"
+                onclick="openEditChoiceForm(
+                  ${choice.id},
+                  '${choice.choice_letter}',
+                  \`${choice.choice_text}\`,
+                  ${choice.choice_score}
+                )">
+                Edit
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      document.getElementById("choicesModal").style.display = "flex";
+    });
+}
+
+function closeChoicesModal() {
+  document.getElementById("choicesModal").style.display = "none";
+}
+
+function openEditChoiceForm(choiceId, letter, text, score) {
+  const form = document.getElementById("editChoiceForm");
+
+  form.style.display = "block";
+  form.action = `/super-admin/choice/${choiceId}/edit`;
+
+  document.getElementById("editChoiceLetter").value = letter;
+  document.getElementById("editChoiceText").value = text;
+  document.getElementById("editChoiceScore").value = score;
+  document.getElementById("editQuestionId").value = currentQuestionId;
+}
+
+document.getElementById("editChoiceForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const form = this;
+  const formData = new FormData(form);
+
+  fetch(form.action, {
+    method: "POST",
+    body: formData
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        form.style.display = "none";
+
+        openChoicesModal(
+          data.question_id,
+          document.getElementById("modalQuestionText").textContent
+        );
+      }
+    });
+});

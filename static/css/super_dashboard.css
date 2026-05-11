@@ -77,3 +77,32 @@ body {
   box-shadow: 0 12px 25px rgba(0,0,0,0.12);
   border-left: 5px solid #19c7c3;
 }
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  width: 420px;
+  max-width: 90%;
+  padding: 28px;
+  border-radius: 18px;
+  position: relative;
+}
+
+.close {
+  position: absolute;
+  right: 20px;
+  top: 14px;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Organizations | Super Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/super_dashboard.css') }}">
+</head>
+<body>
+
+<div class="navbar">
+  <div><strong>Inclusion Intelligence</strong></div>
+  <div>
+    <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
+    <a href="#">Users</a>
+    <a href="#">Reports</a>
+    <a href="{{ url_for('login.logout') }}">Logout</a>
+  </div>
+</div>
+
+<div class="container">
+  <h1>Organizations</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Organization Name</th>
+        <th>Industry</th>
+        <th>Size</th>
+        <th>Company Number</th>
+        <th>Contact Person</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th>Approved At</th>
+        <th>Approved By</th> 
+        <th>Action</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for org in organizations %}
+      <tr>
+        <td>{{ org.id }}</td>
+        <td>{{ org.company_name }}</td>
+        <td>{{ org.industry }}</td>
+        <td>{{ org.company_size }}</td>
+        <td>{{ org.company_number }}</td>
+        <td>
+          <button class="contact-link"
+              onclick="openContactModal(
+                '{{ org.contact_person }}',
+                '{{ org.work_email }}',
+                '{{ org.contact_number }}',
+                '{{ org.position_title }}',
+                '{{ org.status }}'
+              )">
+            {{ org.contact_person }}
+          </button>
+        </td>
+        <td>{{ org.status }}</td>
+        <td>{{ org.created_at }}</td>
+        <td>{{ org.approved_at }}</td>
+        <td>{{ org.approved_by }}</td>
+        <td>
+          <a href="#">Edit</a>
+
+          <form action="{{ url_for('super_admin.delete_organization', org_id=org.id) }}" method="POST" style="display:inline;">
+            <button type="submit" onclick="return confirm('Delete this organization?')">
+              Delete
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="6">No organizations found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="contactModal" class="modal">
+  <div class="modal-content">
+
+    <span class="close" onclick="closeContactModal()">&times;</span>
+
+    <h2>Contact Person Details</h2>
+
+    <p><strong>Name:</strong> <span id="modalName"></span></p>
+
+    <p><strong>Email:</strong> <span id="modalEmail"></span></p>
+
+    <p><strong>Contact Number:</strong> <span id="modalNumber"></span></p>
+
+    <p><strong>Position:</strong> <span id="modalPosition"></span></p>
+
+    <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/super_organizations.js') }}"></script>
+</body>
+</html>

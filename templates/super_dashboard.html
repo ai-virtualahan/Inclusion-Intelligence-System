@@ -33,22 +33,22 @@
   <!-- STATS -->
   <div class="stats">
     <div class="card">
-      <h2>120</h2>
+      <h2>{{ total_organizations }}</h2>
       <p>Total Organizations</p>
     </div>
 
     <div class="card">
-      <h2>15</h2>
+      <h2>{{ pending_approvals }}</h2>
       <p>Pending Approvals</p>
     </div>
 
     <div class="card">
-      <h2>340</h2>
+      <h2>{{ assessment_completed }}</h2>
       <p>Assessments Completed</p>
     </div>
 
     <div class="card">
-      <h2>89</h2>
+      <h2>{{ active_users }}</h2>
       <p>Active Users</p>
     </div>
   </div>
@@ -62,13 +62,17 @@
     </div>
 
     <div class="action-card">
-      <h3>Organizations</h3>
-      <p>View and manage organizations</p>
+      <a href="{{ url_for('super_admin.organizations') }}" class="action-card">  
+        <h3>Organizations</h3>
+        <p>View and manage organizations</p>
+      </a>
     </div>
 
     <div class="action-card">
-      <h3>Assessment Questions</h3>
-      <p>Edit questions and scoring</p>
+      <a href="{{url_for('super_admin.assessment_questions') }}" class="action-card">
+        <h3>Assessment Questions</h3>
+        <p>Edit questions and scoring</p>
+      </a>
     </div>
 
     <div class="action-card">
