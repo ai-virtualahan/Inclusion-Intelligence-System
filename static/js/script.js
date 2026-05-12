@@ -535,7 +535,7 @@ If unsure, choose closest to reality (not aspiration).
 /* -----------------------------
    STATE
 ------------------------------ */
-
+let userAnswers = {};
 let currentExam = "";
 let questionIndex = 0;
 let score = 0;
@@ -551,12 +551,36 @@ let results = {
    PAGE SYSTEM
 ------------------------------ */
 function showPage(id){
-    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+
+    // hide all pages
+    document.querySelectorAll(".page").forEach(p => 
+        p.classList.remove("active")
+    );
+
+    // show selected page
     document.getElementById(id).classList.add("active");
 
-    // 🔥 refresh dashboard whenever user goes there
+    // remove active sidebar state
+    document.getElementById("dashboardBtn")
+        .classList.remove("active-sidebar");
+
+    document.getElementById("diagnosticBtn")
+        .classList.remove("active-sidebar");
+
+    // activate correct sidebar button
     if (id === "dashboard") {
+        document.getElementById("dashboardBtn")
+            .classList.add("active-sidebar");
+
         renderDashboard();
+    }
+
+    if (
+        id === "diagnostic" ||
+        id === "examSelect"
+    ) {
+        document.getElementById("diagnosticBtn")
+            .classList.add("active-sidebar");
     }
 }
 
@@ -567,6 +591,11 @@ function startExam(type){
     currentExam = type;
     questionIndex = 0;
     score = 0;
+
+    if (!userAnswers[currentExam]) {
+        userAnswers[currentExam] = new Array(exams[currentExam].questions.length).fill(null);
+    }
+
     showPage("diagnostic");
     loadQuestion();
 }
@@ -581,11 +610,43 @@ function loadQuestion(){
     document.getElementById("questionBox").innerHTML = `
         <h3>${exam.title}</h3>
         <p>${exam.instructions}</p>
+
         <h4>${q.q}</h4>
-        ${q.options.map(o => `
-            <button onclick="answer(${o.score})">${o.text}</button>
-        `).join("")}
+        
+${q.options.map((o, i) => {
+
+    const selected =
+        userAnswers[currentExam] &&
+        userAnswers[currentExam][questionIndex] === o.score
+            ? "selected"
+            : "";
+
+    return `
+        <button 
+            class="answer-btn ${selected}"
+            id="q${questionIndex}_opt${i}"
+            onclick="selectAnswer(${o.score}, ${i})"
+        >
+            ${o.text}
+        </button>
+    `;
+}).join("")}
+
         <p>Question ${questionIndex + 1} of ${exam.questions.length}</p>
+
+       <div class="nav-buttons ${questionIndex === 0 ? 'single-next' : ''}">
+
+    ${questionIndex > 0 ? `
+        <button onclick="prevQuestion()">
+            Back
+        </button>
+    ` : ""}
+
+    <button onclick="nextOrSubmit()">
+        ${questionIndex === exam.questions.length - 1 ? "Submit" : "Next"}
+    </button>
+
+</div>
     `;
 }
 
@@ -602,21 +663,83 @@ function answer(val){
     }
 }
 
+function selectAnswer(scoreValue, optionIndex) {
+    // ensure storage exists
+    if (!userAnswers[currentExam]) {
+        userAnswers[currentExam] = new Array(exams[currentExam].questions.length).fill(null);
+    }
+
+    // store answer
+    userAnswers[currentExam][questionIndex] = scoreValue;
+
+    // remove previous highlights
+    const options = exams[currentExam].questions[questionIndex].options;
+
+    for (let i = 0; i < options.length; i++) {
+        const btn = document.getElementById(`q${questionIndex}_opt${i}`);
+        if (btn) {
+            btn.classList.remove("selected");
+        }
+    }
+
+    // add highlight to selected
+    const selectedBtn = document.getElementById(`q${questionIndex}_opt${optionIndex}`);
+    if (selectedBtn) {
+        selectedBtn.classList.add("selected");
+    }
+}
+
+function nextOrSubmit(){
+    const exam = exams[currentExam];
+
+    if (questionIndex < exam.questions.length - 1) {
+        questionIndex++;
+        loadQuestion();
+    } else {
+        finishExamFromAnswers();
+    }
+}
+
+function prevQuestion(){
+    if (questionIndex > 0) {
+        questionIndex--;
+        loadQuestion();
+    }
+}
+
+function showProgressSaved(){
+    document.getElementById("progressModal").style.display = "flex";
+}
+
+function goToExamSelect(){
+    document.getElementById("progressModal").style.display = "none";
+    showPage("examSelect");
+}
+
 /* -----------------------------
    FINISH (NO BACKEND, JUST CALCULATION)
 ------------------------------ */
-function finishExam(){
-    const total = exams[currentExam].questions.length;
-    const finalScore = (score / (total * 4)) * 100;
+function finishExamFromAnswers(){
+    const answers = userAnswers[currentExam];
+    const exam = exams[currentExam];
 
-    // SAVE SCORE PER DIMENSION
+    let total = 0;
+    let count = 0;
+
+    answers.forEach(val => {
+        if (val !== null) {
+            total += val;
+            count++;
+        }
+    });
+
+    const finalScore = (total / (exam.questions.length * 4)) * 100;
+
     results[currentExam] = finalScore;
 
-    // OPTIONAL: clear question state (safe reset)
     questionIndex = 0;
     score = 0;
 
-    // GO DIRECTLY TO DASHBOARD
     showPage("dashboard");
 }
 
