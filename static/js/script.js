@@ -535,9 +535,17 @@ If unsure, choose closest to reality (not aspiration).
 /* -----------------------------
    STATE
 ------------------------------ */
+
 let currentExam = "";
 let questionIndex = 0;
 let score = 0;
+let results = {
+    Hiring: null,
+    Onboarding: null,
+    Accommodation: null,
+    Retention: null,
+    Culture: null
+};
 
 /* -----------------------------
    PAGE SYSTEM
@@ -545,6 +553,11 @@ let score = 0;
 function showPage(id){
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
     document.getElementById(id).classList.add("active");
+
+    // 🔥 refresh dashboard whenever user goes there
+    if (id === "dashboard") {
+        renderDashboard();
+    }
 }
 
 /* -----------------------------
@@ -590,28 +603,59 @@ function answer(val){
 }
 
 /* -----------------------------
-   FINISH (NO BACKEND)
+   FINISH (NO BACKEND, JUST CALCULATION)
 ------------------------------ */
 function finishExam(){
     const total = exams[currentExam].questions.length;
     const finalScore = (score / (total * 4)) * 100;
 
-    document.getElementById("resultBox").innerHTML = `
-        <h2>${currentExam} Result</h2>
-        <h1>${finalScore.toFixed(2)}</h1>
-        <p>
-            ${
-                finalScore >= 80 ? "Exemplar" :
-                finalScore >= 60 ? "Leading" :
-                finalScore >= 40 ? "Advancing" :
-                finalScore >= 20 ? "Developing" :
-                "Emerging"
-            }
-        </p>
-        <button onclick="showPage('dashboard')">Back</button>
-    `;
+    // SAVE SCORE PER DIMENSION
+    results[currentExam] = finalScore;
 
-    showPage("results");
+    // OPTIONAL: clear question state (safe reset)
+    questionIndex = 0;
+    score = 0;
+
+    // GO DIRECTLY TO DASHBOARD
+    showPage("dashboard");
+}
+
+/* -----------------------------
+   DASHBOARD RENDER
+------------------------------ */
+function renderDashboard(){
+    const box = document.getElementById("dashboardBox");
+
+    box.innerHTML = `
+        <div class="dashboard-grid">
+
+            <div class="dash-card">
+                <h3>Hiring</h3>
+                <p>${results.Hiring !== null ? results.Hiring.toFixed(2) + "%" : "Not Taken"}</p>
+            </div>
+
+            <div class="dash-card">
+                <h3>Onboarding</h3>
+                <p>${results.Onboarding !== null ? results.Onboarding.toFixed(2) + "%" : "Not Taken"}</p>
+            </div>
+
+            <div class="dash-card">
+                <h3>Accommodation</h3>
+                <p>${results.Accommodation !== null ? results.Accommodation.toFixed(2) + "%" : "Not Taken"}</p>
+            </div>
+
+            <div class="dash-card">
+                <h3>Retention</h3>
+                <p>${results.Retention !== null ? results.Retention.toFixed(2) + "%" : "Not Taken"}</p>
+            </div>
+
+            <div class="dash-card">
+                <h3>Culture</h3>
+                <p>${results.Culture !== null ? results.Culture.toFixed(2) + "%" : "Not Taken"}</p>
+            </div>
+
+        </div>
+    `;
 }
 
 /* -----------------------------
