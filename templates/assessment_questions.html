@@ -8,15 +8,15 @@
         href="{{ url_for('static', filename='css/super_dashboard.css') }}">
 
   <link rel="stylesheet"
-        href="{{ url_for('static', filename='css/question_choices.css') }}">
+        href="{{ url_for('static', filename='css/assessment_questions.css') }}">
 </head>
 
 <body>
 
-<div class="navbar">
-  <div><strong>Inclusion Intelligence</strong></div>
+<div class="top-navbar">
+  <div class="brand">Inclusion Intelligence</div>
 
-  <div>
+  <div class="top-links">
     <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
     <a href="#">Users</a>
     <a href="#">Reports</a>
@@ -24,67 +24,92 @@
   </div>
 </div>
 
-<div class="container">
+<div class="admin-layout">
 
-  <h1>Assessment Questions</h1>
-    <form method="GET" action="{{ url_for('super_admin.assessment_questions') }}">
-        <label for="dimension_id"><strong>Filter by Dimension:</strong></label>
+  <aside class="sidebar">
+    <h3>Super Admin</h3>
 
-        <select name="dimension_id" id="dimension_id" onchange="this.form.submit()">
+    <a href="{{ url_for('super_admin.super_dashboard') }}" class="side-link">
+      Dashboard Overview
+    </a>
+
+    <a href="{{ url_for('super_admin.organizations') }}" class="side-link">
+      Organizations
+    </a>
+
+    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link active">
+      Assessment Questions
+    </a>
+
+    <a href="#" class="side-link">Users</a>
+    <a href="#" class="side-link">Reports</a>
+    <a href="#" class="side-link">Email Logs</a>
+    <a href="#" class="side-link">System Settings</a>
+  </aside>
+
+  <main class="main-content">
+
+    <section class="page-header">
+      <h1>Assessment Questions</h1>
+      <p>Manage assessment questions, answer choices, and scoring.</p>
+    </section>
+
+    <section class="dashboard-panel">
+
+      <div class="panel-header">
+        <h1>Assessment Questions</h1>
+
+        <form method="GET" action="{{ url_for('super_admin.assessment_questions') }}">
+          <label for="dimension_id"><strong>Filter by Dimension:</strong></label>
+
+          <select name="dimension_id" id="dimension_id" onchange="this.form.submit()">
             <option value="">All Dimensions</option>
 
             {% for dim in dimensions %}
-                <option value="{{ dim.id }}"
-                    {% if selected_dimension == dim.id|string %}selected{% endif %}>
-                    {{ dim.name }}
-                </option>
+              <option value="{{ dim.id }}"
+                {% if selected_dimension == dim.id|string %}selected{% endif %}>
+                {{ dim.name }}
+              </option>
             {% endfor %}
-        </select>
-    </form>
-  <table>
+          </select>
+        </form>
+      </div>
 
-    <thead>
-      <tr>
-        <th>Dimension</th>
-        <th>Question</th>
-        <th>Action</th>
-      </tr>
-    </thead>
+      <div class="questions-table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Dimension</th>
+              <th>Question</th>
+              <th>Action</th>
+            </tr>
+          </thead>
 
-    <tbody>
+          <tbody>
+            {% for q in questions %}
+            <tr>
+              <td>{{ q.dimension_name }}</td>
+              <td>{{ q.question_text }}</td>
 
-      {% for q in questions %}
+              <td>
+                <button type="button"
+                  data-question-id="{{ q.id }}"
+                  onclick="openChoicesModal('{{ q.id }}', `{{ q.question_text }}`)">
+                  View Choices
+                </button>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="3">No questions found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
 
-      <tr>
-
-        <td>{{ q.dimension_name }}</td>
-
-        <td>{{ q.question_text }}</td>
-
-        <td>
-          <button type="button"
-            data-question_id="{{ q.id }}"
-            onclick="openChoicesModal('{{ q.id }}', `{{ q.question_text }}`)">
-          View Choices
-          </button> 
-          <a href="#">Edit</a>
-          
-        </td>
-
-      </tr>
-
-      {% else %}
-
-      <tr>
-        <td colspan="6">No questions found.</td>
-      </tr>
-
-      {% endfor %}
-
-    </tbody>
-
-  </table>
-
+    </section>
+  </main>
 </div>
 
 <div id="choicesModal" class="modal">
@@ -92,7 +117,23 @@
     <span class="close" onclick="closeChoicesModal()">&times;</span>
 
     <h2>Question Choices</h2>
-    <p><strong>Question:</strong> <span id="modalQuestionText"></span></p>
+    
+    <div class="question-header">
+
+      <label><strong>Question</strong></label>
+
+      <button type="button"
+              id="editQuestionBtn"
+              onclick="toggleQuestionEdit()">
+        Edit Question
+      </button>
+
+    </div>
+
+    <textarea id="modalQuestionText"
+              rows="4"
+              class="question-textarea"
+              readonly></textarea>
 
     <table>
       <thead>
@@ -128,6 +169,8 @@
 
   </div>
 </div>
+
+
 <input type="hidden" id="openQuestionId" value="{{ request.args.get('open_question_id', '') }}">
 <script src="{{ url_for('static', filename='js/assessment_questions.js') }}"></script>
 </body>

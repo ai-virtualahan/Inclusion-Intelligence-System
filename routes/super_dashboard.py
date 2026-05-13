@@ -284,3 +284,25 @@ def question_choices_data(question_id):
     conn.close()
 
     return {"choices": choices}
+
+@super_admin_bp.route('/super-admin/question/<int:question_id>/edit', methods=['POST'])
+def edit_question(question_id):
+    if session.get('role') != 'super_admin':
+        return {"error": "Unauthorized"}, 403
+
+    question_text = request.form['question_text']
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE question_bank
+        SET question_text = %s
+        WHERE id = %s
+    """, (question_text, question_id))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return {"success": True, "question_id": question_id, "question_text": question_text}

@@ -74,3 +74,34 @@ document.getElementById("editChoiceForm").addEventListener("submit", function (e
       }
     });
 });
+
+
+
+function toggleQuestionEdit() {
+  const textarea = document.getElementById("modalQuestionText");
+  const button = document.getElementById("editQuestionBtn");
+
+  if (textarea.hasAttribute("readonly")) {
+    textarea.removeAttribute("readonly");
+    textarea.focus();
+    button.textContent = "Save Question";
+  } else {
+    const formData = new FormData();
+    formData.append("question_text", textarea.value);
+
+    fetch(`/super-admin/question/${currentQuestionId}/edit`, {
+      method: "POST",
+      body: formData
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          textarea.setAttribute("readonly", true);
+          button.textContent = "Edit Question";
+
+          // update visible question title inside modal
+          textarea.value = data.question_text;
+        }
+      });
+  }
+}

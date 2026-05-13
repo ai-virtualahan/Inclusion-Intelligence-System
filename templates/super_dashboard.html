@@ -5,92 +5,91 @@
   <title>Super Admin Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- ✅ IMPORT CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/super_dashboard.css') }}">
 </head>
 
 <body>
 
-<!-- NAVBAR -->
-<div class="navbar">
-  <div><strong>Inclusion Intelligence</strong></div>
-  <div>
-    <a href="#">Dashboard</a>
+<div class="top-navbar">
+  <div class="brand">Inclusion Intelligence</div>
+
+  <div class="top-links">
+    <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
     <a href="#">Users</a>
     <a href="#">Reports</a>
     <a href="{{ url_for('login.logout') }}">Logout</a>
   </div>
 </div>
 
-<!-- HERO -->
-<div class="hero">
-  <h1>Welcome, Super Admin 👋</h1>
-  <p>Manage users, assessments, reports, and system operations.</p>
-</div>
+<div class="admin-layout">
 
-<div class="container">
+  <aside class="sidebar">
+    <h3>Super Admin</h3>
 
-  <!-- STATS -->
-  <div class="stats">
-    <div class="card">
-      <h2>{{ total_organizations }}</h2>
-      <p>Total Organizations</p>
-    </div>
+    <a href="{{ url_for('super_admin.super_dashboard') }}" class="side-link active">
+      Dashboard Overview
+    </a>
 
-    <div class="card">
-      <h2>{{ pending_approvals }}</h2>
-      <p>Pending Approvals</p>
-    </div>
+    <a href="{{ url_for('super_admin.organizations') }}" class="side-link">
+      Organizations
+    </a>
 
-    <div class="card">
-      <h2>{{ assessment_completed }}</h2>
-      <p>Assessments Completed</p>
-    </div>
+    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">
+      Assessment Questions
+    </a>
 
-    <div class="card">
-      <h2>{{ active_users }}</h2>
-      <p>Active Users</p>
-    </div>
-  </div>
+    <a href="#" class="side-link">
+      Users
+    </a>
 
-  <!-- ACTIONS -->
-  <div class="actions">
+    <a href="#" class="side-link">
+      Reports
+    </a>
 
-    <div class="action-card">
-      <h3><i class = "fa-solid fa-users"></i>User Management</h3>
-      <p>Manage all users and roles</p>
-    </div>
+    <a href="#" class="side-link">
+      Email Logs
+    </a>
 
-    <div class="action-card">
-      <a href="{{ url_for('super_admin.organizations') }}" class="action-card">  
-        <h3>Organizations</h3>
-        <p>View and manage organizations</p>
-      </a>
-    </div>
+    <a href="#" class="side-link">
+      System Settings
+    </a>
+  </aside>
 
-    <div class="action-card">
-      <a href="{{url_for('super_admin.assessment_questions') }}" class="action-card">
-        <h3>Assessment Questions</h3>
-        <p>Edit questions and scoring</p>
-      </a>
-    </div>
+  <main class="main-content">
 
-    <div class="action-card">
-      <h3>Reports & Analytics</h3>
-      <p>View system insights</p>
-    </div>
+    <section class="page-header">
+      <h1>Welcome, Super Admin 👋</h1>
+      <p>Manage users, assessments, reports, and system operations.</p>
+    </section>
 
-    <div class="action-card">
-      <h3>Email Logs</h3>
-      <p>Track notifications and emails</p>
-    </div>
+    <section class="stats">
+      <div class="card">
+        <h2>{{ total_organizations }}</h2>
+        <p>Total Organizations</p>
+      </div>
 
-    <div class="action-card">
-      <h3>System Settings</h3>
-      <p>Configure platform settings</p>
-    </div>
+      <div class="card">
+        <h2>{{ pending_approvals }}</h2>
+        <p>Pending Approvals</p>
+      </div>
 
-  </div>
+      <div class="card">
+        <h2>{{ assessments_completed }}</h2>
+        <p>Assessments Completed</p>
+      </div>
+
+      <div class="card">
+        <h2>{{ active_users }}</h2>
+        <p>Active Users</p>
+      </div>
+    </section>
+
+    <section class="dashboard-panel">
+      <h2>Admin Workspace</h2>
+      <p>Select a module from the sidebar to manage platform data.</p>
+    </section>
+
+  </main>
 
 </div>
 
