@@ -17,8 +17,15 @@
     <div class="sidebar">
         <h3>Inclusion Intelligence System</h3>
 
-        <button onclick="showPage('dashboard')">Inclusion Maturity Dashboard</button>
-        <button onclick="showPage('diagnostic')">Inclusion Diagnostic Engine</button>
+       <button id="dashboardBtn"
+        onclick="showPage('dashboard')">
+    Inclusion Maturity Dashboard
+</button>
+
+<button id="diagnosticBtn"
+        onclick="showPage('diagnostic')">
+    Inclusion Diagnostic Engine
+</button>
     </div>
 
     <!-- CONTENT -->
@@ -29,6 +36,9 @@
             <div class="card">
                 <h2>Inclusion Maturity Dashboard</h2>
                 <p>Track your organization's Inclusion Maturity Level.</p>
+            
+            <div id="dashboardBox"></div>
+            
             </div>
         </div>
 
@@ -73,6 +83,23 @@
         </div>
 
     </div>
+</div>
+
+<div id="progressModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+background:rgba(0,0,0,0.6); justify-content:center; align-items:center;">
+
+  <div style="background:white; padding:25px; border-radius:16px; text-align:center; width:300px;">
+    
+    <h2 style="color:#0E2240;">Progress Saved</h2>
+    <p style="color:#0E2240;">Your assessment has been recorded.</p>
+
+    <button onclick="goToExamSelect()" 
+        style="background:#00B8A0; color:white; border:none; padding:12px 18px; border-radius:10px; cursor:pointer;">
+        Choose Assessment Type
+    </button>
+
+  </div>
+
 </div>
 
 <!-- ✅ FIXED JS PATH (VERY IMPORTANT) -->
