@@ -23,7 +23,8 @@
 </button>
 
 <button id="diagnosticBtn"
-        onclick="showPage('diagnostic')">
+        onclick="openDiagnostic()"
+    >
     Inclusion Diagnostic Engine
 </button>
     </div>
@@ -43,32 +44,29 @@
         </div>
 
         <!-- DIAGNOSTIC ENGINE -->
-        <div id="diagnostic" class="page">
-            <div class="card">
-                <h2>Inclusion Diagnostic Engine</h2>
+<div id="diagnostic" class="page">
+    <div class="card">
+        <h2>Inclusion Diagnostic Engine</h2>
 
-                <div id="questionBox"></div>
+        <!-- GROUP START -->
+        <div id="examMenuWrapper">
 
-                <button class="primary" onclick="showPage('examSelect')">
-                    Choose Assessment Type
-                </button>
+            <p>Please select an assessment type.</p>
+
+            <div class="exam-grid" id="examMenu">
+                <div class="exam" onclick="startExam('Hiring')">Hiring</div>
+                <div class="exam" onclick="startExam('Onboarding')">Onboarding</div>
+                <div class="exam" onclick="startExam('Accommodation')">Accommodation</div>
+                <div class="exam" onclick="startExam('Retention')">Retention</div>
+                <div class="exam" onclick="startExam('Culture')">Culture</div>
             </div>
-        </div>
 
-        <!-- EXAM SELECT -->
-        <div id="examSelect" class="page">
-            <div class="card">
-                <h2>Select Assessment Type</h2>
-
-                <div class="exam-grid">
-                    <div class="exam" onclick="startExam('Hiring')">Hiring</div>
-                    <div class="exam" onclick="startExam('Onboarding')">Onboarding</div>
-                    <div class="exam" onclick="startExam('Accommodation')">Accommodation</div>
-                    <div class="exam" onclick="startExam('Retention')">Retention</div>
-                    <div class="exam" onclick="startExam('Culture')">Culture</div>
-                </div>
-            </div>
         </div>
+        <!-- GROUP END -->
+
+        <div id="questionBox"></div>
+    </div>
+</div>
 
 
         <!-- RESULT PAGE (IMPORTANT - YOU WERE MISSING THIS LOGIC TARGET) -->
