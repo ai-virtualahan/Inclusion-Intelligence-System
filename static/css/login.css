@@ -165,20 +165,12 @@
       margin-top: 0;
     }
 
-    /* .tagline {
+    .left section::before {
+      content: "";
       position: absolute;
-      bottom: 140px;
-      left:80px;
-      transform: translateY(-90%);
-      overflow: hidden;
-
-      max-width: 100%;
-      font-size: 28px;
-      font-weight: 700;
-      color: #0b7f86;
-      line-height: 1.6;
-      white-space: nowrap;
-    } */
+      inset: 0;
+      background: rgba((5), 20, 45, 0.35);
+    }
 
     .tagline {
       position: absolute;
@@ -188,22 +180,27 @@
       left: 40px;
       transform: translateY(-60%);
 
-      width: 80%;
+      width: 72%;
 
       font-size: 26px;
       font-weight: 500;
-      color: rgba(255, 255, 255, 0.9);
-      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.95);
+      line-height: 1.45;
 
       background: linear-gradient(
         to right,
-        rgba(0, 0, 0, 0.45),
-        rgba(0, 0, 0, 0.25),
+        rgba(5, 15, 35, 0.55),
+        rgba(5, 15, 35, 0.32),
+        rgba(5, 15, 35, 0.12),
         transparent
       );
-      padding: 14px 18px;
-      border-radius: 12px;
+      padding: 12px 18px;
+      border-radius: 16px;
       
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+
+      border: 1px solid rgba(255, 255, 255, 0.8);
     }
 
     .highlight {
@@ -231,10 +228,20 @@
       font-size: 38px;
       font-weight: 900;
       color: #ffffff;
+      letter-spacing: 0.5px;
 
       text-shadow:
         0 4px 10px rgba(0,0,0,0.6),
         0 0 18px rgba(111, 228, 216, 0.6);
+    }
+
+    .highlight,
+    .diversity,
+    .equity,
+    .inclusion {
+      text-shadow: 
+        0 2px 5px rgba(0, 0, 0, 0.65),
+        0 6px 14px rgba(0, 0, 0, 0.45);
     }
 
     .card {
@@ -330,10 +337,13 @@
     .btn {
       width: 100%;
       height: 54px;
+      margin-bottom: 20px;
+
       border: none;
       border-radius: 12px;
       /* background: linear-gradient(90deg, #0b1f3a, #159e9a); */
       background: linear-gradient(to right, #0B2A4A, #00d4a1);
+
       color: white;
       font-size: 18px;
       font-weight: bold;
@@ -346,48 +356,7 @@
       opacity: 0.96;
     }
 
-    .divider {
-      text-align: center;
-      margin: 18px 0;
-      color: #8b95a1;
-      position: relative;
-      font-size: 15px;
-    }
-
-    .divider:before,
-    .divider:after {
-      content: "";
-      position: absolute;
-      top: 50%;
-      width: 39%;
-      height: 1px;
-      background: #d7dee4;
-    }
-
-    .divider:before {
-      left: 0;
-    }
-
-    .divider:after {
-      right: 0;
-    }
-
-    .google-btn {
-      width: 100%;
-      height: 52px;
-      border: 2px solid #bfe9e6;
-      border-radius: 12px;
-      background: white;
-      color: #1f2937;
-      font-size: 17px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .google-btn:hover {
-      border-color: #159e9a;
-      background: #f7ffff;
-    }
+    
 
     .bottom-text {
       text-align: center;
@@ -484,3 +453,64 @@
         font-size: 14px;
       }
     }
+
+    .modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 31, 58, 0.55);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-box {
+  width: 420px;
+  max-width: 90%;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+  position: relative;
+}
+
+.modal-box h2 {
+  margin-bottom: 8px;
+  color: #0b1f3a;
+}
+
+.modal-box p {
+  margin-bottom: 18px;
+  color: #52616f;
+}
+
+.modal-box input {
+  width: 100%;
+  height: 48px;
+  border: 1px solid #d7dee4;
+  border-radius: 12px;
+  padding: 0 14px;
+  margin-bottom: 14px;
+}
+
+.modal-box button[type="submit"] {
+  width: 100%;
+  height: 48px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(to right, #0B2A4A, #00d4a1);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  border: none;
+  background: none;
+  font-size: 26px;
+  cursor: pointer;
+  color: #334155;
+}

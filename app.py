@@ -1,18 +1,32 @@
 from flask import Flask, render_template, request, redirect
-from config import SECRET_KEY
+from config import *
 from db import get_db_connection
 from assessment_scoring import compute_assessment_scores
+
 from routes.login import login_bp
 from routes.super_dashboard import super_admin_bp
 from routes.vhan_dashboard import vhan_bp
 
+from extensions import mail
 
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+
+# Blueprints
 app.register_blueprint(login_bp)
 app.register_blueprint(super_admin_bp)
 app.register_blueprint(vhan_bp)
+
+# Mail Config
+app.config['MAIL_SERVER'] = MAIL_SERVER
+app.config['MAIL_PORT'] = MAIL_PORT
+app.config['MAIL_USE_TLS'] = MAIL_USE_TLS
+app.config['MAIL_USERNAME'] = MAIL_USERNAME
+app.config['MAIL_PASSWORD'] = MAIL_PASSWORD
+
+# Initialize Mail
+mail.init_app(app)
 
 
 @app.route('/')

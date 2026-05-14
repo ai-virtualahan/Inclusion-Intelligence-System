@@ -1,23 +1,9 @@
-function loginUser(e) {
-      e.preventDefault();
+function openForgotModal(event) {
+  event.preventDefault();
 
-      console.log("login function triggered");
+  document.getElementById("forgotModal").style.display = "flex";
+}
 
-      // kuhaon ang values (optional for now)
-      let email = document.querySelector('input[type="email"]').value;
-      let password = document.querySelector('input[type="password"]').value;
-
-      // simple validation (optional)
-      if (email === "" || password === "") {
-        alert("Please fill in all fields");
-        return;
-      }
-
-      // SET LOGIN STATE
-      localStorage.setItem("loggedIn", "true");
-
-      // alert("Login successful!");
-
-      // redirect to home page
-      window.location.href = "/assessment";
-    }
+function closeForgotModal() {
+  document.getElementById("forgotModal").style.display = "none";
+}
