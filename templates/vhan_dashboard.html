@@ -1,53 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>VHAN Dashboard</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/super_admin.css') }}">
+  <meta charset="UTF-8">
+  <title>VHAN Admin Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/vhan_dashboard.css') }}">
 </head>
 <body>
+<!-- TOP NAVBAR -->
+<div class="top-navbar">
+    <div class="logo-section">
+        <h2>Inclusion Intelligence</h2>
+    </div>
 
-<div class="navbar">
-  <strong>VHAN Admin</strong>
-  <a href="{{ url_for('login.logout') }}">Logout</a>
+    <div class="top-nav-links">
+        <a href="#">Dashboard</a>
+        <a href="#">Organizations</a>
+        <a href="#">Reports</a>
+        <a href="{{ url_for('login.logout') }}">Logout</a>
+    </div>
 </div>
 
-<div class="container">
-  <h2>Pending Approvals</h2>
+<div class="dashboard-container">
+  <div class="dashboard-wrapper">
 
-  <table border="1" cellpadding="10">
-    <tr>
-      <th>Company</th>
-      <th>Industry</th>
-      <th>Company Size</th>
-      <th>Company No.</th>
-      <th>Contact Person</th>
-      <th>Position</th>
-      <th>Contact No.</th>
-      <th>Work Email</th>
-      <th>Status</th>
-      <th>Action</th>
-    </tr>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>VHAN Admin</h2>
+        <p>Inclusion Intelligence</p>
+      </div>
 
-    {% for req in requests %}
-    <tr>
-      <td>{{ req.company_name }}</td>
-      <td>{{ req.industry }}</td>
-      <td>{{ req.company_size }}</td>
-      <td>{{ req.company_number }}</td>
-      <td>{{ req.contact_person }}</td>
-      <td>{{ req.position_title }}</td>
-      <td>{{ req.contact_number }}</td>
-      <td>{{ req.work_email }}</td>
-      <td>{{ req.status }}</td>
-      <td>
-        <a href="{{ url_for('vhan.approve_request', req_id=req.id) }}">Approve</a> |
-        <a href="#">Reject</a>
-      </td>
-    </tr>
-    {% endfor %}
+      <nav class="sidebar-menu">
+        <a href="{{ url_for('vhan.vhan_dashboard') }}" class="active">Dashboard Overview</a>
+        <a href="{{ url_for('vhan.pending_approvals') }}">Pending Approvals</a>
+        <a href="#">Organizations</a>
+        <a href="#">Assessment Questions</a>
+        <a href="#">Email Logs</a>
+        <a href="#">Reports & Analytics</a>
+      </nav>
+    </aside>
 
-  </table>
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+      <!-- Welcome Banner -->
+      <header class="welcome-banner">
+        <div>
+          <h1>Welcome, VHAN Admin 👋</h1>
+          <p>Review organization requests, manage access, and monitor assessment activity.</p>
+        </div>
+             
+      </header>
+
+      <!-- OVERVIEW CARDS -->
+      <section class="overview-cards">
+        <div class="card">
+          <h3>Pending Approvals</h3>
+          <p class="card-number">{{ requests|length }}</p>
+          <span>Organization access requests</span>
+        </div>
+
+        <div class="card">
+          <h3>Organizations</h3>
+          <p class="card-number">0</p>
+          <span>Approved organizations</span>
+        </div>
+
+        <div class="card">
+          <h3>Email Logs</h3>
+          <p class="card-number">0</p>
+          <span>Invitation emails sent</span>
+        </div>
+
+        <div class="card">
+          <h3>Reports</h3>
+          <p class="card-number">0</p>
+          <span>Reports and analytics</span>
+        </div>
+      </section>
+
+      
+
+    </main>
+
+  </div>
 </div>
-
 </body>
 </html>

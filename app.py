@@ -7,6 +7,7 @@ from routes.login import login_bp
 from routes.super_dashboard import super_admin_bp
 from routes.vhan_dashboard import vhan_bp
 
+
 from extensions import mail
 
 
@@ -17,6 +18,7 @@ app.secret_key = SECRET_KEY
 app.register_blueprint(login_bp)
 app.register_blueprint(super_admin_bp)
 app.register_blueprint(vhan_bp)
+
 
 # Mail Config
 app.config['MAIL_SERVER'] = MAIL_SERVER
@@ -59,10 +61,6 @@ def home():
         progress_tracked=progress_tracked
     )
 
-
-@app.route('/login')
-def login():
-    return render_template('login.html')
 
 
 @app.route('/assessment')

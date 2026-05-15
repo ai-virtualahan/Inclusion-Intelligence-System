@@ -13,14 +13,16 @@ def super_dashboard():
     cursor = conn.cursor(dictionary=True)
 
     # Total Organizations
-    cursor.execute("SELECT COUNT(*) AS total FROM organizations")
+    cursor.execute("""
+        SELECT COUNT(*) AS total FROM organizations
+        WHERE status = 'approved' 
+    """)
     total_organizations = cursor.fetchone()['total']
 
     # Pending Approvals (pwede ni from users or access_requests depende sa imong flow)
     cursor.execute("""
         SELECT COUNT(*) AS total
-        FROM users
-        WHERE status = 'pending'
+        FROM access_requests
     """)
     pending_approvals = cursor.fetchone()['total']
 
@@ -34,9 +36,7 @@ def super_dashboard():
 
     # Active Users
     cursor.execute("""
-        SELECT COUNT(*) AS total
-        FROM users
-        WHERE status = 'approved'
+        SELECT COUNT(*) AS total FROM users
     """)
     active_users = cursor.fetchone()['total']
 
@@ -59,36 +59,63 @@ def organizations():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("""
-        SELECT
-            o.id,
-            o.company_name,
-            o.industry,
-            o.company_size,
-            o.status,
-            o.created_at,
-            o.approved_at,
-            o.approved_by,
-            u.id AS contact_user_id,
-            u.contact_person,
-            u.work_email,
-            u.contact_number,
-            u.position_title
-        FROM organizations o
-        LEFT JOIN users u
-            ON o.id = u.organization_id
-            AND u.role = 'org_admin'
-        ORDER BY o.id DESC
-    """)
+    selected_status = request.args.get('status')
+    
+    if selected_status:
+        cursor.execute("""
+            SELECT
+                o.id,
+                o.company_name,
+                o.industry,
+                o.company_size,
+                o.company_number,
+                o.status,
+                o.created_at,
+                o.approved_at,
+                o.approved_by,
+                u.id AS contact_user_id,
+                u.contact_person,
+                u.work_email,
+                u.contact_number,
+                u.position_title
+            FROM organizations o
+            LEFT JOIN users u
+                ON o.id = u.organization_id
+                AND u.role = 'org_admin'
+            WHERE o.status = %s
+            ORDER BY o.id DESC
+        """, (selected_status,))
+    else:
+        cursor.execute("""
+            SELECT
+                o.id,
+                o.company_name,
+                o.industry,
+                o.company_size,
+                o.company_number,
+                o.status,
+                o.created_at,
+                o.approved_at,
+                o.approved_by,
+                u.id AS contact_user_id,
+                u.contact_person,
+                u.work_email,
+                u.contact_number,
+                u.position_title
+            FROM organizations o
+            LEFT JOIN users u
+                ON o.id = u.organization_id
+                AND u.role = 'org_admin'
+            ORDER BY o.id DESC
+        """)
     organizations = cursor.fetchall()
 
     cursor.close()
     conn.close()
 
-    return render_template(
-        'super_organizations.html',
-        organizations=organizations
-    )
+    return render_template('super_organizations.html',organizations=organizations,
+    selected_status=selected_status)
+    
 
 
 @super_admin_bp.route('/super-admin/user/<int:user_id>')

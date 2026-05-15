@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VHAN Admin Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/vhan_dashboard.css') }}">
+</head>
+<body>
+<!-- TOP NAVBAR -->
+<div class="top-navbar">
+    <div class="logo-section">
+        <h2>Inclusion Intelligence</h2>
+    </div>
+
+    <div class="top-nav-links">
+        <a href="#">Dashboard</a>
+        <a href="#">Organizations</a>
+        <a href="#">Reports</a>
+        <a href="{{ url_for('login.logout') }}">Logout</a>
+    </div>
+</div>
+
+<div class="dashboard-container">
+  <div class="dashboard-wrapper">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>VHAN Admin</h2>
+        <p>Inclusion Intelligence</p>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard Overview</a>
+        <a href="{{ url_for('vhan.pending_approvals') }}" class="active">Pending Approvals</a>
+        <a href="#">Organizations</a>
+        <a href="#">Assessment Questions</a>
+        <a href="#">Email Logs</a>
+        <a href="#">Reports & Analytics</a>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+      <!-- Welcome Banner -->
+      <header class="welcome-banner">
+        <div>
+          <h1>Pending Approvals</h1>
+          <p>Review and approve organization access requests.</p>
+        </div>
+             
+      </header>
+           
+
+      <!-- PENDING APPROVALS TABLE -->
+      <section class="content-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Pending Approvals</h2>
+            <p>Organizations that requested access to the Inclusion Intelligence System.</p>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Industry</th>
+                <th>Company Size</th>
+                <th>Company No.</th>
+                <th>Contact Person</th>
+                <th>Position</th>
+                <th>Contact No.</th>
+                <th>Work Email</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for req in requests %}
+              <tr>
+                <td>{{ req.company_name }}</td>
+                <td>{{ req.industry }}</td>
+                <td>{{ req.company_size }}</td>
+                <td>{{ req.company_number }}</td>
+                <td>{{ req.contact_person }}</td>
+                <td>{{ req.position_title }}</td>
+                <td>{{ req.contact_number }}</td>
+                <td>{{ req.work_email }}</td>
+                <td>
+                  <span class="status-badge">{{ req.status }}</span>
+                </td>
+                <td>
+                  <a href="{{ url_for('vhan.approve_request', req_id=req.id) }}" class="approve-btn">Approve</a>
+                  <a href="#" class="reject-btn">Reject</a>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="10" class="empty-message">No pending approvals found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+</div>
+</body>
+</html>

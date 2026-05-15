@@ -50,7 +50,16 @@
 
     <section class="dashboard-panel">
       <h1>Organizations</h1>
+      <form method="GET" action="{{ url_for('super_admin.organizations') }}" class="filter-form">
+        <label for="status"><strong>Filter by Status:</strong></label>
 
+        <select name="status" id="status" onchange="this.form.submit()">
+          <option value="">All Status</option>
+          <option value="suspended" {% if selected_status == 'suspended' %}selected{% endif %}>Suspended</option>
+          <option value="approved" {% if selected_status == 'approved' %}selected{% endif %}>Approved</option>
+          <option value="rejected" {% if selected_status == 'rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+      </form>
       <div class="table-wrapper">
 
         <table>

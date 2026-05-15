@@ -62,14 +62,14 @@ def submit_registration():
 
         check_user_sql = """
             SELECT id FROM users
-            WHERE email = %s
+            WHERE work_email = %s
         """
         cursor.execute(check_user_sql, (work_email,))
         existing_user = cursor.fetchone()
 
         if existing_user:
             flash("This email is already registered. Please log in.", "warning")
-            return redirect(url_for('login'))
+            return redirect(url_for('login.login'))
 
         insert_sql = """
             INSERT INTO access_requests
@@ -77,12 +77,12 @@ def submit_registration():
                 company_name,
                 industry,
                 company_size,
+                company_number,
                 contact_person,
                 work_email,
                 password_hash,
                 position_title,
                 contact_number,
-                notes,
                 status,
                 created_at
             )
@@ -93,19 +93,20 @@ def submit_registration():
             company_name,
             industry,
             company_size,
+            company_number,
             full_name,
             work_email,
             hashed_password,
             position,
-            contact_number,
-            company_number
+            contact_number
+                        
         )
 
         cursor.execute(insert_sql, values)
         conn.commit()
 
         flash("Your access request has been submitted successfully. Please wait for admin approval.", "success")
-        return redirect(url_for('login'))
+        return redirect(url_for('register.register'))
 
     except Error as e:
         flash(f"Database error: {e}", "danger")

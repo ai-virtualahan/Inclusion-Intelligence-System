@@ -11,5 +11,5 @@ MAIL_SERVER = "smtp.office365.com"
 MAIL_PORT = 587
 MAIL_USE_TLS = True
 
-MAIL_USERNAME = "intern3@virtualahan.com"
-MAIL_PASSWORD = "#glorybe2God"
+MAIL_USERNAME = "iis@virtualahan.com"
+MAIL_PASSWORD = "N)551284096127av2026"

@@ -98,3 +98,36 @@ def approve_request(req_id):
     conn.close()
 
     return redirect(url_for('vhan.vhan_dashboard'))
+
+@vhan_bp.route('/vhan/pending-approvals')
+def pending_approvals():
+    if session.get('role') != 'vhan_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT
+            id,
+            company_name,
+            industry,
+            company_size,
+            company_number,
+            contact_person,
+            position_title,
+            contact_number,
+            work_email,
+            status,
+            created_at
+        FROM access_requests
+        WHERE status = 'pending'
+        ORDER BY created_at DESC
+    """)
+
+    requests = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('pending_approvals.html', requests=requests)
