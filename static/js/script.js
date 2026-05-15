@@ -588,6 +588,9 @@ function showPage(id){
    START EXAM
 ------------------------------ */
 function startExam(type){
+
+    document.getElementById("examMenuWrapper").style.display = "none";
+
     currentExam = type;
     questionIndex = 0;
     score = 0;
@@ -637,12 +640,12 @@ ${q.options.map((o, i) => {
        <div class="nav-buttons ${questionIndex === 0 ? 'single-next' : ''}">
 
     ${questionIndex > 0 ? `
-        <button onclick="prevQuestion()">
+        <button class="primary nav-btn-small" onclick="prevQuestion()">
             Back
         </button>
     ` : ""}
 
-    <button onclick="nextOrSubmit()">
+    <button class="primary nav-btn-small" onclick="nextOrSubmit()">
         ${questionIndex === exam.questions.length - 1 ? "Submit" : "Next"}
     </button>
 
@@ -716,10 +719,48 @@ function goToExamSelect(){
     showPage("examSelect");
 }
 
+function resetDiagnosticPage(){
+
+    // open diagnostic page
+    showPage("diagnostic");
+
+    // show assessment buttons again
+    document.getElementById("examMenu").style.display = "grid";
+
+    // clear questionnaire
+    document.getElementById("questionBox").innerHTML = "";
+
+    // optional reset
+    questionIndex = 0;
+}
+
+function resetDiagnosticState(){
+
+    // show menu again
+    document.getElementById("examMenuWrapper").style.display = "block";
+
+    // clear questionnaire
+    document.getElementById("questionBox").innerHTML = "";
+
+    // reset exam state (important)
+    currentExam = "";
+    questionIndex = 0;
+}
+
+function openDiagnostic(){
+
+    showPage("diagnostic");
+
+    resetDiagnosticState();
+}
+
 /* -----------------------------
    FINISH (NO BACKEND, JUST CALCULATION)
 ------------------------------ */
 function finishExamFromAnswers(){
+
+    document.getElementById("examMenuWrapper").style.display = "block";
+
     const answers = userAnswers[currentExam];
     const exam = exams[currentExam];
 
@@ -739,6 +780,12 @@ function finishExamFromAnswers(){
 
     questionIndex = 0;
     score = 0;
+
+    // SHOW MENU AGAIN
+    document.getElementById("examMenu").style.display = "grid";
+
+    // CLEAR OLD QUESTIONS
+    document.getElementById("questionBox").innerHTML = "";
 
     showPage("dashboard");
 }
