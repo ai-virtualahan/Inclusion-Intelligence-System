@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Users | Super Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/super_dashboard.css') }}">
+</head>
+
+<body>
+
+<div class="top-navbar">
+  <div class="brand">Inclusion Intelligence</div>
+
+  <div class="top-links">
+    <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('super_admin.users') }}">Users</a>
+    <a href="#">Reports</a>
+    <a href="{{ url_for('login.logout') }}">Logout</a>
+  </div>
+</div>
+
+<div class="admin-layout">
+
+  <aside class="sidebar">
+    <h3>Super Admin</h3>
+
+    <a href="{{ url_for('super_admin.super_dashboard') }}" class="side-link">
+      Dashboard Overview
+    </a>
+
+    <a href="{{ url_for('super_admin.organizations') }}" class="side-link">
+      Organizations
+    </a>
+
+    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">
+      Assessment Questions
+    </a>
+
+    <a href="{{ url_for('super_admin.users') }}" class="side-link active">
+      Users
+    </a>
+
+    <a href="#" class="side-link">Reports</a>
+    <a href="#" class="side-link">Email Logs</a>
+    <a href="#" class="side-link">System Settings</a>
+  </aside>
+
+  <main class="main-content">
+
+    <section class="page-header">
+      <h1>Users</h1>
+      <p>Manage internal admins and organization user accounts.</p>
+    </section>
+
+    <section class="dashboard-panel">
+
+        <div class="users-header">
+            <h1>Users</h1>
+
+            <div class="users-controls">
+            <form method="GET" action="{{ url_for('super_admin.users') }}" class="filter-form">
+                <label for="role"><strong>Filter by Role:</strong></label>
+
+                <select name="role" id="role" onchange="this.form.submit()">
+                <option value="">All Users</option>
+                <option value="internal" {% if selected_role == 'internal' %}selected{% endif %}>Internal Admins</option>
+                <option value="organization" {% if selected_role == 'organization' %}selected{% endif %}>Organization Users</option>
+                <option value="super_admin" {% if selected_role == 'super_admin' %}selected{% endif %}>Super Admin</option>
+                <option value="vhan_admin" {% if selected_role == 'vhan_admin' %}selected{% endif %}>VHAN Admin</option>
+                <option value="org_admin" {% if selected_role == 'org_admin' %}selected{% endif %}>Org Admin</option>
+                </select>
+            </form>
+
+            <button class="add-btn">
+                + Add User
+            </button>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+            <thead>
+                <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Organization ID</th>
+                <th>Position</th>
+                <th>Contact Number</th>
+                <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for user in users %}
+                <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.contact_person }}</td>
+                <td>{{ user.work_email }}</td>
+                <td>{{ user.role }}</td>
+                <td>{{ user.status }}</td>
+                <td>{{ user.organization_id }}</td>
+                <td>{{ user.position_title }}</td>
+                <td>{{ user.contact_number }}</td>
+                <td>
+                    <button class="action-btn edit-btn">Edit</button>
+                    <button class="action-btn delete-btn" onclick="return confirm('Delete this user?')">
+                    Delete
+                    </button>
+                </td>
+                </tr>
+                {% else %}
+                <tr>
+                <td colspan="9">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+
+        </section>
+  </main>
+</div>
+
+</body>
+</html>

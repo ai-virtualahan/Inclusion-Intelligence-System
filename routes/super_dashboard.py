@@ -23,6 +23,7 @@ def super_dashboard():
     cursor.execute("""
         SELECT COUNT(*) AS total
         FROM access_requests
+        WHERE status = 'pending'
     """)
     pending_approvals = cursor.fetchone()['total']
 
@@ -106,6 +107,7 @@ def organizations():
             LEFT JOIN users u
                 ON o.id = u.organization_id
                 AND u.role = 'org_admin'
+            WHERE o.status IN ('approved', 'suspended', 'rejected')
             ORDER BY o.id DESC
         """)
     organizations = cursor.fetchall()
@@ -333,3 +335,53 @@ def edit_question(question_id):
     conn.close()
 
     return {"success": True, "question_id": question_id, "question_text": question_text}
+
+
+@super_admin_bp.route('/super-admin/users')
+def users():
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    selected_role = request.args.get('role')
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    if selected_role == 'internal':
+        cursor.execute("""
+            SELECT *
+            FROM users
+            WHERE role IN ('super_admin', 'vhan_admin')
+            ORDER BY id DESC
+        """)
+    elif selected_role == 'organization':
+        cursor.execute("""
+            SELECT *
+            FROM users
+            WHERE role = 'org_admin'
+            ORDER BY id DESC
+        """)
+    elif selected_role:
+        cursor.execute("""
+            SELECT *
+            FROM users
+            WHERE role = %s
+            ORDER BY id DESC
+        """, (selected_role,))
+    else:
+        cursor.execute("""
+            SELECT *
+            FROM users
+            ORDER BY id DESC
+        """)
+
+    users = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        'super_users.html',
+        users=users,
+        selected_role=selected_role
+    )

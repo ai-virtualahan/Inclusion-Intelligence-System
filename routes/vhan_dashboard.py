@@ -3,6 +3,7 @@ from db import get_db_connection
 
 vhan_bp = Blueprint('vhan', __name__)
 
+
 @vhan_bp.route('/vhan/dashboard')
 def vhan_dashboard():
     if session.get('role') != 'vhan_admin':
@@ -11,24 +12,23 @@ def vhan_dashboard():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    
     cursor.execute("""
         SELECT
-        id,
-        company_name,
-        industry,
-        company_size,
-        company_number,    
-        contact_person,
-        position_title,
-        contact_number,
-        work_email,
-        status,
-        created_at
-    FROM access_requests
-    WHERE status = 'pending'
-    ORDER BY created_at DESC
-""")
+            id,
+            company_name,
+            industry,
+            company_size,
+            company_number,
+            contact_person,
+            position_title,
+            contact_number,
+            work_email,
+            status,
+            created_at
+        FROM access_requests
+        WHERE status = 'pending'
+        ORDER BY created_at DESC
+    """)
 
     requests = cursor.fetchall()
 
@@ -36,7 +36,6 @@ def vhan_dashboard():
     conn.close()
 
     return render_template('vhan_dashboard.html', requests=requests)
-
 
 
 @vhan_bp.route('/vhan/approve/<int:req_id>')
@@ -47,14 +46,38 @@ def approve_request(req_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # get request data
-    cursor.execute("SELECT * FROM access_requests WHERE id = %s", (req_id,))
+    # Get request data
+    cursor.execute("""
+        SELECT *
+        FROM access_requests
+        WHERE id = %s
+    """, (req_id,))
+
     req = cursor.fetchone()
 
-    # insert to organizations
+    # Safety check: if request does not exist
+    if not req:
+        cursor.close()
+        conn.close()
+        return redirect(url_for('vhan.vhan_dashboard'))
+
+    # Safety check: only pending requests can be approved
+    if req['status'] != 'pending':
+        cursor.close()
+        conn.close()
+        return redirect(url_for('vhan.vhan_dashboard'))
+
+    # Insert approved organization
     cursor.execute("""
-        INSERT INTO organizations (company_name, industry, company_size, company_number)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO organizations (
+            company_name,
+            industry,
+            company_size,
+            company_number,
+            status,
+            approved_at
+        )
+        VALUES (%s, %s, %s, %s, 'approved', NOW())
     """, (
         req['company_name'],
         req['industry'],
@@ -64,7 +87,7 @@ def approve_request(req_id):
 
     org_id = cursor.lastrowid
 
-    # insert to users
+    # Insert organization admin user
     cursor.execute("""
         INSERT INTO users (
             organization_id,
@@ -86,7 +109,7 @@ def approve_request(req_id):
         req['position_title']
     ))
 
-    # update request
+    # Update access request status
     cursor.execute("""
         UPDATE access_requests
         SET status = 'approved'
@@ -94,10 +117,12 @@ def approve_request(req_id):
     """, (req_id,))
 
     conn.commit()
+
     cursor.close()
     conn.close()
 
     return redirect(url_for('vhan.vhan_dashboard'))
+
 
 @vhan_bp.route('/vhan/pending-approvals')
 def pending_approvals():
