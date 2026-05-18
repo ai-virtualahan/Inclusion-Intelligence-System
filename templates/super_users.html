@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Users | Super Admin</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/super_dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/super_users.css') }}">
 </head>
 
 <body>
@@ -105,7 +106,17 @@
                 <td>{{ user.position_title }}</td>
                 <td>{{ user.contact_number }}</td>
                 <td>
-                    <button class="action-btn edit-btn">Edit</button>
+                    <button class="action-btn edit-btn" type="button"
+                    onclick="openEditUserModal(
+                      '{{ user.id }}',
+                      '{{ user.contact_person }}',
+                      '{{ user.work_email }}',
+                      '{{ user.role }}',
+                      '{{ user.status }}',
+                      '{{ user.position_title }}',
+                      '{{ user.contact_number }}'
+                    )">Edit</button>
+
                     <button class="action-btn delete-btn" onclick="return confirm('Delete this user?')">
                     Delete
                     </button>
@@ -124,5 +135,81 @@
   </main>
 </div>
 
+<div id="editUserModal" class="modal">
+
+  <div class="modal-content">
+
+    <span class="close" onclick="closeEditUserModal()">
+      &times;
+    </span>
+
+    <h2>Edit User</h2>
+
+    <form id="editUserForm"
+          method="POST"
+          class="modal-form">
+
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text"
+              name="contact_person"
+              id="editUserName"
+              required>
+      </div>
+
+      <div class="form-group"> 
+        <label>Email</label>
+        <input type="email"
+              name="work_email"
+              id="editUserEmail"
+              required>
+      </div>
+
+      <div class="form-group">      
+        <label>Role</label>
+        <select name="role" id="editUserRole">
+
+          <option value="super_admin">Super Admin</option>
+          <option value="vhan_admin">VHAN Admin</option>
+          <option value="org_admin">Org Admin</option>
+
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Status</label>
+        <select name="status" id="editUserStatus">
+
+          <option value="approved">Approved</option>
+          <option value="suspended">Suspended</option>
+          <option value="rejected">Rejected</option>
+
+        </select>
+      
+      <div class="form-group">
+        <label>Position</label>
+        <input type="text"
+              name="position_title"
+              id="editUserPosition">
+      </div>
+
+      <div class="form-group">
+        <label>Contact Number</label>
+        <input type="text"
+              name="contact_number"
+              id="editUserNumber">
+      </div>
+
+      <button type="submit"
+              class="action-btn edit-btn">
+        Save Changes
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
+<script src="{{ url_for('static', filename='js/super_users.js') }}"></script>
 </body>
 </html>

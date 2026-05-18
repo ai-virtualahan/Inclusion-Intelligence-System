@@ -117,34 +117,45 @@ def organizations():
 
     return render_template('super_organizations.html',organizations=organizations,
     selected_status=selected_status)
-    
 
 
-@super_admin_bp.route('/super-admin/user/<int:user_id>')
-def view_user(user_id):
+@super_admin_bp.route('/super-admin/organizations/edit/<int:org_id>', methods=['POST'])
+def edit_organization(org_id):
     if session.get('role') != 'super_admin':
         return redirect(url_for('login.login'))
 
+    company_name = request.form['company_name']
+    industry = request.form['industry']
+    company_size = request.form['company_size']
+    company_number = request.form['company_number']
+    status = request.form['status']
+
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT *
-        FROM users
+        UPDATE organizations
+        SET company_name = %s,
+            industry = %s,
+            company_size = %s,
+            company_number = %s,
+            status = %s
         WHERE id = %s
-    """, (user_id,))
+    """, (
+        company_name,
+        industry,
+        company_size,
+        company_number,
+        status,
+        org_id
+    ))
 
-    user = cursor.fetchone()
-
+    conn.commit()
     cursor.close()
     conn.close()
 
-    return render_template(
-        'view_user.html',
-        user=user
-    )
-
-
+    return redirect(url_for('super_admin.organizations'))
+    
 @super_admin_bp.route('/super-admin/organizations/delete/<int:org_id>', methods=['POST'])
 def delete_organization(org_id):
     if session.get('role') != 'super_admin':
@@ -217,8 +228,8 @@ def assessment_questions():
         questions=questions,
         dimensions=dimensions,
         selected_dimension=selected_dimension
-    )
 
+    )
 
 @super_admin_bp.route('/super-admin/question/<int:question_id>/choices')
 def question_choices(question_id):
@@ -337,6 +348,33 @@ def edit_question(question_id):
     return {"success": True, "question_id": question_id, "question_text": question_text}
 
 
+
+@super_admin_bp.route('/super-admin/user/<int:user_id>')
+def view_user(user_id):
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT *
+        FROM users
+        WHERE id = %s
+    """, (user_id,))
+
+    user = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        'view_user.html',
+        user=user
+    )
+
+
+
 @super_admin_bp.route('/super-admin/users')
 def users():
     if session.get('role') != 'super_admin':
@@ -385,3 +423,7 @@ def users():
         users=users,
         selected_role=selected_role
     )
+
+
+
+

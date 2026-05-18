@@ -11,3 +11,21 @@ function openContactModal(name, email, number, position, status) {
 function closeContactModal() {
   document.getElementById("contactModal").style.display = "none";
 }
+
+function openEditOrgModal(id, companyName, industry, companySize, companyNumber, status) {
+  const form = document.getElementById("editOrgForm");
+
+  form.action = `/super-admin/organizations/edit/${id}`;
+
+  document.getElementById("editCompanyName").value = companyName || "";
+  document.getElementById("editIndustry").value = industry || "";
+  document.getElementById("editCompanySize").value = companySize || "";
+  document.getElementById("editCompanyNumber").value = companyNumber || "";
+  document.getElementById("editStatus").value = status || "approved";
+
+  document.getElementById("editOrgModal").style.display = "flex";
+}
+
+function closeEditOrgModal() {
+  document.getElementById("editOrgModal").style.display = "none";
+}

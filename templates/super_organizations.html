@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Organizations | Super Admin</title>
+  <title>Super Admin | Organizations</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/super_dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/super_organizations.css') }}">
 </head>
 <body>
 
@@ -112,7 +113,18 @@
             <td>{{ org.approved_at }}</td>
             <td>{{ org.approved_by }}</td>
             <td>
-              <button class="action-btn edit-btn">Edit</button>
+              <button type="button"
+                    class="action-btn edit-btn"
+                    onclick="openEditOrgModal(
+                    '{{ org.id }}',
+                    '{{ org.company_name }}',
+                    '{{ org.industry }}',
+                    '{{ org.company_size }}',
+                    '{{ org.company_number }}',
+                    '{{ org.status }}'
+                  )">
+                Edit
+              </button>
 
                 <form action="{{ url_for('super_admin.delete_organization', org_id=org.id) }}" method="POST" style="display:inline;">
                   <button class="action-btn delete-btn"
@@ -121,7 +133,7 @@
                     Delete
                   </button>
                 </form>
-              </button>
+              
             </td>
           </tr>
           {% else %}
@@ -177,6 +189,52 @@
 
   </div>
 </div>
+
+<div id="editOrgModal" class="modal">
+  <div class="modal-content contact-modal">
+    <span class="close" onclick="closeEditOrgModal()">&times;</span>
+
+    <h2>Edit Organization</h2>
+
+    <form id="editOrgForm" method="POST" class="edit-org-form">
+      <label>Organization Name</label>
+      <input type="text" name="company_name" id="editCompanyName" required>
+
+      <label>Industry</label>
+      <select id="editIndustry" name="industry">
+        <option value="Manufacturing">Manufacturing</option>
+        <option value="Information Technology">Information Technology</option>
+        <option value="Retail">Retail</option>
+        <option value="Healthcare">Healthcare</option>
+        <option value="Education">Education</option>
+        <option value="Finance">Finance</option>
+      </select>
+
+      <label>Company Size</label>
+      <select id="editCompanySize" name="company_size">
+        <option value="1-50 employees">1-50 employees</option>
+        <option value="51-200">51-200</option>
+        <option value="201-500">201-500</option>
+        <option value="500+">500+</option>
+      </select>
+
+      <label>Company Number</label>
+      <input type="text" name="company_number" id="editCompanyNumber">
+
+      <label>Status</label>
+      <select name="status" id="editStatus" required>
+        <option value="approved">Approved</option>
+        <option value="suspended">Suspended</option>
+        <option value="rejected">Rejected</option>
+      </select>
+
+      <button type="submit" class="action-btn edit-btn">
+        Save Changes
+      </button>
+    </form>
+  </div>
+</div>
+
 <script src="{{ url_for('static', filename='js/super_organizations.js') }}"></script>
 </body>
 </html>

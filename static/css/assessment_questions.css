@@ -2,17 +2,6 @@
    QUESTION CHOICES MODAL POPUP
 ========================= */
 
-.modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  z-index: 9999;
-
-  justify-content: center;
-  align-items: center;
-}
-
 #choicesModal .modal-content {
   background: #ffffff;
   width: 1050px !important;
@@ -29,51 +18,7 @@
   position: relative;
 }
 
-.close {
-  position: absolute;
-  top: 12px;
-  right: 18px;
 
-  font-size: 28px;
-  cursor: pointer;
-}
-
-.modal-content h2 {
-  margin-bottom: 20px;
-}
-
-.modal-content label {
-  font-weight: 600;
-  display: block;
-  margin-top: 12px;
-}
-
-.modal-content textarea,
-.modal-content input {
-  width: 100%;
-  padding: 10px;
-
-  margin-top: 6px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-}
-
-.modal-content button {
-  margin-top: 18px;
-
-  background: #0b2a66;
-  color: white;
-
-  border: none;
-  padding: 12px 18px;
-  border-radius: 10px;
-
-  cursor: pointer;
-}
-
-.modal-content button:hover {
-  background: #123b8a;
-} 
 
 /* =========================
    CHOICES TABLE
@@ -130,6 +75,34 @@
   margin-bottom: 10px;
 }
 
+.question-textarea {
+  width: 100%;
+  min-height: 110px;
+
+  padding: 14px 16px;
+
+  border: 1px solid #d6dce5;
+  border-radius: 14px;
+
+  background: #f9fbff;
+
+  font-size: 15px;
+  line-height: 1.6;
+
+  resize: vertical;
+
+  margin-bottom: 24px;
+}
+
+.question-textarea:focus {
+  outline: none;
+
+  border-color: #14b8a6;
+  background: white;
+
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
+}
+
 /* ASSESSMENT QUESTIONS TABLE */
 
 .questions-table-wrapper {
@@ -174,3 +147,5 @@
   max-width: 700px;
   line-height: 1.4;
 }
+
+

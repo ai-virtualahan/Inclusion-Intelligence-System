@@ -19,12 +19,13 @@ function openChoicesModal(questionId, questionText) {
             <td>${choice.choice_score}</td>
             <td>
               <button type="button"
-                onclick="openEditChoiceForm(
-                  ${choice.id},
-                  '${choice.choice_letter}',
-                  \`${choice.choice_text}\`,
-                  ${choice.choice_score}
-                )">
+                      class="action-btn edit-btn"
+                      onclick="openEditChoiceForm(
+                        ${choice.id},
+                        '${choice.choice_letter}',
+                        \`${choice.choice_text}\`,
+                        ${choice.choice_score}
+                      )">
                 Edit
               </button>
             </td>
