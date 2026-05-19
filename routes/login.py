@@ -98,6 +98,7 @@ def forgot_password():
 
         msg = Message(
             subject="Reset Your Password - Inclusion Intelligence System",
+            sender=MAIL_USERNAME,
             recipients=[email]
         )
 

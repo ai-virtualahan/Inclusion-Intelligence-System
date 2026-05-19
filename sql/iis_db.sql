@@ -41,7 +41,7 @@ CREATE TABLE `access_requests` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `work_email` (`work_email`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -50,7 +50,7 @@ CREATE TABLE `access_requests` (
 
 LOCK TABLES `access_requests` WRITE;
 /*!40000 ALTER TABLE `access_requests` DISABLE KEYS */;
-INSERT INTO `access_requests` VALUES (1,'Crochet with Love','Manufacturing','1-50 employees','09531080123','Jinalie C. Arbuis','Manager','09531080123','arbuisjinalie@gmail.com','scrypt:32768:8:1$MByC8iAmVfXRtN7J$9ba0ab2898bee77e464ac79e668f2e4d79bb9f5be91634a5670fbca2ff155558b240cf7b5ef56f5ddf24262188c8127b7030ad6d3728db090b6121aa7abb2a3a',NULL,'approved',NULL,NULL,NULL,'2026-05-15 10:16:59'),(2,'Japan Surplus Incorporated','Retail','1-50 employees','09531080123','Jinah Cuizon','HR','09531080123','jinarbz@gmail.com','scrypt:32768:8:1$Y23YMfA3FJZDq3mH$fac769906085f67533a233476587894317994221c7f1144cba89a6ea905e0d975e21fb747c7ac8b187bbbdf640a349832af8cc769b31620e72fc4be3c4cd673e',NULL,'pending',NULL,NULL,NULL,'2026-05-15 10:19:34');
+INSERT INTO `access_requests` VALUES (1,'Crochet with Love','Manufacturing','1-50 employees','09531080123','Jinalie C. Arbuis','Manager','09531080123','arbuisjinalie@gmail.com','scrypt:32768:8:1$MByC8iAmVfXRtN7J$9ba0ab2898bee77e464ac79e668f2e4d79bb9f5be91634a5670fbca2ff155558b240cf7b5ef56f5ddf24262188c8127b7030ad6d3728db090b6121aa7abb2a3a',NULL,'approved',NULL,NULL,NULL,'2026-05-15 10:16:59'),(2,'Japan Surplus Incorporated','Retail','1-50 employees','09531080123','Jinah Cuizon','HR','09531080123','jinarbz@gmail.com','scrypt:32768:8:1$Y23YMfA3FJZDq3mH$fac769906085f67533a233476587894317994221c7f1144cba89a6ea905e0d975e21fb747c7ac8b187bbbdf640a349832af8cc769b31620e72fc4be3c4cd673e',NULL,'pending',NULL,NULL,NULL,'2026-05-15 10:19:34'),(3,'Virtualahan','Information Technology','1-50 employees','+639163657571','Cynthia','Project Manager','+639163657571','cynthia@virtualahan.com','scrypt:32768:8:1$XlADXu1QLdUbUcij$2b7d41e2984682aa9343225e0ee007ce1dd07ef86494c611c8c5cef0e15774a7d2b5cfb056c69aba842716c7630dd63d3818fc41538a73309a6e3eb5d17ab31f',NULL,'approved',NULL,NULL,NULL,'2026-05-19 05:55:52');
 /*!40000 ALTER TABLE `access_requests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -368,7 +368,7 @@ CREATE TABLE `organizations` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `company_number` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -377,7 +377,7 @@ CREATE TABLE `organizations` (
 
 LOCK TABLES `organizations` WRITE;
 /*!40000 ALTER TABLE `organizations` DISABLE KEYS */;
-INSERT INTO `organizations` VALUES (1,'Mock Company','Information Technology','51-200','approved',NULL,NULL,'2026-04-24 11:41:43',NULL),(6,'Crochet with Love','Manufacturing','1-50 employees','approved',NULL,NULL,'2026-05-15 10:20:45','09531080123');
+INSERT INTO `organizations` VALUES (1,'Mock Company','Information Technology','51-200','approved',NULL,NULL,'2026-04-24 11:41:43',NULL),(6,'Crochet with Love','Manufacturing','1-50 employees','approved',NULL,NULL,'2026-05-15 10:20:45','09531080123'),(7,'Virtualahan','Information Technology','1-50 employees','approved','2026-05-19 06:03:14',NULL,'2026-05-19 06:03:14','+639163657571');
 /*!40000 ALTER TABLE `organizations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -499,7 +499,7 @@ CREATE TABLE `users` (
   UNIQUE KEY `email` (`work_email`),
   KEY `fk_users_organization` (`organization_id`),
   CONSTRAINT `fk_users_organization` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -508,7 +508,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,1,'Mock HR User','mockher@example.com','mocked_hashed_password','org_admin','approved','2026-04-24 12:04:29',NULL,NULL,NULL,NULL,NULL),(2,NULL,'Mock Super Admin','iis@virtualahan.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','super_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,'JK3j7R6Gb_y64wHJKlmd4Y8rtlOBhmZQWKIkb2OEomo','2026-05-14 09:09:03'),(3,NULL,'Mock VHAN Admin','vhanadmin@example.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','vhan_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL),(4,NULL,'Mock HR User','hr@example.com','scrypt:32768:8:1$pjU5gzIVRjQFu9CY$a40aad76952fb404e6a0a62a4f7bdf58e31ef1821e296a8f20eb35d01d1407e612bf6de0564564a8592d084594455b39286d5a088042d48a44ac6a51b0f82d49','org_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL),(5,NULL,'Maria','jinah@testemail.com','scrypt:32768:8:1$xMn09DKAZ7q5RmDm$c061c6dff8ede97f2bbf16392cc3f03ddc3def8cb9b9288ea84fbaa7b1aa43a1d2ffd0fae7f0f8c1bc0af8c61054dc390829e75fab34d6ff59749bb7d48edf1c','org_admin','approved','2026-05-15 06:28:41',NULL,'Skills Incubator','12345678910',NULL,NULL),(6,6,'Jinalie C. Arbuis','arbuisjinalie@gmail.com','scrypt:32768:8:1$MByC8iAmVfXRtN7J$9ba0ab2898bee77e464ac79e668f2e4d79bb9f5be91634a5670fbca2ff155558b240cf7b5ef56f5ddf24262188c8127b7030ad6d3728db090b6121aa7abb2a3a','org_admin','approved','2026-05-15 10:20:45',NULL,'Manager','09531080123',NULL,NULL);
+INSERT INTO `users` VALUES (1,1,'Mock HR User','mockher@example.com','mocked_hashed_password','org_admin','approved','2026-04-24 12:04:29',NULL,NULL,NULL,NULL,NULL),(2,NULL,'Mock Super Admin','iis@virtualahan.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','super_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,'JK3j7R6Gb_y64wHJKlmd4Y8rtlOBhmZQWKIkb2OEomo','2026-05-14 09:09:03'),(3,NULL,'Mock VHAN Admin','vhanadmin@example.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','vhan_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL),(4,NULL,'Mock HR User','hr@example.com','scrypt:32768:8:1$pjU5gzIVRjQFu9CY$a40aad76952fb404e6a0a62a4f7bdf58e31ef1821e296a8f20eb35d01d1407e612bf6de0564564a8592d084594455b39286d5a088042d48a44ac6a51b0f82d49','org_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL),(5,NULL,'Maria','jinah@testemail.com','scrypt:32768:8:1$xMn09DKAZ7q5RmDm$c061c6dff8ede97f2bbf16392cc3f03ddc3def8cb9b9288ea84fbaa7b1aa43a1d2ffd0fae7f0f8c1bc0af8c61054dc390829e75fab34d6ff59749bb7d48edf1c','org_admin','approved','2026-05-15 06:28:41',NULL,'Skills Incubator','12345678910',NULL,NULL),(6,6,'Jinalie C. Arbuis','arbuisjinalie@gmail.com','scrypt:32768:8:1$MByC8iAmVfXRtN7J$9ba0ab2898bee77e464ac79e668f2e4d79bb9f5be91634a5670fbca2ff155558b240cf7b5ef56f5ddf24262188c8127b7030ad6d3728db090b6121aa7abb2a3a','org_admin','approved','2026-05-15 10:20:45',NULL,'Manager','09531080123','0fe_Xy-bU1B8aenfYD6jpPtn20g8VWPC1DIdy5_wt9k','2026-05-19 07:36:23'),(7,7,'Cynthia','cynthia@virtualahan.com','scrypt:32768:8:1$XlADXu1QLdUbUcij$2b7d41e2984682aa9343225e0ee007ce1dd07ef86494c611c8c5cef0e15774a7d2b5cfb056c69aba842716c7630dd63d3818fc41538a73309a6e3eb5d17ab31f','org_admin','approved','2026-05-19 06:03:14',NULL,'Project Manager','+639163657571',NULL,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -521,4 +521,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-18 18:20:55
+-- Dump completed on 2026-05-19 19:31:31

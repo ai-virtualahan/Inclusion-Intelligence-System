@@ -7,9 +7,11 @@ SECRET_KEY = "supersecretkey123"
 
 
 # EMAIL CONFIG
-MAIL_SERVER = "smtp.office365.com"
+MAIL_SERVER = "smtp.gmail.com"
 MAIL_PORT = 587
 MAIL_USE_TLS = True
 
-MAIL_USERNAME = "iis@virtualahan.com"
-MAIL_PASSWORD = "N)551284096127av2026"
+MAIL_USERNAME = "jinarbz@gmail.com"
+MAIL_PASSWORD = "tjpv edlp jqyj neyj"
+
+MAIL_DEFAULT_SENDER = "jinarbz@gmail.com"
