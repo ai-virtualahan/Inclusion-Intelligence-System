@@ -94,11 +94,12 @@ def forgot_password():
 
         conn.commit()
 
-        reset_link = url_for('login.reset_password', token=token, _external=True)
-
+        BASE_URL = "https://cylinder-cinch-unnerve.ngrok-free.dev"
+        reset_link = f"{BASE_URL}/reset-password/{token}"
+        
         msg = Message(
             subject="Reset Your Password - Inclusion Intelligence System",
-            sender=MAIL_USERNAME,
+            sender=("Inclusion Intelligence System", MAIL_USERNAME),
             recipients=[email]
         )
 
