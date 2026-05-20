@@ -2,10 +2,7 @@
 <html>
 <head>
     <title>IIS - Inclusion Intelligence System</title>
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- ✅ FIXED CSS PATH (Flask-safe) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/assessment.css') }}">
 </head>
 
@@ -15,18 +12,46 @@
 
     <!-- SIDEBAR -->
     <div class="sidebar">
+
         <h3>Inclusion Intelligence System</h3>
 
-       <button id="dashboardBtn"
-        onclick="showPage('dashboard')">
-    Inclusion Maturity Dashboard
-</button>
+        <!-- TOP NAV BUTTONS -->
+        <div class="sidebar-top">
 
-<button id="diagnosticBtn"
-        onclick="openDiagnostic()"
-    >
-    Inclusion Diagnostic Engine
-</button>
+            <button id="dashboardBtn" onclick="showPage('dashboard')">
+                Inclusion Maturity Dashboard
+            </button>
+
+            <button id="diagnosticBtn" onclick="openDiagnostic()">
+                Inclusion Diagnostic Engine
+            </button>
+
+            <!-- Sub-buttons: only visible when Diagnostic is active -->
+            <div id="diagnosticSubNav" style="display:none;">
+                <button class="sub-nav-btn" id="subHiring"        onclick="startExamFromSidebar('Hiring')">Hiring</button>
+                <button class="sub-nav-btn" id="subOnboarding"    onclick="startExamFromSidebar('Onboarding')">Onboarding</button>
+                <button class="sub-nav-btn" id="subAccommodation" onclick="startExamFromSidebar('Accommodation')">Accommodation</button>
+                <button class="sub-nav-btn" id="subRetention"     onclick="startExamFromSidebar('Retention')">Retention</button>
+                <button class="sub-nav-btn" id="subCulture"       onclick="startExamFromSidebar('Culture')">Culture</button>
+            </div>
+
+            <button id="profileBtn" onclick="showPage('profile')">
+                Company Profile
+            </button>
+
+        </div>
+
+        <!-- BOTTOM NAV BUTTONS -->
+        <button id="contactBtn" onclick="showPage('contact')">
+                Contact Us
+            </button>
+
+        <div class="sidebar-bottom">
+            <button id="logoutBtn" onclick="openLogoutModal()">
+                Logout
+            </button>
+        </div>
+
     </div>
 
     <!-- CONTENT -->
@@ -37,43 +62,95 @@
             <div class="card">
                 <h2>Inclusion Maturity Dashboard</h2>
                 <p>Track your organization's Inclusion Maturity Level.</p>
-            
-            <div id="dashboardBox"></div>
-            
+                <div id="dashboardBox"></div>
             </div>
         </div>
 
         <!-- DIAGNOSTIC ENGINE -->
-<div id="diagnostic" class="page">
-    <div class="card">
-        <h2>Inclusion Diagnostic Engine</h2>
+        <div id="diagnostic" class="page">
+            <div class="card">
+                <h2>Inclusion Diagnostic Engine</h2>
 
-        <!-- GROUP START -->
-        <div id="examMenuWrapper">
+                <div id="examMenuWrapper">
+                    <p>Please select an assessment type.</p>
+                    <div class="exam-grid" id="examMenu">
+                        <div class="exam" onclick="startExam('Hiring')">Hiring</div>
+                        <div class="exam" onclick="startExam('Onboarding')">Onboarding</div>
+                        <div class="exam" onclick="startExam('Accommodation')">Accommodation</div>
+                        <div class="exam" onclick="startExam('Retention')">Retention</div>
+                        <div class="exam" onclick="startExam('Culture')">Culture</div>
+                    </div>
+                </div>
 
-            <p>Please select an assessment type.</p>
-
-            <div class="exam-grid" id="examMenu">
-                <div class="exam" onclick="startExam('Hiring')">Hiring</div>
-                <div class="exam" onclick="startExam('Onboarding')">Onboarding</div>
-                <div class="exam" onclick="startExam('Accommodation')">Accommodation</div>
-                <div class="exam" onclick="startExam('Retention')">Retention</div>
-                <div class="exam" onclick="startExam('Culture')">Culture</div>
+                <div id="questionBox"></div>
             </div>
-
         </div>
-        <!-- GROUP END -->
 
-        <div id="questionBox"></div>
-    </div>
-</div>
+        <!-- COMPANY PROFILE -->
+        <div id="profile" class="page">
+            <div class="card">
+                <h2>Company Profile</h2>
+                <p>Your registered account and organization details.</p>
 
+                <div class="profile-grid">
 
-        <!-- RESULT PAGE (IMPORTANT - YOU WERE MISSING THIS LOGIC TARGET) -->
+                    <div class="profile-field">
+                        <label>Full Name</label>
+                        <div class="profile-value">{{ profile.full_name or '—' }}</div>
+                    </div>
+
+                    <div class="profile-field">
+                        <label>Position</label>
+                        <div class="profile-value">{{ profile.position or '—' }}</div>
+                    </div>
+
+                    <div class="profile-field">
+                        <label>Work Email Address</label>
+                        <div class="profile-value">{{ profile.work_email or '—' }}</div>
+                    </div>
+
+                    <div class="profile-field">
+                        <label>Contact Number</label>
+                        <div class="profile-value">{{ profile.contact_number or '—' }}</div>
+                    </div>
+
+                    <div class="profile-field">
+                        <label>Company Name</label>
+                        <div class="profile-value">{{ profile.company_name or '—' }}</div>
+                    </div>
+
+                    <div class="profile-field">
+                        <label>Company Size</label>
+                        <div class="profile-value">{{ profile.company_size or '—' }}</div>
+                    </div>
+
+                    <div class="profile-field">
+                        <label>Industry</label>
+                        <div class="profile-value">{{ profile.industry or '—' }}</div>
+                    </div>
+
+                    <div class="profile-field">
+                        <label>Company Number</label>
+                        <div class="profile-value">{{ profile.company_number or '—' }}</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTACT US -->
+        <div id="contact" class="page">
+            <div class="card">
+                <h2>Contact Us</h2>
+                <p>Get in touch with the Inclusion Intelligence System team.</p>
+                <!-- Content to be added later -->
+            </div>
+        </div>
+
+        <!-- RESULT PAGE -->
         <div id="results" class="page">
             <div class="card">
                 <div id="resultBox"></div>
-
                 <button class="primary" onclick="showPage('dashboard')">
                     Back to Dashboard
                 </button>
@@ -83,24 +160,34 @@
     </div>
 </div>
 
-<div id="progressModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+
+<!-- PROGRESS MODAL -->
+<div id="progressModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
 background:rgba(0,0,0,0.6); justify-content:center; align-items:center;">
-
-  <div style="background:white; padding:25px; border-radius:16px; text-align:center; width:300px;">
-    
-    <h2 style="color:#0E2240;">Progress Saved</h2>
-    <p style="color:#0E2240;">Your assessment has been recorded.</p>
-
-    <button onclick="goToExamSelect()" 
-        style="background:#00B8A0; color:white; border:none; padding:12px 18px; border-radius:10px; cursor:pointer;">
-        Choose Assessment Type
-    </button>
-
-  </div>
-
+    <div style="background:white; padding:25px; border-radius:16px; text-align:center; width:300px;">
+        <h2 style="color:#0E2240;">Progress Saved</h2>
+        <p style="color:#0E2240;">Your assessment has been recorded.</p>
+        <button onclick="goToExamSelect()"
+            style="background:#00B8A0; color:white; border:none; padding:12px 18px; border-radius:10px; cursor:pointer;">
+            Choose Assessment Type
+        </button>
+    </div>
 </div>
 
-<!-- ✅ FIXED JS PATH (VERY IMPORTANT) -->
+
+<!-- LOGOUT CONFIRMATION MODAL -->
+<div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+background:rgba(0,0,0,0.55); justify-content:center; align-items:center; z-index:9999;">
+    <div class="logout-modal-box">
+        <h3>Are you sure you want to logout?</h3>
+        <div class="logout-modal-actions">
+            <a href="{{ url_for('login.logout') }}" class="logout-confirm-btn">Yes, Logout</a>
+            <button onclick="closeLogoutModal()" class="logout-cancel-btn">No, Stay</button>
+        </div>
+    </div>
+</div>
+
+
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </body>

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, session, url_for
 from config import *
 from db import get_db_connection
 from assessment_scoring import compute_assessment_scores
@@ -6,7 +6,6 @@ from assessment_scoring import compute_assessment_scores
 from routes.login import login_bp
 from routes.super_dashboard import super_admin_bp
 from routes.vhan_dashboard import vhan_bp
-
 
 from extensions import mail
 
@@ -49,9 +48,6 @@ def home():
     """)
     progress_tracked = cursor.fetchone()['progress_tracked']
 
-    print("Users Assessed:", users_assessed)
-    print("Progress Tracked:", progress_tracked)
-
     cursor.close()
     conn.close()
 
@@ -62,14 +58,56 @@ def home():
     )
 
 
-
 @app.route('/assessment')
 def assessment():
-    return render_template('assessment.html')
+    user_id = session.get('user_id')
+
+    # Default empty profile in case something goes wrong
+    profile = {
+        'full_name': '',
+        'position': '',
+        'work_email': '',
+        'contact_number': '',
+        'company_name': '',
+        'company_size': '',
+        'industry': '',
+        'company_number': ''
+    }
+
+    if user_id:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Fetch user + their linked organization in one query
+        cursor.execute("""
+            SELECT
+                u.contact_person   AS full_name,
+                u.position_title   AS position,
+                u.work_email       AS work_email,
+                u.contact_number   AS contact_number,
+                o.company_name     AS company_name,
+                o.company_size     AS company_size,
+                o.industry         AS industry,
+                o.company_number   AS company_number
+            FROM users u
+            LEFT JOIN organizations o ON u.organization_id = o.id
+            WHERE u.id = %s
+        """, (user_id,))
+
+        result = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        if result:
+            profile = {k: (v or '') for k, v in result.items()}
+
+    return render_template('assessment.html', profile=profile)
 
 
 from routes.register import register_bp
 app.register_blueprint(register_bp)
+
 
 @app.route('/submit_assessment', methods=['POST'])
 def submit_assessment():
