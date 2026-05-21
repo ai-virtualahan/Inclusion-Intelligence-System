@@ -1,14 +1,16 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session, url_for, jsonify
 from config import *
 from db import get_db_connection
 from assessment_scoring import compute_assessment_scores
+from datetime import datetime, timedelta
 
 from routes.login import login_bp
 from routes.super_dashboard import super_admin_bp
 from routes.vhan_dashboard import vhan_bp
+from routes.register import register_bp
+from routes.org_dashboard import org_dashboard_bp
 
 from extensions import mail
-
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
@@ -17,7 +19,8 @@ app.secret_key = SECRET_KEY
 app.register_blueprint(login_bp)
 app.register_blueprint(super_admin_bp)
 app.register_blueprint(vhan_bp)
-
+app.register_blueprint(register_bp)
+app.register_blueprint(org_dashboard_bp)
 
 # Mail Config
 app.config['MAIL_SERVER'] = MAIL_SERVER
@@ -25,8 +28,6 @@ app.config['MAIL_PORT'] = MAIL_PORT
 app.config['MAIL_USE_TLS'] = MAIL_USE_TLS
 app.config['MAIL_USERNAME'] = MAIL_USERNAME
 app.config['MAIL_PASSWORD'] = MAIL_PASSWORD
-
-# Initialize Mail
 mail.init_app(app)
 
 
@@ -42,133 +43,119 @@ def home():
     """)
     users_assessed = cursor.fetchone()['users_assessed']
 
-    cursor.execute("""
-        SELECT COUNT(*) AS progress_tracked
-        FROM assessments
-    """)
+    cursor.execute("SELECT COUNT(*) AS progress_tracked FROM assessments")
     progress_tracked = cursor.fetchone()['progress_tracked']
 
     cursor.close()
     conn.close()
-
-    return render_template(
-        'home.html',
-        users_assessed=users_assessed,
-        progress_tracked=progress_tracked
-    )
+    return render_template('home.html', users_assessed=users_assessed, progress_tracked=progress_tracked)
 
 
 @app.route('/assessment')
 def assessment():
     user_id = session.get('user_id')
-
-    # Default empty profile in case something goes wrong
-    profile = {
-        'full_name': '',
-        'position': '',
-        'work_email': '',
-        'contact_number': '',
-        'company_name': '',
-        'company_size': '',
-        'industry': '',
-        'company_number': ''
-    }
-
+    profile = {k: '' for k in ['full_name','position','work_email','contact_number',
+                                'company_name','company_size','industry','company_number']}
     if user_id:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-
-        # Fetch user + their linked organization in one query
         cursor.execute("""
-            SELECT
-                u.contact_person   AS full_name,
-                u.position_title   AS position,
-                u.work_email       AS work_email,
-                u.contact_number   AS contact_number,
-                o.company_name     AS company_name,
-                o.company_size     AS company_size,
-                o.industry         AS industry,
-                o.company_number   AS company_number
+            SELECT u.contact_person AS full_name, u.position_title AS position,
+                   u.work_email, u.contact_number,
+                   o.company_name, o.company_size, o.industry, o.company_number
             FROM users u
             LEFT JOIN organizations o ON u.organization_id = o.id
             WHERE u.id = %s
         """, (user_id,))
-
         result = cursor.fetchone()
-
         cursor.close()
         conn.close()
-
         if result:
             profile = {k: (v or '') for k, v in result.items()}
-
     return render_template('assessment.html', profile=profile)
-
-
-from routes.register import register_bp
-app.register_blueprint(register_bp)
 
 
 @app.route('/submit_assessment', methods=['POST'])
 def submit_assessment():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login.login'))
+
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get user's organization_id
+    cursor.execute("SELECT organization_id FROM users WHERE id = %s", (user_id,))
+    user_row = cursor.fetchone()
+    if not user_row or not user_row['organization_id']:
+        cursor.close()
+        conn.close()
+        return "Error: No organization linked to your account.", 400
+
+    organization_id = user_row['organization_id']
+
+    # ── 6-month reassessment lock ─────────────────────────────────────────
+    cursor.execute("""
+        SELECT submitted_at FROM assessments
+        WHERE organization_id = %s AND status = 'completed'
+        ORDER BY submitted_at DESC LIMIT 1
+    """, (organization_id,))
+    last = cursor.fetchone()
+    if last and last['submitted_at']:
+        last_date = last['submitted_at']
+        if isinstance(last_date, str):
+            last_date = datetime.fromisoformat(last_date)
+        unlock_date = last_date + timedelta(days=182)
+        if datetime.now() < unlock_date:
+            cursor.close()
+            conn.close()
+            return render_template('assessment_locked.html',
+                                   next_eligible=unlock_date.strftime("%B %d, %Y"))
+
+    # ── Determine cycle number ────────────────────────────────────────────
+    cursor.execute("""
+        SELECT COUNT(*) AS cnt FROM assessments
+        WHERE organization_id = %s AND status = 'completed'
+    """, (organization_id,))
+    cnt = cursor.fetchone()['cnt']
+    cycle_number = cnt + 1
+    assessment_type = 'baseline' if cycle_number == 1 else 'reassessment'
+
+    cursor2 = conn.cursor()  # non-dict cursor for inserts
 
     try:
-        organization_id = 1  # temporary
+        cursor2.execute("""
+            INSERT INTO assessments (organization_id, assessment_type, status, cycle_number, started_at)
+            VALUES (%s, %s, 'submitted', %s, CURRENT_TIMESTAMP)
+        """, (organization_id, assessment_type, cycle_number))
+        assessment_id = cursor2.lastrowid
 
-        # 1. create assessment
-        cursor.execute("""
-            INSERT INTO assessments (
-                organization_id,
-                assessment_type,
-                status,
-                cycle_number,
-                started_at
-            )
-            VALUES (%s, 'baseline', 'submitted', 1, CURRENT_TIMESTAMP)
-        """, (organization_id,))
+        # Save answers
+        for key, selected_choice_id in request.form.items():
+            if key.startswith("answer_"):
+                q_id = key.replace("answer_", "")
+                cursor2.execute("SELECT choice_score FROM question_choices WHERE id = %s", (selected_choice_id,))
+                row = cursor2.fetchone()
+                if row:
+                    score_value = row[0]
+                    cursor2.execute("""
+                        INSERT INTO assessment_answers
+                            (assessment_id, question_id, selected_choice_id, score_value, saved_at)
+                        VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+                    """, (assessment_id, q_id, selected_choice_id, score_value))
 
-        assessment_id = cursor.lastrowid
-
-        # 2. save answers
-        for question_id, selected_choice_id in request.form.items():
-            if question_id.startswith("answer_"):
-                q_id = question_id.replace("answer_", "")
-
-                cursor.execute("""
-                    SELECT choice_score
-                    FROM question_choices
-                    WHERE id = %s
-                """, (selected_choice_id,))
-
-                score_value = cursor.fetchone()[0]
-
-                cursor.execute("""
-                    INSERT INTO assessment_answers (
-                        assessment_id,
-                        question_id,
-                        selected_choice_id,
-                        score_value,
-                        saved_at
-                    )
-                    VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
-                """, (assessment_id, q_id, selected_choice_id, score_value))
-
-        # 3. AUTO COMPUTE
-        compute_assessment_scores(cursor, assessment_id)
-
-        # 4. save all changes
+        # Auto-compute scores
+        compute_assessment_scores(cursor2, assessment_id)
         conn.commit()
-
         return redirect(f'/assessment_result/{assessment_id}')
 
     except Exception as e:
         conn.rollback()
-        return f"Error: {e}"
+        return f"Error: {e}", 500
 
     finally:
         cursor.close()
+        cursor2.close()
         conn.close()
 
 
@@ -177,15 +164,11 @@ def assessment_result(assessment_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # assessment summary
     cursor.execute("""
-        SELECT overall_score, maturity_level
-        FROM assessments
-        WHERE id = %s
+        SELECT overall_score, maturity_level FROM assessments WHERE id = %s
     """, (assessment_id,))
     assessment = cursor.fetchone()
 
-    # dimension scores
     cursor.execute("""
         SELECT ds.score, ds.raw_score, ad.name
         FROM dimension_scores ds
@@ -196,12 +179,7 @@ def assessment_result(assessment_id):
 
     cursor.close()
     conn.close()
-
-    return render_template(
-        'assessment_result.html',
-        assessment=assessment,
-        scores=scores
-    )
+    return render_template('assessment_result.html', assessment=assessment, scores=scores)
 
 
 if __name__ == '__main__':

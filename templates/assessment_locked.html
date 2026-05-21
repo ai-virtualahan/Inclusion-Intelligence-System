@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Assessment Locked | IIS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/assessment.css') }}">
+  <style>
+    .lock-card {
+      max-width: 500px;
+      margin: 80px auto;
+      background: white;
+      border-radius: 18px;
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      color: #0E2240;
+    }
+    .lock-icon { font-size: 52px; margin-bottom: 16px; }
+    .lock-card h2 { margin: 0 0 12px; font-size: 22px; }
+    .lock-card p { color: #555; line-height: 1.6; margin-bottom: 24px; }
+    .lock-date {
+      display: inline-block;
+      background: #e8f7f5;
+      color: #0B9B8A;
+      font-weight: 700;
+      font-size: 16px;
+      padding: 10px 22px;
+      border-radius: 10px;
+      margin-bottom: 24px;
+    }
+    .back-btn {
+      display: inline-block;
+      background: #0B9B8A;
+      color: white;
+      padding: 12px 28px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body style="background:#0E2240; min-height:100vh;">
+  <div class="lock-card">
+    <div class="lock-icon">🔒</div>
+    <h2>Reassessment Not Yet Available</h2>
+    <p>
+      Your organization has already completed an assessment.
+      Reassessments are available every <strong>6 months</strong> to allow time for
+      meaningful progress and change.
+    </p>
+    <div class="lock-date">Next eligible: {{ next_eligible }}</div>
+    <br>
+    <a href="{{ url_for('assessment') }}" class="back-btn">Back to Dashboard</a>
+  </div>
+</body>
+</html>
