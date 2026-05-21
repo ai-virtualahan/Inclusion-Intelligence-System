@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Email Logs</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/super_dashboard.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/email_logs.css') }}">
+</head>
+<body>
+<div class="top-navbar">
+  <div class="brand">Inclusion Intelligence</div>
+
+  <div class="top-links">
+    <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
+    <a href="#">Users</a>
+    <a href="#">Reports</a>
+    <a href="{{ url_for('login.logout') }}">Logout</a>
+  </div>
+
+</div>
+
+<div class="admin-layout">
+  <aside class="sidebar">
+    <h3>Super Admin</h3>
+
+    <a href="{{ url_for('super_admin.super_dashboard') }}" class="side-link">
+      Dashboard Overview
+    </a>
+
+    <a href="{{ url_for('super_admin.organizations') }}" class="side-link">
+      Organizations
+    </a>
+
+    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">
+      Assessment Questions
+    </a>
+
+    <a href="{{ url_for('super_admin.users') }}" class="side-link">
+      Users
+    </a>
+    <a href="#" class="side-link">Reports</a>
+    <a href="{{ url_for('super_admin.email_logs') }}" class="side-link active">
+        Email Logs
+    </a>
+    <a href="#" class="side-link">System Settings</a>
+
+  </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <div class="page-header">
+            <h1>Email Logs</h1>
+            <p>Monitor all system email activities.</p>
+        </div>
+
+        <!-- FILTER SECTION -->
+        <div class="filter-section">
+
+            <input type="text"
+                    id="emailSearchInput"
+                    placeholder="Search email..."
+                    class="search-input">
+
+            <select id="statusFilter" class="filter-select">
+                <option>All Status</option>
+                <option>Sent</option>
+                <option>Pending</option>
+                <option>Failed</option>
+            </select>
+
+        </div>
+
+        <!-- TABLE -->
+        <div class="table-container">
+
+            <table class="data-table">
+
+                <thead>
+                    <tr>
+                        <th>Recipient</th>
+                        <th>Type</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th>Sent At</th>
+                        <th>Triggered By</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for log in email_logs %}
+                    <tr data-status="{{ log.send_status }}">
+
+                        <td>{{ log.recipient_email }}</td>
+
+                        <td>
+                            {{ log.notification_type }}
+                        </td>
+
+                        <td>{{ log.subject }}</td>
+
+                        <td>
+                            <span class="status-badge status-{{ log.send_status }}">
+                                {{ log.send_status }}
+                            </span>
+                        </td>
+
+                        <td>{{ log.sent_at or '—' }}</td>
+
+                        <td>{{ log.triggered_by_name or 'System' }}</td>
+
+                        <td>
+                            <td>
+                                <button type="button"
+                                        class="action-btn secondary-btn"
+                                        onclick="openEmailLogModal(
+                                            '{{ log.recipient_email }}',
+                                            '{{ log.notification_type }}',
+                                            '{{ log.subject }}',
+                                            `{{ log.message_body or '' }}`,
+                                            '{{ log.send_status }}',
+                                            '{{ log.sent_at or "—" }}',
+                                            '{{ log.triggered_by_name or "System" }}',
+                                            `{{ log.error_message or "" }}`
+                                        )">
+                                    View
+                                </button>
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </main>
+
+</div>
+
+<div id="emailLogModal" class="modal">
+  <div class="modal-content contact-modal">
+    <span class="close" onclick="closeEmailLogModal()">&times;</span>
+
+    <h2>Email Log Details</h2>
+
+    <div class="contact-details">
+      <div class="detail-row">
+        <span class="detail-label">Recipient:</span>
+        <span id="modalRecipient"></span>
+      </div>
+     
+      <div class="detail-row">
+        <span class="detail-label">Subject:</span>
+        <span id="modalSubject"></span>
+      </div>
+
+      <div class="detail-row message-row">
+        <span class="detail-label">Message:</span>
+        <p id="modalMessage"></p>
+      </div>
+
+      <div class="detail-row message-row">
+        <span class="detail-label">Error Message:</span>
+        <p id="modalError"></p>
+      </div>
+    </div>
+  </div>
+</div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/email_logs.js') }}"></script>
+</body>
+</html>

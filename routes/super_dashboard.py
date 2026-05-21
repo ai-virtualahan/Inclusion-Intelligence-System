@@ -425,5 +425,36 @@ def users():
     )
 
 
+@super_admin_bp.route('/email-logs')
+def email_logs():
+
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    query = """
+        SELECT 
+            en.*,
+            u.contact_person AS triggered_by_name
+        FROM email_notifications en
+        LEFT JOIN users u
+        ON en.triggered_by = u.id
+        ORDER BY en.created_at DESC
+    """
+
+    cursor.execute(query)
+    email_logs = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        'email_logs.html',
+        email_logs=email_logs
+    )
+
+
 
 
