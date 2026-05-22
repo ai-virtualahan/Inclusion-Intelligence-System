@@ -28,6 +28,12 @@ app.config['MAIL_PORT'] = MAIL_PORT
 app.config['MAIL_USE_TLS'] = MAIL_USE_TLS
 app.config['MAIL_USERNAME'] = MAIL_USERNAME
 app.config['MAIL_PASSWORD'] = MAIL_PASSWORD
+
+
+app.config['MAIL_DEFAULT_SENDER'] = MAIL_DEFAULT_SENDER
+
+# Initialize Mail
+
 mail.init_app(app)
 
 

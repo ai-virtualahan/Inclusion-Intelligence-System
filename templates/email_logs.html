@@ -115,7 +115,6 @@
 
                         <td>{{ log.triggered_by_name or 'System' }}</td>
 
-                        <td>
                             <td>
                                 <button type="button"
                                         class="action-btn secondary-btn"
@@ -131,7 +130,7 @@
                                         )">
                                     View
                                 </button>
-                        </td>
+                            </td>
 
                     </tr>
                     {% endfor %}
@@ -175,8 +174,8 @@
     </div>
   </div>
 </div>
-  </div>
-</div>
+
+
 <script src="{{ url_for('static', filename='js/email_logs.js') }}"></script>
 </body>
 </html>

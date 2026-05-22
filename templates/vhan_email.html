@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VHAN Admin | Email Logs</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/vhan_dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/vhan_email.css') }}">
+</head>
+<body>
+
+<div class="top-navbar">
+  <div class="logo-section">
+    <h2>Inclusion Intelligence</h2>
+  </div>
+
+  <div class="top-nav-links">
+    <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard</a>
+    <a href="#">Organizations</a>
+    <a href="#">Reports</a>
+    <a href="{{ url_for('login.logout') }}">Logout</a>
+  </div>
+</div>
+
+<div class="dashboard-container">
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>VHAN Admin</h2>
+      <p>Inclusion Intelligence</p>
+    </div>
+
+    <nav class="sidebar-menu">
+      <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard Overview</a>
+      <a href="{{ url_for('vhan.pending_approvals') }}">Pending Approvals</a>
+      <a href="#">Organizations</a>
+      <a href="#">Assessment Questions</a>
+      <a href="{{ url_for('vhan.email_logs') }}" class="active">Email Logs</a>
+      <a href="#">Reports & Analytics</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+
+    <section class="page-header">
+      <h1>Outgoing Email Logs</h1>
+      <p>Monitor all outgoing emails and send registration invitations</p>
+    </section>
+
+    <!-- INVITATION FORM -->
+    <!-- <section class="table-container">
+      <h2>Send Registration Invitation</h2>
+
+      <form method="POST" action="#" class="modal-form">
+
+        <div class="form-group">
+          <label>Company / Organization Name</label>
+          <input type="text" name="company_name" placeholder="Enter company name">
+        </div>
+
+        <div class="form-group">
+          <label>Recipient Email</label>
+          <input type="email" name="recipient_email" placeholder="Enter recipient email" required>
+        </div>
+
+        <div class="form-group">
+          <label>Invitation Message</label>
+          <textarea name="message_body" rows="5">Hello,
+
+You are invited to register in the Inclusion Intelligence System.
+
+Please complete your organization registration using the provided link.
+
+Thank you,2
+Inclusion Intelligence Team</textarea>
+        </div>
+
+        <button type="submit" class="action-btn edit-btn">
+          Send Invitation
+        </button>
+
+      </form>
+    </section> -->
+
+    <!-- FILTERS -->
+    <div class="email-toolbar">
+      <div class="filter-group">
+        <input type="text"
+              id="emailSearchInput"
+              placeholder="Search email or subject..."
+              class="search-input">
+
+        <select id="typeFilter" class="filter-select">
+          <option value="">All Email Types</option>
+          <option value="registration_invitation">Registration Invitation</option>
+          <option value="password_reset">Password Reset</option>
+          <option value="account_approval">Account Approval</option>
+          <option value="account_rejection">Account Rejection</option>
+          <option value="assessment_reminder">Assessment Reminder</option>
+        </select>
+
+        <select id="statusFilter" class="filter-select">
+          <option value="">All Status</option>
+          <option value="sent">Sent</option>
+          <option value="pending">Pending</option>
+          <option value="failed">Failed</option>
+        </select>
+      </div>
+
+      <button type="button" class="send-invite-btn" onclick="openInviteModal()">
+        + Send Invitation
+      </button>
+    </div>
+
+    <!-- EMAIL LIST -->
+    <section class="table-container">
+      <h2>Email Activity</h2>
+      
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Recipient</th>
+              <th>Email Type</th>
+              <th>Subject</th>
+              <th>Status</th>
+              <th>Sent At</th>
+              <th>Triggered By</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for log in email_logs %}
+            <tr data-status="{{ log.send_status }}" data-type="{{ log.notification_type }}">
+              <td>{{ log.recipient_email }}</td>
+              <td>{{ log.notification_type }}</td>
+              <td>{{ log.subject }}</td>
+
+              <td>
+                  <span class="status-badge status-{{ log.send_status }}">
+                      {{ log.send_status }}
+                  </span>
+              </td>
+
+              <td>{{ log.sent_at or '—' }}</td>
+
+              <td>{{ log.triggered_by_company or 'System' }}</td>
+
+              <td>
+                  <button class="view-btn">
+                      View
+                  </button>
+              </td>
+          </tr>
+            {% else %}
+            <tr>
+              <td colspan="7" class="empty-state">No email activity yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>  
+    </section>
+
+  </main>
+</div>
+
+<!-- INVITATION MODAL-->
+<div id="inviteModal" class="modal">
+  <div class="modal-content invite-modal">
+    <span class="close" onclick="closeInviteModal()">&times;</span>
+
+    <h2>Send Registration Invitation</h2>
+    <p class="modal-subtitle">Invite an organization representative to register.</p>
+
+    <form method="POST" action="#" class="modal-form">
+      <div class="form-group">
+        <label>Company / Organization Name</label>
+        <input type="text" name="company_name" placeholder="Enter company name">
+      </div>
+
+      <div class="form-group">
+        <label>Recipient Email</label>
+        <input type="email" name="recipient_email" placeholder="Enter recipient email" required>
+      </div>
+
+      <div class="form-group">
+        <label>Invitation Message</label>
+        <textarea name="message_body" rows="6">Hello,
+
+You are invited to register in the Inclusion Intelligence System.
+
+Please complete your organization registration using the provided link.
+
+Thank you,
+Inclusion Intelligence Team</textarea>
+      </div>
+
+      <button type="submit" class="send-invite-btn">
+        Send Invitation
+      </button>
+    </form>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/email_logs.js') }}"></script>
+</body>
+</html>

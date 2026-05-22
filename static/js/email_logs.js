@@ -1,58 +1,42 @@
-function openEmailLogModal(recipient, type, subject, message, status, sentAt, triggeredBy, errorMessage) {
-  document.getElementById("modalRecipient").textContent = recipient;
-  document.getElementById("modalSubject").textContent = subject;
-  document.getElementById("modalMessage").textContent = message || "—";
-  document.getElementById("modalError").textContent = errorMessage || "No error";
-
-  document.getElementById("emailLogModal").style.display = "flex";
-}
-
-function closeEmailLogModal() {
-  document.getElementById("emailLogModal").style.display = "none";
-}
-
-
 const searchInput = document.getElementById("emailSearchInput");
-
 const statusFilter = document.getElementById("statusFilter");
+const typeFilter = document.getElementById("typeFilter");
 
 function filterEmailLogs() {
+  const searchValue = searchInput ? searchInput.value.toLowerCase() : "";
+  const statusValue = statusFilter ? statusFilter.value.toLowerCase() : "";
+  const typeValue = typeFilter ? typeFilter.value.toLowerCase() : "";
 
-  const searchValue =
-    searchInput.value.toLowerCase();
+  document.querySelectorAll(".data-table tbody tr").forEach(row => {
+    const rowText = row.textContent.toLowerCase();
+    const rowStatus = row.dataset.status?.toLowerCase() || "";
+    const rowType = row.dataset.type?.toLowerCase() || "";
 
-  const statusValue =
-    statusFilter.value.toLowerCase();
+    const matchesSearch = rowText.includes(searchValue);
+    const matchesStatus = statusValue === "" || rowStatus === statusValue;
+    const matchesType = typeValue === "" || rowType === typeValue;
 
-  document.querySelectorAll(".data-table tbody tr")
-    .forEach(row => {
-
-      const rowText =
-        row.textContent.toLowerCase();
-
-      const rowStatus =
-        row.dataset.status.toLowerCase();
-
-      const matchesSearch =
-        rowText.includes(searchValue);
-
-      const matchesStatus =
-        statusValue === "" ||
-        rowStatus === statusValue;
-
-      row.style.display =
-        matchesSearch && matchesStatus
-          ? ""
-          : "none";
-    });
+    row.style.display =
+      matchesSearch && matchesStatus && matchesType ? "" : "none";
+  });
 }
 
-searchInput.addEventListener(
-  "input",
-  filterEmailLogs
-);
+if (searchInput) searchInput.addEventListener("input", filterEmailLogs);
+if (statusFilter) statusFilter.addEventListener("change", filterEmailLogs);
+if (typeFilter) typeFilter.addEventListener("change", filterEmailLogs);
 
-statusFilter.addEventListener(
-  "change",
-  filterEmailLogs
-);
+function openInviteModal() {
+    document.getElementById("inviteModal").classList.add("show");
+}
+
+function closeInviteModal() {
+    document.getElementById("inviteModal").classList.remove("show");
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById("inviteModal");
+
+    if (event.target === modal) {
+        modal.classList.remove("show");
+    }
+}

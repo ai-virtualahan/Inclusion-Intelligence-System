@@ -72,7 +72,7 @@ def logout():
 
 @login_bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
-    
+
     email = request.form['email']
 
     conn = get_db_connection()
@@ -82,6 +82,7 @@ def forgot_password():
     user = cursor.fetchone()
 
     if user:
+
         token = secrets.token_urlsafe(32)
         expiry = datetime.now() + timedelta(minutes=15)
 
@@ -96,7 +97,7 @@ def forgot_password():
 
         BASE_URL = "https://cylinder-cinch-unnerve.ngrok-free.dev"
         reset_link = f"{BASE_URL}/reset-password/{token}"
-        
+
         msg = Message(
             subject="Reset Your Password - Inclusion Intelligence System",
             sender=("Inclusion Intelligence System", MAIL_USERNAME),
@@ -104,28 +105,81 @@ def forgot_password():
         )
 
         msg.body = f"""
-        Hello {user.get('contact_person', '')},
+Hello {user.get('contact_person', '')},
 
-        We received a request to reset the password associated with your Inclusion Intelligence System account.
+We received a request to reset the password associated with your Inclusion Intelligence System account.
 
-        Please click the link below to create a new password:
+Please click the link below to create a new password:
 
-        {reset_link}
+{reset_link}
 
-        For security purposes, this link will expire in 15 minutes.
+For security purposes, this link will expire in 15 minutes.
 
-        If you did not request a password reset, you may safely ignore this email.
+If you did not request a password reset, you may safely ignore this email.
 
-        Thank you,
-        Inclusion Intelligence System Support Team
-        Empowering Inclusion. Enriching Lives.
-        """
+Thank you,
+Inclusion Intelligence System Support Team
+Empowering Inclusion. Enriching Lives.
+"""
 
-        print("ABOUT TO SEND EMAIL TO:",  email)
-        mail.send(msg)
-        print ("EMAIL SENT SUCCESSFULLY")
+        print("ABOUT TO SEND EMAIL TO:", email)
+
+        try:
+            mail.send(msg)
+
+            print("EMAIL SENT SUCCESSFULLY")
+
+            cursor.execute("""
+                INSERT INTO email_notifications (
+                    user_id,
+                    recipient_email,
+                    notification_type,
+                    subject,
+                    message_body,
+                    send_status,
+                    sent_at
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, NOW())
+            """, (
+                user['id'],
+                email,
+                'password_reset',
+                msg.subject,
+                msg.body,
+                'sent'
+            ))
+
+            conn.commit()
+
+        except Exception as e:
+
+            print("EMAIL SEND ERROR:", e)
+
+            cursor.execute("""
+                INSERT INTO email_notifications (
+                    user_id,
+                    recipient_email,
+                    notification_type,
+                    subject,
+                    message_body,
+                    send_status,
+                    error_message
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (
+                user['id'],
+                email,
+                'password_reset',
+                msg.subject,
+                msg.body,
+                'failed',
+                str(e)
+            ))
+
+            conn.commit()
 
         flash("A password reset link has been sent to your email.", "success")
+
     else:
         flash("Email not found.", "error")
 
@@ -133,7 +187,6 @@ def forgot_password():
     conn.close()
 
     return redirect(url_for('login.login'))
-
 
 @login_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
