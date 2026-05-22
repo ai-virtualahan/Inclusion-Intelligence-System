@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 8.0.45, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.46, for Win64 (x86_64)
 --
--- Host: localhost    Database: iis_db
+-- Host: 127.0.0.1    Database: iis_db
 -- ------------------------------------------------------
--- Server version	8.0.45
+-- Server version	8.0.46
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -222,7 +222,7 @@ CREATE TABLE `email_notifications` (
   `user_id` int DEFAULT NULL,
   `organization_id` int DEFAULT NULL,
   `assessment_id` int DEFAULT NULL,
-  `notification_type` enum('account_approval','account_rejection','account_activation','reassessment_reminder','password_reset','report_ready') NOT NULL,
+  `notification_type` enum('registration_invitation','account_approval','account_rejection','password_reset','assessment_reminder','report_ready') NOT NULL,
   `recipient_email` varchar(150) NOT NULL,
   `subject` varchar(255) NOT NULL,
   `message_body` text,
@@ -240,7 +240,7 @@ CREATE TABLE `email_notifications` (
   CONSTRAINT `fk_email_org` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_email_triggered_by` FOREIGN KEY (`triggered_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_email_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -249,6 +249,7 @@ CREATE TABLE `email_notifications` (
 
 LOCK TABLES `email_notifications` WRITE;
 /*!40000 ALTER TABLE `email_notifications` DISABLE KEYS */;
+INSERT INTO `email_notifications` VALUES (1,NULL,NULL,NULL,'account_approval','juan@example.com','Account Approved','Your account has been approved.','sent','2026-05-20 04:52:10',NULL,NULL,'2026-05-20 04:52:10'),(2,NULL,NULL,NULL,'registration_invitation','arbuisjinalie@gmail.com','Registration Invitation - Inclusion Intelligence','Hello,\r\n\r\nYou are invited to register in the Inclusion Intelligence System.\r\n\r\nPlease complete your organization registration using the provided link.\r\n\r\nThank you,\r\nInclusion Intelligence Team','sent','2026-05-22 06:51:53',NULL,3,'2026-05-22 06:51:53'),(3,NULL,NULL,NULL,'registration_invitation','arbuisjinalie@gmail.com','Registration Invitation - Inclusion Intelligence','Hello,\r\n\r\nYou are invited to register in the Inclusion Intelligence System.\r\n\r\nPlease complete your organization registration using the provided link.\r\n\r\nThank you,\r\nInclusion Intelligence Team','sent','2026-05-22 06:52:05',NULL,3,'2026-05-22 06:52:05'),(4,NULL,NULL,NULL,'registration_invitation','arbuisjinalie@gmail.com','Registration Invitation - Inclusion Intelligence','Hello,\r\n\r\nYou are invited to register in the Inclusion Intelligence System.\r\n\r\nPlease complete your organization registration using the provided link.\r\n\r\nThank you,\r\nInclusion Intelligence Team','failed',NULL,'[Errno 11002] getaddrinfo failed',3,'2026-05-22 07:25:53'),(5,NULL,NULL,NULL,'registration_invitation','arbuisjinalie@gmail.com','Registration Invitation - Inclusion Intelligence','Hello,\r\n\r\nYou are invited to register in the Inclusion Intelligence System.\r\n\r\nPlease complete your organization registration using the provided link.\r\n\r\nThank you,\r\nInclusion Intelligence Team','failed',NULL,'[Errno 11002] getaddrinfo failed',3,'2026-05-22 07:33:56'),(6,NULL,NULL,NULL,'registration_invitation','arbuisjinalie@gmail.com','Registration Invitation - Inclusion Intelligence','Hello,\r\n\r\nYou are invited to register in the Inclusion Intelligence System.\r\n\r\nPlease complete your organization registration using the provided link.\r\n\r\nThank you,\r\nInclusion Intelligence Team','failed',NULL,'[Errno 11002] getaddrinfo failed',3,'2026-05-22 07:35:59'),(7,NULL,NULL,NULL,'registration_invitation','arbuisjinalie@gmail.com','Registration Invitation - Inclusion Intelligence','Hello,\r\n\r\nYou are invited to register in the Inclusion Intelligence System.\r\n\r\nPlease complete your organization registration using the provided link.\r\n\r\nThank you,\r\nInclusion Intelligence Team','failed',NULL,'(535, b\'5.7.139 Authentication unsuccessful, the request did not meet the criteria to be authenticated successfully. Contact your administrator. [TPYP295CA0042.TWNP295.PROD.OUTLOOK.COM 2026-05-22T07:36:39.520Z 08DEB6AE016FB470]\')',3,'2026-05-22 07:36:39'),(8,NULL,NULL,NULL,'registration_invitation','arbuisjinalie@gmail.com','Registration Invitation - Inclusion Intelligence','Hello,\r\n\r\nYou are invited to register in the Inclusion Intelligence System.\r\n\r\nPlease complete your organization registration using the provided link.\r\n\r\nThank you,\r\nInclusion Intelligence Team','failed',NULL,'(535, b\'5.7.139 Authentication unsuccessful, the request did not meet the criteria to be authenticated successfully. Contact your administrator. [SG2PR02CA0121.apcprd02.prod.outlook.com 2026-05-22T07:42:03.232Z 08DEB6B236CE7D27]\')',3,'2026-05-22 07:42:03'),(9,6,NULL,NULL,'password_reset','arbuisjinalie@gmail.com','Reset Your Password - Inclusion Intelligence System','\nHello Jinalie C. Arbuis,\n\nWe received a request to reset the password associated with your Inclusion Intelligence System account.\n\nPlease click the link below to create a new password:\n\nhttps://cylinder-cinch-unnerve.ngrok-free.dev/reset-password/1QH2JD_8EhHCleKWgjRnVL66WccI80v8b8oqZXAoiFw\n\nFor security purposes, this link will expire in 15 minutes.\n\nIf you did not request a password reset, you may safely ignore this email.\n\nThank you,\nInclusion Intelligence System Support Team\nEmpowering Inclusion. Enriching Lives.\n','sent','2026-05-22 11:31:54',NULL,NULL,'2026-05-22 11:31:54');
 /*!40000 ALTER TABLE `email_notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -508,7 +509,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,1,'Mock HR User','mockher@example.com','mocked_hashed_password','org_admin','approved','2026-04-24 12:04:29',NULL,NULL,NULL,NULL,NULL),(2,NULL,'Mock Super Admin','iis@virtualahan.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','super_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,'JK3j7R6Gb_y64wHJKlmd4Y8rtlOBhmZQWKIkb2OEomo','2026-05-14 09:09:03'),(3,NULL,'Mock VHAN Admin','vhanadmin@example.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','vhan_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL),(4,NULL,'Mock HR User','hr@example.com','scrypt:32768:8:1$pjU5gzIVRjQFu9CY$a40aad76952fb404e6a0a62a4f7bdf58e31ef1821e296a8f20eb35d01d1407e612bf6de0564564a8592d084594455b39286d5a088042d48a44ac6a51b0f82d49','org_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL),(5,NULL,'Maria','jinah@testemail.com','scrypt:32768:8:1$xMn09DKAZ7q5RmDm$c061c6dff8ede97f2bbf16392cc3f03ddc3def8cb9b9288ea84fbaa7b1aa43a1d2ffd0fae7f0f8c1bc0af8c61054dc390829e75fab34d6ff59749bb7d48edf1c','org_admin','approved','2026-05-15 06:28:41',NULL,'Skills Incubator','12345678910',NULL,NULL),(6,6,'Jinalie C. Arbuis','arbuisjinalie@gmail.com','scrypt:32768:8:1$MByC8iAmVfXRtN7J$9ba0ab2898bee77e464ac79e668f2e4d79bb9f5be91634a5670fbca2ff155558b240cf7b5ef56f5ddf24262188c8127b7030ad6d3728db090b6121aa7abb2a3a','org_admin','approved','2026-05-15 10:20:45',NULL,'Manager','09531080123','0fe_Xy-bU1B8aenfYD6jpPtn20g8VWPC1DIdy5_wt9k','2026-05-19 07:36:23'),(7,7,'Cynthia','cynthia@virtualahan.com','scrypt:32768:8:1$XlADXu1QLdUbUcij$2b7d41e2984682aa9343225e0ee007ce1dd07ef86494c611c8c5cef0e15774a7d2b5cfb056c69aba842716c7630dd63d3818fc41538a73309a6e3eb5d17ab31f','org_admin','approved','2026-05-19 06:03:14',NULL,'Project Manager','+639163657571',NULL,NULL);
+INSERT INTO `users` VALUES (1,1,'Mock HR User','mockher@example.com','mocked_hashed_password','org_admin','approved','2026-04-24 12:04:29',NULL,NULL,NULL,NULL,NULL),(2,NULL,'Mock Super Admin','iis@virtualahan.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','super_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,'JK3j7R6Gb_y64wHJKlmd4Y8rtlOBhmZQWKIkb2OEomo','2026-05-14 09:09:03'),(3,NULL,'Mock VHAN Admin','vhanadmin@example.com','scrypt:32768:8:1$wOBxgLuO1Z6BkQZQ$78dd151d04704c83f73939aa2b8372761a8015b13084dd5f236eb44f3818cf26e09fa3c933ef8f83de11e2766aea12b5e76c034e0a14c87008e4722b6ecfa085','vhan_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL),(4,NULL,'Mock HR User','hr@example.com','scrypt:32768:8:1$pjU5gzIVRjQFu9CY$a40aad76952fb404e6a0a62a4f7bdf58e31ef1821e296a8f20eb35d01d1407e612bf6de0564564a8592d084594455b39286d5a088042d48a44ac6a51b0f82d49','org_admin','approved','2026-04-30 04:18:03',NULL,NULL,NULL,NULL,NULL),(5,NULL,'Maria','jinah@testemail.com','scrypt:32768:8:1$xMn09DKAZ7q5RmDm$c061c6dff8ede97f2bbf16392cc3f03ddc3def8cb9b9288ea84fbaa7b1aa43a1d2ffd0fae7f0f8c1bc0af8c61054dc390829e75fab34d6ff59749bb7d48edf1c','org_admin','approved','2026-05-15 06:28:41',NULL,'Skills Incubator','12345678910',NULL,NULL),(6,6,'Jinalie C. Arbuis','arbuisjinalie@gmail.com','scrypt:32768:8:1$MByC8iAmVfXRtN7J$9ba0ab2898bee77e464ac79e668f2e4d79bb9f5be91634a5670fbca2ff155558b240cf7b5ef56f5ddf24262188c8127b7030ad6d3728db090b6121aa7abb2a3a','org_admin','approved','2026-05-15 10:20:45',NULL,'Manager','09531080123','1QH2JD_8EhHCleKWgjRnVL66WccI80v8b8oqZXAoiFw','2026-05-22 11:46:51'),(7,7,'Cynthia','cynthia@virtualahan.com','scrypt:32768:8:1$XlADXu1QLdUbUcij$2b7d41e2984682aa9343225e0ee007ce1dd07ef86494c611c8c5cef0e15774a7d2b5cfb056c69aba842716c7630dd63d3818fc41538a73309a6e3eb5d17ab31f','org_admin','approved','2026-05-19 06:03:14',NULL,'Project Manager','+639163657571',NULL,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -521,4 +522,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-19 19:31:31
+-- Dump completed on 2026-05-22 23:33:46
