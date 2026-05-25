@@ -15,8 +15,8 @@
 
   <div class="top-links">
     <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
-    <a href="#">Users</a>
-    <a href="#">Reports</a>
+    <a href="{{ url_for('super_admin.users') }}">Users</a>
+    <a href="{{ url_for('super_admin.reports') }}">Reports</a>
     <a href="{{ url_for('login.logout') }}">Logout</a>
   </div>
 </div>
@@ -42,7 +42,7 @@
       Users
     </a>
 
-    <a href="#" class="side-link">
+    <a href="{{ url_for('super_admin.reports') }}" class="side-link">
       Reports
     </a>
 
@@ -50,7 +50,7 @@
       Email Logs
     </a>
 
-    <a href=="#" class="side-link">
+    <a href="{{ url_for('super_admin.system_settings') }}" class="side-link">
       System Settings
     </a>
   </aside>
@@ -65,7 +65,7 @@
     <section class="stats">
       <div class="card">
         <h2>{{ total_organizations }}</h2>
-        <p>Total Organizations</p>
+        <p>Approved Organizations</p>
       </div>
 
       <div class="card">
@@ -81,6 +81,11 @@
       <div class="card">
         <h2>{{ active_users }}</h2>
         <p>Active Users</p>
+      </div>
+
+      <div class="card">
+        <h2>{{ generated_reports }}</h2>
+        <p>Saved Reports</p>
       </div>
     </section>
 

@@ -17,6 +17,9 @@ body {
   height: 70px;
   background: #072653;
   color: white;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 
   display: flex;
   align-items: center;
@@ -42,8 +45,8 @@ body {
 
 .admin-layout {
   display: flex;
-  min-height: calc(100vh - 80px);
-  overflow-x: hidden;
+  height: calc(100vh - 70px);
+  overflow: hidden;
 }
 
 .sidebar {
@@ -52,6 +55,10 @@ body {
   background: #0b2345;
   padding: 28px 22px;
   color: white;
+  height: calc(100vh - 70px);
+  overflow-y: auto;
+  position: sticky;
+  top: 70px;
 }
 
 .sidebar h3 {
@@ -86,6 +93,8 @@ body {
   flex: 1;
   padding: 40px;
   overflow-x: hidden;
+  overflow-y: auto;
+  height: calc(100vh - 70px);
 }
 
 
@@ -112,6 +121,39 @@ body {
   opacity: 0.9;
 }
 
+.flash-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.flash-message {
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.flash-message.success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.flash-message.warning {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.flash-message.danger,
+.flash-message.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
 .dashboard-panel {
   background: white;
   padding: 24px;
@@ -127,7 +169,7 @@ body {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 22px;
   margin-bottom: 28px;
 }
@@ -192,6 +234,10 @@ td{
   padding: 12px 14px;
   font-size: 14px;
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: white;
 }
 
 .table-wrapper td {
@@ -257,8 +303,15 @@ td{
   color: white;
 }
 
-.delete-btn {
+.delete-btn,
+.suspend-btn {
   background: #d9534f;
+  color: white;
+  margin-left: 6px;
+}
+
+.reactivate-btn {
+  background: #14b8a6;
   color: white;
   margin-left: 6px;
 }
@@ -283,8 +336,13 @@ td{
   background: #123b8a;
 }
 
-.delete-btn:hover {
+.delete-btn:hover,
+.suspend-btn:hover {
   background: #c9453b;
+}
+
+.reactivate-btn:hover {
+  background: #0f9e8d;
 }
 
 .secondary-btn {
@@ -294,6 +352,37 @@ td{
 
 .secondary-btn:hover {
   background: #0f9e8d;
+}
+
+.inline-form {
+  display: inline;
+}
+
+.record-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 11px;
+  text-transform: capitalize;
+}
+
+.record-status.status-approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.record-status.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.record-status.status-suspended,
+.record-status.status-inactive,
+.record-status.status-rejected {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 
@@ -326,6 +415,10 @@ td{
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
 }
 
+.wide-modal {
+    width: 760px;
+}
+
 .close {
     position: absolute;
 
@@ -342,6 +435,23 @@ td{
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.modal-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.modal-submit {
+  grid-column: 1 / -1;
+  justify-self: flex-end;
+}
+
+@media (max-width: 760px) {
+  .modal-form-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .form-group {

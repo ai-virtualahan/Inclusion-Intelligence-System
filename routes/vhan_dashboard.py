@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session, redirect, url_for, request
+from flask import Blueprint, render_template, session, redirect, url_for, request, flash
 from db import get_db_connection
 from flask_mail import Message
 from extensions import mail
@@ -34,10 +34,35 @@ def vhan_dashboard():
 
     requests = cursor.fetchall()
 
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM organizations
+        WHERE status = 'approved'
+    """)
+    approved_organizations = cursor.fetchone()['total']
+
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM email_notifications
+    """)
+    email_logs_count = cursor.fetchone()['total']
+
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM reports
+    """)
+    reports_count = cursor.fetchone()['total']
+
     cursor.close()
     conn.close()
 
-    return render_template('vhan_dashboard.html', requests=requests)
+    return render_template(
+        'vhan_dashboard.html',
+        requests=requests,
+        approved_organizations=approved_organizations,
+        email_logs_count=email_logs_count,
+        reports_count=reports_count
+    )
 
 
 @vhan_bp.route('/vhan/approve/<int:req_id>')
@@ -124,6 +149,54 @@ def approve_request(req_id):
     conn.close()
 
     return redirect(url_for('vhan.vhan_dashboard'))
+
+
+@vhan_bp.route('/vhan/reject/<int:req_id>', methods=['POST'])
+def reject_request(req_id):
+    if session.get('role') != 'vhan_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT id, status
+        FROM access_requests
+        WHERE id = %s
+    """, (req_id,))
+    req = cursor.fetchone()
+
+    if not req:
+        cursor.close()
+        conn.close()
+        flash("Access request not found.", "danger")
+        return redirect(url_for('vhan.pending_approvals'))
+
+    if req['status'] != 'pending':
+        cursor.close()
+        conn.close()
+        flash("Only pending requests can be rejected.", "warning")
+        return redirect(url_for('vhan.pending_approvals'))
+
+    cursor.execute("""
+        UPDATE access_requests
+        SET status = 'rejected',
+            reviewed_by = %s,
+            reviewed_at = NOW(),
+            rejection_reason = %s
+        WHERE id = %s
+    """, (
+        session.get('user_id'),
+        'Rejected by VHAN admin.',
+        req_id
+    ))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash("Access request rejected successfully.", "success")
+    return redirect(url_for('vhan.pending_approvals'))
 
 
 @vhan_bp.route('/vhan/pending-approvals')

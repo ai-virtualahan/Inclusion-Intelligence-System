@@ -29,10 +29,29 @@ def login():
 
         user = cursor.fetchone()
 
+        access_request = None
+        if not user:
+            cursor.execute("""
+                SELECT status
+                FROM access_requests
+                WHERE work_email = %s
+                ORDER BY created_at DESC
+                LIMIT 1
+            """, (email,))
+            access_request = cursor.fetchone()
+
         cursor.close()
         conn.close()
 
         if not user:
+            if access_request and access_request['status'] == 'pending':
+                flash("Your access request is still pending approval.", "warning")
+                return redirect(url_for('login.login'))
+
+            if access_request and access_request['status'] == 'rejected':
+                flash("Your access request was rejected. Please contact the administrator.", "error")
+                return redirect(url_for('login.login'))
+
             flash("Email not found.", "error")
             return redirect(url_for('login.login'))
 

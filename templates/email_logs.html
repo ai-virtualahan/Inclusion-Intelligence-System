@@ -1,14 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Email Logs</title>
-
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/super_dashboard.css') }}">
-
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/email_logs.css') }}">
+  <meta charset="UTF-8">
+  <title>Super Admin | Email Logs</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/super_dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/email_logs.css') }}">
 </head>
 <body>
 <div class="top-navbar">
@@ -16,133 +12,168 @@
 
   <div class="top-links">
     <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
-    <a href="#">Users</a>
-    <a href="#">Reports</a>
+    <a href="{{ url_for('super_admin.users') }}">Users</a>
+    <a href="{{ url_for('super_admin.reports') }}">Reports</a>
     <a href="{{ url_for('login.logout') }}">Logout</a>
   </div>
-
 </div>
 
 <div class="admin-layout">
   <aside class="sidebar">
     <h3>Super Admin</h3>
 
-    <a href="{{ url_for('super_admin.super_dashboard') }}" class="side-link">
-      Dashboard Overview
-    </a>
-
-    <a href="{{ url_for('super_admin.organizations') }}" class="side-link">
-      Organizations
-    </a>
-
-    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">
-      Assessment Questions
-    </a>
-
-    <a href="{{ url_for('super_admin.users') }}" class="side-link">
-      Users
-    </a>
-    <a href="#" class="side-link">Reports</a>
-    <a href="{{ url_for('super_admin.email_logs') }}" class="side-link active">
-        Email Logs
-    </a>
-    <a href="#" class="side-link">System Settings</a>
-
+    <a href="{{ url_for('super_admin.super_dashboard') }}" class="side-link">Dashboard Overview</a>
+    <a href="{{ url_for('super_admin.organizations') }}" class="side-link">Organizations</a>
+    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">Assessment Questions</a>
+    <a href="{{ url_for('super_admin.users') }}" class="side-link">Users</a>
+    <a href="{{ url_for('super_admin.reports') }}" class="side-link">Reports</a>
+    <a href="{{ url_for('super_admin.email_logs') }}" class="side-link active">Email Logs</a>
+    <a href="{{ url_for('super_admin.system_settings') }}" class="side-link">System Settings</a>
   </aside>
 
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
+  <main class="main-content">
+    <section class="page-header">
+      <h1>Outgoing Email Logs</h1>
+      <p>Monitor all outgoing emails and send registration invitations.</p>
+    </section>
 
-        <div class="page-header">
-            <h1>Email Logs</h1>
-            <p>Monitor all system email activities.</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+              {{ message }}
+            </div>
+          {% endfor %}
         </div>
+      {% endif %}
+    {% endwith %}
 
-        <!-- FILTER SECTION -->
-        <div class="filter-section">
+    <div class="email-toolbar">
+      <div class="filter-group">
+        <input type="text"
+              id="emailSearchInput"
+              placeholder="Search email or subject..."
+              class="search-input">
 
-            <input type="text"
-                    id="emailSearchInput"
-                    placeholder="Search email..."
-                    class="search-input">
+        <select id="typeFilter" class="filter-select">
+          <option value="">All Email Types</option>
+          <option value="registration_invitation">Registration Invitation</option>
+          <option value="password_reset">Password Reset</option>
+          <option value="account_approval">Account Approval</option>
+          <option value="account_rejection">Account Rejection</option>
+          <option value="assessment_reminder">Assessment Reminder</option>
+          <option value="report_ready">Report Ready</option>
+        </select>
 
-            <select id="statusFilter" class="filter-select">
-                <option>All Status</option>
-                <option>Sent</option>
-                <option>Pending</option>
-                <option>Failed</option>
-            </select>
+        <select id="statusFilter" class="filter-select">
+          <option value="">All Status</option>
+          <option value="sent">Sent</option>
+          <option value="pending">Pending</option>
+          <option value="failed">Failed</option>
+        </select>
+      </div>
 
-        </div>
+      <button type="button" class="send-invite-btn" onclick="openInviteModal()">
+        + Send Invitation
+      </button>
+    </div>
 
-        <!-- TABLE -->
-        <div class="table-container">
+    <section class="table-container">
+      <h2>Email Activity</h2>
 
-            <table class="data-table">
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Recipient</th>
+              <th>Email Type</th>
+              <th>Subject</th>
+              <th>Status</th>
+              <th>Sent At</th>
+              <th>Triggered By</th>
+              <th>Action</th>
+            </tr>
+          </thead>
 
-                <thead>
-                    <tr>
-                        <th>Recipient</th>
-                        <th>Type</th>
-                        <th>Subject</th>
-                        <th>Status</th>
-                        <th>Sent At</th>
-                        <th>Triggered By</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
+          <tbody>
+            {% for log in email_logs %}
+            <tr data-status="{{ log.send_status }}" data-type="{{ log.notification_type }}">
+              <td>{{ log.id }}</td>
+              <td>{{ log.recipient_email }}</td>
+              <td>{{ log.notification_type }}</td>
+              <td>{{ log.subject }}</td>
+              <td>
+                <span class="status-badge status-{{ log.send_status }}">
+                  {{ log.send_status }}
+                </span>
+              </td>
+              <td>{{ log.sent_at or '-' }}</td>
+              <td>{{ log.triggered_by_name or 'System' }}</td>
+              <td>
+                <button type="button"
+                        class="view-email-btn"
+                        data-recipient='{{ log.recipient_email|tojson }}'
+                        data-type='{{ log.notification_type|tojson }}'
+                        data-subject='{{ log.subject|tojson }}'
+                        data-message='{{ (log.message_body or "")|tojson }}'
+                        data-status='{{ log.send_status|tojson }}'
+                        data-sent-at='{{ (log.sent_at|string if log.sent_at else "-")|tojson }}'
+                        data-triggered-by='{{ (log.triggered_by_name or "System")|tojson }}'
+                        data-error='{{ (log.error_message or "")|tojson }}'
+                        onclick="openEmailLogModalFromButton(this)">
+                  View
+                </button>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="8" class="empty-state">No email activity yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
 
-                <tbody>
+<div id="inviteModal" class="modal">
+  <div class="modal-content invite-modal">
+    <span class="close" onclick="closeInviteModal()">&times;</span>
 
-                    {% for log in email_logs %}
-                    <tr data-status="{{ log.send_status }}">
+    <h2>Send Registration Invitation</h2>
+    <p class="modal-subtitle">Invite an organization representative to register.</p>
 
-                        <td>{{ log.recipient_email }}</td>
+    <form method="POST" action="{{ url_for('super_admin.email_logs') }}" class="modal-form">
+      <div class="form-group">
+        <label>Company / Organization Name</label>
+        <input type="text" name="company_name" placeholder="Enter company name">
+      </div>
 
-                        <td>
-                            {{ log.notification_type }}
-                        </td>
+      <div class="form-group">
+        <label>Recipient Email</label>
+        <input type="email" name="recipient_email" placeholder="Enter recipient email" required>
+      </div>
 
-                        <td>{{ log.subject }}</td>
+      <div class="form-group">
+        <label>Invitation Message</label>
+        <textarea name="message_body" rows="6">Hello,
 
-                        <td>
-                            <span class="status-badge status-{{ log.send_status }}">
-                                {{ log.send_status }}
-                            </span>
-                        </td>
+You are invited to register in the Inclusion Intelligence System.
 
-                        <td>{{ log.sent_at or '—' }}</td>
+Please complete your organization registration using the provided link.
 
-                        <td>{{ log.triggered_by_name or 'System' }}</td>
+Thank you,
+Inclusion Intelligence Team</textarea>
+      </div>
 
-                            <td>
-                                <button type="button"
-                                        class="action-btn secondary-btn"
-                                        onclick="openEmailLogModal(
-                                            '{{ log.recipient_email }}',
-                                            '{{ log.notification_type }}',
-                                            '{{ log.subject }}',
-                                            `{{ log.message_body or '' }}`,
-                                            '{{ log.send_status }}',
-                                            '{{ log.sent_at or "—" }}',
-                                            '{{ log.triggered_by_name or "System" }}',
-                                            `{{ log.error_message or "" }}`
-                                        )">
-                                    View
-                                </button>
-                            </td>
-
-                    </tr>
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </main>
-
+      <button type="submit" class="send-invite-btn">
+        Send Invitation
+      </button>
+    </form>
+  </div>
 </div>
 
 <div id="emailLogModal" class="modal">
@@ -151,30 +182,38 @@
 
     <h2>Email Log Details</h2>
 
-    <div class="contact-details">
-      <div class="detail-row">
-        <span class="detail-label">Recipient:</span>
-        <span id="modalRecipient"></span>
-      </div>
-     
-      <div class="detail-row">
-        <span class="detail-label">Subject:</span>
-        <span id="modalSubject"></span>
+    <div class="email-preview">
+      <div class="email-meta">
+        <div class="meta-row">
+          <span class="meta-label">Recipient</span>
+          <span id="modalRecipient"></span>
+        </div>
+
+        <div class="meta-row">
+          <span class="meta-label">Subject</span>
+          <span id="modalSubject"></span>
+        </div>
+
+        <div class="meta-row">
+          <span class="meta-label">Status</span>
+          <span id="modalStatus"></span>
+        </div>
       </div>
 
-      <div class="detail-row message-row">
-        <span class="detail-label">Message:</span>
-        <p id="modalMessage"></p>
+      <div class="error-card" id="modalErrorCard">
+        <div class="error-header">Error Message</div>
+        <div class="error-content" id="modalError"></div>
       </div>
 
-      <div class="detail-row message-row">
-        <span class="detail-label">Error Message:</span>
-        <p id="modalError"></p>
+      <div class="email-body-card">
+        <div class="email-body-header">Message</div>
+        <div class="email-body-content">
+          <pre id="modalMessage"></pre>
+        </div>
       </div>
     </div>
   </div>
 </div>
-
 
 <script src="{{ url_for('static', filename='js/email_logs.js') }}"></script>
 </body>

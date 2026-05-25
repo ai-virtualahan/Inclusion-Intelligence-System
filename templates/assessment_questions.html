@@ -18,8 +18,8 @@
 
   <div class="top-links">
     <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
-    <a href="#">Users</a>
-    <a href="#">Reports</a>
+    <a href="{{ url_for('super_admin.users') }}">Users</a>
+    <a href="{{ url_for('super_admin.reports') }}">Reports</a>
     <a href="{{ url_for('login.logout') }}">Logout</a>
   </div>
 </div>
@@ -44,11 +44,11 @@
     <a href="{{ url_for('super_admin.users') }}" class="side-link">
       Users
     </a>
-    <a href="#" class="side-link">Reports</a>
+    <a href="{{ url_for('super_admin.reports') }}" class="side-link">Reports</a>
     <a href="{{ url_for('super_admin.email_logs') }}" class="side-link">
         Email Logs
     </a>
-    <a href="#" class="side-link">System Settings</a>
+    <a href="{{ url_for('super_admin.system_settings') }}" class="side-link">System Settings</a>
   </aside>
 
   <main class="main-content">

@@ -39,6 +39,18 @@
         <h2>Welcome Back!</h2>
         <p class="sub">Sign in to continue to your account</p>
 
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-container">
+              {% for category, message in messages %}
+                <div class="flash-message {{ category }}">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
         <form method="POST" action="{{ url_for('login.login') }}">
           <div class="input-box">
             <input type="email" name="email" placeholder="Email Address" required>
@@ -62,7 +74,7 @@
 
           
           <p class="bottom-text">
-            Don’t have an account?
+            Don't have an account?
             <a href="/register">Register here</a>
           </p>
         </form>
@@ -76,10 +88,10 @@
     </div>
     <div id="forgotModal" class="modal">
       <div class="modal-box">
-        <button class="modal-close" onclick="closeForgotModal()">×</button>
+        <button class="modal-close" onclick="closeForgotModal()">&times;</button>
 
         <h2>Forgot Password</h2>
-        <p>Enter your work email and we’ll generate a reset link.</p>
+        <p>Enter your work email and we'll generate a reset link.</p>
 
         <form action="/forgot-password" method="POST">
           <input type="email" name="email" placeholder="Enter your work email" required>

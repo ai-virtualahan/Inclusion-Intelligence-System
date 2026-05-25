@@ -34,9 +34,54 @@ function closeInviteModal() {
 }
 
 window.onclick = function(event) {
-    const modal = document.getElementById("inviteModal");
+    const inviteModal = document.getElementById("inviteModal");
+    const emailLogModal = document.getElementById("emailLogModal");
 
-    if (event.target === modal) {
-        modal.classList.remove("show");
+    if (event.target === inviteModal) {
+        inviteModal.classList.remove("show");
     }
+
+    if (event.target === emailLogModal) {
+        emailLogModal.classList.remove("show");
+    }
+}
+
+function parseJsonDatasetValue(value) {
+  try {
+    return JSON.parse(value || "\"\"");
+  } catch (error) {
+    return value || "";
+  }
+}
+
+function openEmailLogModalFromButton(button) {
+  openEmailLogModal(
+    parseJsonDatasetValue(button.dataset.recipient),
+    parseJsonDatasetValue(button.dataset.type),
+    parseJsonDatasetValue(button.dataset.subject),
+    parseJsonDatasetValue(button.dataset.message),
+    parseJsonDatasetValue(button.dataset.status),
+    parseJsonDatasetValue(button.dataset.sentAt),
+    parseJsonDatasetValue(button.dataset.triggeredBy),
+    parseJsonDatasetValue(button.dataset.error)
+  );
+}
+
+function openEmailLogModal(recipient, type, subject, message, status, sentAt, triggeredBy, errorMessage) {
+  document.getElementById("modalRecipient").textContent = recipient || "N/A";
+  document.getElementById("modalSubject").textContent = subject || "N/A";
+  document.getElementById("modalStatus").textContent = status || "N/A";
+  document.getElementById("modalMessage").textContent = message || "";
+  document.getElementById("modalError").textContent = errorMessage || "";
+
+  const errorCard = document.getElementById("modalErrorCard");
+  if (errorCard) {
+    errorCard.style.display = errorMessage ? "block" : "none";
+  }
+
+  document.getElementById("emailLogModal").classList.add("show");
+}
+
+function closeEmailLogModal() {
+  document.getElementById("emailLogModal").classList.remove("show");
 }

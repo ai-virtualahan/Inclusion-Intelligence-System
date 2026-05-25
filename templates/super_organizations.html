@@ -13,8 +13,8 @@
 
   <div class="top-links">
     <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
-    <a href="#">Users</a>
-    <a href="#">Reports</a>
+    <a href="{{ url_for('super_admin.users') }}">Users</a>
+    <a href="{{ url_for('super_admin.reports') }}">Reports</a>
     <a href="{{ url_for('login.logout') }}">Logout</a>
   </div>
 
@@ -39,11 +39,11 @@
     <a href="{{ url_for('super_admin.users') }}" class="side-link">
       Users
     </a>
-    <a href="#" class="side-link">Reports</a>
+    <a href="{{ url_for('super_admin.reports') }}" class="side-link">Reports</a>
     <a href="{{ url_for('super_admin.email_logs') }}" class="side-link">
         Email Logs
     </a>
-    <a href="#" class="side-link">System Settings</a>
+    <a href="{{ url_for('super_admin.system_settings') }}" class="side-link">System Settings</a>
 
   </aside>
 
@@ -110,7 +110,11 @@
                 {{ org.contact_person }}
               </button>
             </td>
-            <td>{{ org.status }}</td>
+            <td>
+              <span class="record-status status-{{ org.status }}">
+                {{ org.status }}
+              </span>
+            </td>
             <td>{{ org.created_at }}</td>
             <td>{{ org.approved_at }}</td>
             <td>{{ org.approved_by }}</td>
@@ -128,13 +132,23 @@
                 Edit
               </button>
 
-                <form action="{{ url_for('super_admin.delete_organization', org_id=org.id) }}" method="POST" style="display:inline;">
-                  <button class="action-btn delete-btn"
+              {% if org.status == 'suspended' %}
+                <form action="{{ url_for('super_admin.reactivate_organization', org_id=org.id) }}" method="POST" style="display:inline;">
+                  <button class="action-btn reactivate-btn"
                           type="submit"
-                          onclick="return confirm('Delete this organization?')">
-                    Delete
+                          onclick="return confirm('Reactivate this organization?')">
+                    Reactivate
                   </button>
                 </form>
+              {% else %}
+                <form action="{{ url_for('super_admin.suspend_organization', org_id=org.id) }}" method="POST" style="display:inline;">
+                  <button class="action-btn suspend-btn"
+                          type="submit"
+                          onclick="return confirm('Suspend this organization?')">
+                    Suspend
+                  </button>
+                </form>
+              {% endif %}
               
             </td>
           </tr>

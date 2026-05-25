@@ -108,7 +108,9 @@
 .questions-table-wrapper {
   width: 100%;
   overflow-x: auto;
+  overflow-y: auto;
   margin-top: 18px;
+  max-height: 520px;
 }
 
 .questions-table-wrapper table {
@@ -123,6 +125,10 @@
   font-size: 14px;
   font-weight: 700;
   color: #0b2345;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: white;
 }
 
 .questions-table-wrapper td {

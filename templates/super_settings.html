@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>System Settings | Super Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/super_dashboard.css') }}">
+</head>
+<body>
+<div class="top-navbar">
+  <div class="brand">Inclusion Intelligence</div>
+
+  <div class="top-links">
+    <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('super_admin.users') }}">Users</a>
+    <a href="{{ url_for('super_admin.reports') }}">Reports</a>
+    <a href="{{ url_for('login.logout') }}">Logout</a>
+  </div>
+</div>
+
+<div class="admin-layout">
+  <aside class="sidebar">
+    <h3>Super Admin</h3>
+
+    <a href="{{ url_for('super_admin.super_dashboard') }}" class="side-link">Dashboard Overview</a>
+    <a href="{{ url_for('super_admin.organizations') }}" class="side-link">Organizations</a>
+    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">Assessment Questions</a>
+    <a href="{{ url_for('super_admin.users') }}" class="side-link">Users</a>
+    <a href="{{ url_for('super_admin.reports') }}" class="side-link">Reports</a>
+    <a href="{{ url_for('super_admin.email_logs') }}" class="side-link">Email Logs</a>
+    <a href="{{ url_for('super_admin.system_settings') }}" class="side-link active">System Settings</a>
+  </aside>
+
+  <main class="main-content">
+    <section class="page-header">
+      <h1>System Settings</h1>
+      <p>Review core system configuration notes for administrators.</p>
+    </section>
+
+    <section class="dashboard-panel">
+      <h2>Settings Workspace</h2>
+      <p>Settings controls can be added here when the team finalizes which configuration items should be editable from the app.</p>
+    </section>
+  </main>
+</div>
+</body>
+</html>

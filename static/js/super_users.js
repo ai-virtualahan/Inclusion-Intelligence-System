@@ -1,3 +1,11 @@
+function openAddUserModal() {
+  document.getElementById("addUserModal").style.display = "flex";
+}
+
+function closeAddUserModal() {
+  document.getElementById("addUserModal").style.display = "none";
+}
+
 function openEditUserModal(
   id,
   name,
