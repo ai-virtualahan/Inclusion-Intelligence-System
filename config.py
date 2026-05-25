@@ -1,12 +1,14 @@
+import os
+from dotenv import load_dotenv
 
-MYSQL_HOST = "localhost"
-MYSQL_USER = "root"
-MYSQL_PASSWORD = "Jinatot1205"
-MYSQL_DATABASE = "IIS_DB"
+load_dotenv()
 
+MYSQL_HOST = os.getenv("MYSQL_HOST")
+MYSQL_USER = os.getenv("MYSQL_USER")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
+MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
 
-SECRET_KEY = "supersecretkey123"
-
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # EMAIL CONFIG
 MAIL_SERVER = "smtp.gmail.com"
@@ -15,5 +17,3 @@ MAIL_USE_TLS = True
 
 MAIL_USERNAME = "inclusionintelligencesystem@gmail.com"
 MAIL_PASSWORD = "sbcw gpbc usya yxhx"
-
-MAIL_DEFAULT_SENDER = "inclusionintelligencesystem@gmail.com"
