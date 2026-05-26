@@ -62,11 +62,15 @@
         <form method="GET" action="{{ url_for('super_admin.reports') }}" class="report-filter">
           <label for="organization_id">Organization</label>
           <select name="organization_id" id="organization_id" onchange="this.form.submit()">
-            {% for org in organizations %}
-              <option value="{{ org.id }}" {% if selected_org_id == org.id %}selected{% endif %}>
-                {{ org.company_name }}
-              </option>
-            {% endfor %}
+            {% if organizations %}
+              {% for org in organizations %}
+                <option value="{{ org.id }}" {% if selected_org_id == org.id %}selected{% endif %}>
+                  {{ org.company_name }}
+                </option>
+              {% endfor %}
+            {% else %}
+              <option>No approved organizations available</option>
+            {% endif %}
           </select>
         </form>
 
@@ -131,11 +135,11 @@
                 </div>
                 <div>
                   <span>Assessment Type</span>
-                  <strong>{{ latest_assessment.assessment_type }}</strong>
+                  <strong>{{ latest_assessment.assessment_type|replace('_', ' ')|title }}</strong>
                 </div>
                 <div>
                   <span>Status</span>
-                  <strong>{{ latest_assessment.status }}</strong>
+                  <strong>{{ latest_assessment.status|title }}</strong>
                 </div>
               </div>
 

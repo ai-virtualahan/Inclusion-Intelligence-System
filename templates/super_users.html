@@ -80,6 +80,7 @@
                 <option value="">All Users</option>
                 <option value="internal" {% if selected_role == 'internal' %}selected{% endif %}>Internal Admins</option>
                 <option value="organization" {% if selected_role == 'organization' %}selected{% endif %}>Organization Users</option>
+                <option value="inactive" {% if selected_role == 'inactive' %}selected{% endif %}>Inactive Users</option>
                 <option value="super_admin" {% if selected_role == 'super_admin' %}selected{% endif %}>Super Admin</option>
                 <option value="vhan_admin" {% if selected_role == 'vhan_admin' %}selected{% endif %}>VHAN Admin</option>
                 <option value="org_admin" {% if selected_role == 'org_admin' %}selected{% endif %}>Org Admin</option>
@@ -125,15 +126,15 @@
                 <td>{{ user.contact_number }}</td>
                 <td>
                     <button class="action-btn edit-btn" type="button"
-                    onclick="openEditUserModal(
-                      '{{ user.id }}',
-                      '{{ user.contact_person }}',
-                      '{{ user.work_email }}',
-                      '{{ user.role }}',
-                      '{{ user.status }}',
-                      '{{ user.position_title }}',
-                      '{{ user.contact_number }}'
-                    )">Edit</button>
+                    onclick='openEditUserModal(
+                      {{ user.id|tojson }},
+                      {{ (user.contact_person or '')|tojson }},
+                      {{ (user.work_email or '')|tojson }},
+                      {{ (user.role or '')|tojson }},
+                      {{ (user.status or '')|tojson }},
+                      {{ (user.position_title or '')|tojson }},
+                      {{ (user.contact_number or '')|tojson }}
+                    )'>Edit</button>
 
                     {% if user.status == 'inactive' %}
                     <form action="{{ url_for('super_admin.reactivate_user', user_id=user.id) }}" method="POST" class="inline-form">

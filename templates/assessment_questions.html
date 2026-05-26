@@ -58,6 +58,18 @@
       <p>Manage assessment questions, answer choices, and scoring.</p>
     </section>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
     <section class="dashboard-panel">
 
         <div class="org-header">
@@ -77,6 +89,16 @@
                   </option>
                 {% endfor %}
               </select>
+
+              <label for="question_status"><strong>Status:</strong></label>
+
+              <select name="question_status" id="question_status" onchange="this.form.submit()">
+                <option value="all" {% if selected_question_status == 'all' %}selected{% endif %}>All Versions</option>
+                <option value="active" {% if selected_question_status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if selected_question_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                <option value="version_1" {% if selected_question_status == 'version_1' %}selected{% endif %}>Version 1</option>
+                <option value="version_2" {% if selected_question_status == 'version_2' %}selected{% endif %}>Version 2</option>
+              </select>
             </form>
           </div>  
         
@@ -85,30 +107,72 @@
       <table>
         <thead>
           <tr>
+            <th>No.</th>
             <th>Dimension</th>
             <th>Question</th>
+            <th>Version</th>
+            <th>Status</th>
             <th>Action</th>
           </tr>
         </thead>
 
         <tbody>
           {% for q in questions %}
-          <tr>
+          <tr class="{% if q.version > 1 %}new-version-row{% endif %}">
+            <td class="question-number-cell">Q{{ q.question_number }}</td>
             <td>{{ q.dimension_name }}</td>
             <td>{{ q.question_text }}</td>
+            <td class="version-cell">
+              <span class="version-badge {% if q.version > 1 %}version-badge-new{% endif %}">
+                Version {{ q.version }}
+              </span>
+            </td>
+            <td class="status-cell">
+              <span class="record-status status-{{ 'approved' if q.is_active else 'inactive' }}">
+                {% if q.is_active %}
+                  Active
+                {% else %}
+                  Inactive
+                {% endif %}
+              </span>
+            </td>
 
             <td>
-              <button type="button"
-                      class="action-btn secondary-btn"
-                      data-question-id="{{ q.id }}"
-                      onclick="openChoicesModal('{{ q.id }}', `{{ q.question_text }}`)">
-                View Choices
-              </button>
+              <div class="question-actions">
+                <button type="button"
+                        class="action-btn secondary-btn"
+                        id="manageQuestion{{ q.id }}"
+                        data-question-id="{{ q.id }}"
+                        data-question-number="{{ q.question_number }}"
+                        data-question-version="{{ q.version }}"
+                        data-question-text='{{ (q.question_text or "")|tojson }}'
+                        onclick="openChoicesModalFromButton(this)">
+                  Manage
+                </button>
+
+                {% if q.is_active %}
+                  <form action="{{ url_for('super_admin.deactivate_question', question_id=q.id) }}" method="POST" class="inline-form">
+                    <button type="submit"
+                            class="action-btn suspend-btn"
+                            onclick="return confirm('Deactivate this question version? It will no longer appear in assessments.')">
+                      Inactivate
+                    </button>
+                  </form>
+                {% else %}
+                  <form action="{{ url_for('super_admin.activate_question', question_id=q.id) }}" method="POST" class="inline-form">
+                    <button type="submit"
+                            class="action-btn reactivate-btn"
+                            onclick="return confirm('Activate this question version? Other versions of this question will be inactivated.')">
+                      Activate
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
             </td>
           </tr>
           {% else %}
           <tr>
-            <td colspan="3">No questions found.</td>
+            <td colspan="6">No questions found.</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -122,7 +186,7 @@
   <div class="modal-content">
     <span class="close" onclick="closeChoicesModal()">&times;</span>
 
-    <h2>Question Choices</h2>
+    <h2>Manage Question Version</h2>
     
     <div class="question-header">
 
@@ -132,15 +196,32 @@
               id="editQuestionBtn"
               class="action-btn edit-btn"
               onclick="toggleQuestionEdit()">
-        Edit Question
+        Create New Version
       </button>
 
     </div>
+
+    <p class="version-note">
+      Saving creates the next version number and keeps the previous version inactive for reference.
+    </p>
+
+    <div id="modalVersionContext" class="version-context"></div>
 
     <textarea id="modalQuestionText"
               rows="4"
               class="question-textarea"
               readonly></textarea>
+
+    <div class="choices-toolbar">
+      <h3>Answer Choices</h3>
+
+      <button type="button"
+              id="editChoicesBtn"
+              class="action-btn secondary-btn"
+              onclick="toggleChoicesEdit()">
+        Edit Choices
+      </button>
+    </div>
 
     <table>
       <thead>
@@ -148,60 +229,10 @@
           <th>Letter</th>
           <th>Choice</th>
           <th>Score</th>
-          <th>Action</th>
         </tr>
       </thead>
       <tbody id="choicesTableBody"></tbody>
     </table>
-
-    <form id="editChoiceForm"
-          method="POST"
-          class="modal-form"
-          style="display:none;">
-
-      <h3>Edit Choice</h3>
-
-      <input type="hidden" id="editChoiceId">
-
-      <input type="hidden"
-            name="question_id"
-            id="editQuestionId">
-
-      <div class="form-group">
-        <label>Letter</label>
-
-        <input type="text"
-              id="editChoiceLetter"
-              readonly>
-      </div>
-
-      <div class="form-group">
-        <label>Choice Text</label>
-
-        <textarea name="choice_text"
-                  id="editChoiceText"
-                  rows="4"
-                  required></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>Score</label>
-
-        <input type="number"
-              name="choice_score"
-              id="editChoiceScore"
-              step="0.01"
-              required>
-      </div>
-
-      <div class="modal-actions">
-        <button type="submit"
-                class="action-btn edit-btn">
-          Save Changes
-        </button>
-      </div>
-
-    </form>
 
   </div>
 </div>

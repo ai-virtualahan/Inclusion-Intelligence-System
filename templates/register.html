@@ -60,7 +60,13 @@
               <input type="email" id="email" name="work_email" placeholder="Work Email Address" required>
             </div>
             <div class="input-box">
-              <input type="text" id="contactNumber" name="contact_number" placeholder="Contact Number" required>
+              <input type="tel"
+                     id="contactNumber"
+                     name="contact_number"
+                     placeholder="Contact Number"
+                     pattern="^\+?[0-9][0-9\s().-]{8,18}[0-9]$"
+                     title="Enter a valid phone number with 10 to 15 digits."
+                     required>
             </div>
           </div>
 
@@ -95,7 +101,13 @@
               </select>
             </div>
             <div class="input-box">
-              <input type="text" id="companyNumber" name="company_number" placeholder="Company Number" required>
+              <input type="tel"
+                     id="companyNumber"
+                     name="company_number"
+                     placeholder="Company Number"
+                     pattern="^\+?[0-9][0-9\s().-]{8,18}[0-9]$"
+                     title="Enter a valid company number with 10 to 15 digits."
+                     required>
             </div>
           </div>
 

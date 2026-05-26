@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, session, url_for, jsonify
-from config import *
+from collections import OrderedDict
 from db import get_db_connection
 from assessment_scoring import compute_assessment_scores
 from datetime import datetime, timedelta
@@ -13,7 +13,11 @@ from routes.org_dashboard import org_dashboard_bp
 from extensions import mail
 
 app = Flask(__name__)
-app.secret_key = SECRET_KEY
+
+# App config
+app.config.from_object('config')
+
+mail.init_app(app)
 
 # Blueprints
 app.register_blueprint(login_bp)
@@ -21,20 +25,6 @@ app.register_blueprint(super_admin_bp)
 app.register_blueprint(vhan_bp)
 app.register_blueprint(register_bp)
 app.register_blueprint(org_dashboard_bp)
-
-# Mail Config
-app.config['MAIL_SERVER'] = MAIL_SERVER
-app.config['MAIL_PORT'] = MAIL_PORT
-app.config['MAIL_USE_TLS'] = MAIL_USE_TLS
-app.config['MAIL_USERNAME'] = MAIL_USERNAME
-app.config['MAIL_PASSWORD'] = MAIL_PASSWORD
-
-
-app.config['MAIL_DEFAULT_SENDER'] = MAIL_DEFAULT_SENDER
-
-# Initialize Mail
-
-mail.init_app(app)
 
 
 @app.route('/')
@@ -62,9 +52,12 @@ def assessment():
     user_id = session.get('user_id')
     profile = {k: '' for k in ['full_name','position','work_email','contact_number',
                                 'company_name','company_size','industry','company_number']}
+    active_exams = OrderedDict()
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
     if user_id:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
         cursor.execute("""
             SELECT u.contact_person AS full_name, u.position_title AS position,
                    u.work_email, u.contact_number,
@@ -74,11 +67,61 @@ def assessment():
             WHERE u.id = %s
         """, (user_id,))
         result = cursor.fetchone()
-        cursor.close()
-        conn.close()
         if result:
             profile = {k: (v or '') for k, v in result.items()}
-    return render_template('assessment.html', profile=profile)
+
+    cursor.execute("""
+        SELECT
+            qb.id AS question_id,
+            qb.question_text,
+            ad.name AS dimension_name,
+            ad.id AS dimension_id,
+            qc.id AS choice_id,
+            qc.choice_letter,
+            qc.choice_text,
+            qc.choice_score
+        FROM question_bank qb
+        JOIN assessment_dimensions ad
+            ON qb.dimension_id = ad.id
+        JOIN question_choices qc
+            ON qb.id = qc.question_id
+        WHERE qb.is_active = 1
+        ORDER BY
+            ad.id ASC,
+            COALESCE(qb.version_group_id, qb.id) ASC,
+            qb.id ASC,
+            qc.choice_letter ASC
+    """)
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    for row in rows:
+        dim_name = row['dimension_name']
+        if dim_name not in active_exams:
+            active_exams[dim_name] = {
+                "title": dim_name,
+                "startQuestionId": row['question_id'],
+                "questions": []
+            }
+
+        questions = active_exams[dim_name]["questions"]
+        if not questions or questions[-1]["id"] != row['question_id']:
+            questions.append({
+                "id": row['question_id'],
+                "text": row['question_text'],
+                "choices": []
+            })
+
+        questions[-1]["choices"].append({
+            "id": row['choice_id'],
+            "letter": row['choice_letter'],
+            "text": row['choice_text'],
+            "score": float(row['choice_score'])
+        })
+
+    return render_template('assessment.html', profile=profile, active_exams=active_exams)
 
 
 @app.route('/submit_assessment', methods=['POST'])
@@ -130,6 +173,22 @@ def submit_assessment():
     cursor2 = conn.cursor()  # non-dict cursor for inserts
 
     try:
+        cursor.execute("""
+            SELECT id
+            FROM question_bank
+            WHERE is_active = 1
+            ORDER BY dimension_id ASC, COALESCE(version_group_id, id) ASC, id ASC
+        """)
+        active_question_ids = {str(row['id']) for row in cursor.fetchall()}
+        submitted_question_ids = {
+            key.replace("answer_", "")
+            for key in request.form
+            if key.startswith("answer_")
+        }
+
+        if active_question_ids != submitted_question_ids:
+            return "Error: Please answer all active assessment questions before submitting.", 400
+
         cursor2.execute("""
             INSERT INTO assessments (organization_id, assessment_type, status, cycle_number, started_at)
             VALUES (%s, %s, 'submitted', %s, CURRENT_TIMESTAMP)
@@ -140,15 +199,26 @@ def submit_assessment():
         for key, selected_choice_id in request.form.items():
             if key.startswith("answer_"):
                 q_id = key.replace("answer_", "")
-                cursor2.execute("SELECT choice_score FROM question_choices WHERE id = %s", (selected_choice_id,))
+                cursor2.execute("""
+                    SELECT qc.choice_score
+                    FROM question_choices qc
+                    JOIN question_bank qb
+                        ON qc.question_id = qb.id
+                    WHERE qc.id = %s
+                      AND qc.question_id = %s
+                      AND qb.is_active = 1
+                """, (selected_choice_id, q_id))
                 row = cursor2.fetchone()
-                if row:
-                    score_value = row[0]
-                    cursor2.execute("""
-                        INSERT INTO assessment_answers
-                            (assessment_id, question_id, selected_choice_id, score_value, saved_at)
-                        VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
-                    """, (assessment_id, q_id, selected_choice_id, score_value))
+                if not row:
+                    conn.rollback()
+                    return "Error: Invalid answer selected for an active question.", 400
+
+                score_value = row[0]
+                cursor2.execute("""
+                    INSERT INTO assessment_answers
+                        (assessment_id, question_id, selected_choice_id, score_value, saved_at)
+                    VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+                """, (assessment_id, q_id, selected_choice_id, score_value))
 
         # Auto-compute scores
         compute_assessment_scores(cursor2, assessment_id)
@@ -167,13 +237,35 @@ def submit_assessment():
 
 @app.route('/assessment_result/<int:assessment_id>')
 def assessment_result(assessment_id):
+    user_id = session.get('user_id')
+    role = session.get('role')
+    if not user_id:
+        return redirect(url_for('login.login'))
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("""
-        SELECT overall_score, maturity_level FROM assessments WHERE id = %s
-    """, (assessment_id,))
+    if role == 'super_admin':
+        cursor.execute("""
+            SELECT overall_score, maturity_level
+            FROM assessments
+            WHERE id = %s
+        """, (assessment_id,))
+    else:
+        cursor.execute("""
+            SELECT a.overall_score, a.maturity_level
+            FROM assessments a
+            JOIN users u
+                ON a.organization_id = u.organization_id
+            WHERE a.id = %s
+              AND u.id = %s
+        """, (assessment_id, user_id))
+
     assessment = cursor.fetchone()
+    if not assessment:
+        cursor.close()
+        conn.close()
+        return "Assessment result not found.", 404
 
     cursor.execute("""
         SELECT ds.score, ds.raw_score, ad.name

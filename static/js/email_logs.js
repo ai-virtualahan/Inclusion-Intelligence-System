@@ -70,7 +70,10 @@ function openEmailLogModalFromButton(button) {
 function openEmailLogModal(recipient, type, subject, message, status, sentAt, triggeredBy, errorMessage) {
   document.getElementById("modalRecipient").textContent = recipient || "N/A";
   document.getElementById("modalSubject").textContent = subject || "N/A";
+  document.getElementById("modalType").textContent = type || "N/A";
   document.getElementById("modalStatus").textContent = status || "N/A";
+  document.getElementById("modalSentAt").textContent = sentAt || "N/A";
+  document.getElementById("modalTriggeredBy").textContent = triggeredBy || "N/A";
   document.getElementById("modalMessage").textContent = message || "";
   document.getElementById("modalError").textContent = errorMessage || "";
 

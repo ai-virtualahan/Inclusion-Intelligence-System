@@ -1,38 +1,62 @@
 let currentQuestionId = null;
+let currentQuestionNumber = null;
+let currentChoices = [];
+let choicesEditMode = false;
 
-function openChoicesModal(questionId, questionText) {
+function parseJsonDatasetValue(value) {
+  try {
+    return JSON.parse(value || "\"\"");
+  } catch (error) {
+    return value || "";
+  }
+}
+
+function openChoicesModalFromButton(button) {
+  currentQuestionNumber = button.dataset.questionNumber;
+  openChoicesModal(
+    button.dataset.questionId,
+    parseJsonDatasetValue(button.dataset.questionText),
+    {
+      questionNumber: button.dataset.questionNumber,
+      version: button.dataset.questionVersion
+    }
+  );
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function openChoicesModal(questionId, questionText, meta = {}) {
   currentQuestionId = questionId;
+  currentQuestionNumber = meta.questionNumber || currentQuestionNumber;
 
-  document.getElementById("modalQuestionText").textContent = questionText;
+  const questionTextarea = document.getElementById("modalQuestionText");
+  const editQuestionBtn = document.getElementById("editQuestionBtn");
+  const versionContext = document.getElementById("modalVersionContext");
+
+  questionTextarea.value = questionText || "";
+  questionTextarea.setAttribute("readonly", true);
+  editQuestionBtn.textContent = "Create New Version";
+  choicesEditMode = false;
+  updateChoicesButton();
+
+  if (versionContext) {
+    const qNumber = currentQuestionNumber ? `Q${currentQuestionNumber}` : "Question";
+    const version = meta.version ? `Version ${meta.version}` : "";
+    versionContext.textContent = [qNumber, version].filter(Boolean).join(" - ");
+  }
 
   fetch(`/super-admin/question/${questionId}/choices-data`)
     .then(response => response.json())
     .then(data => {
-      const tbody = document.getElementById("choicesTableBody");
-      tbody.innerHTML = "";
-
-      data.choices.forEach(choice => {
-        tbody.innerHTML += `
-          <tr>
-            <td>${choice.choice_letter}</td>
-            <td>${choice.choice_text}</td>
-            <td>${choice.choice_score}</td>
-            <td>
-              <button type="button"
-                      class="action-btn edit-btn"
-                      onclick="openEditChoiceForm(
-                        ${choice.id},
-                        '${choice.choice_letter}',
-                        \`${choice.choice_text}\`,
-                        ${choice.choice_score}
-                      )">
-                Edit
-              </button>
-            </td>
-          </tr>
-        `;
-      });
-
+      currentChoices = data.choices || [];
+      renderChoicesTable();
       document.getElementById("choicesModal").style.display = "flex";
     });
 }
@@ -41,42 +65,80 @@ function closeChoicesModal() {
   document.getElementById("choicesModal").style.display = "none";
 }
 
-function openEditChoiceForm(choiceId, letter, text, score) {
-  const form = document.getElementById("editChoiceForm");
-
-  form.style.display = "block";
-  form.action = `/super-admin/choice/${choiceId}/edit`;
-
-  document.getElementById("editChoiceLetter").value = letter;
-  document.getElementById("editChoiceText").value = text;
-  document.getElementById("editChoiceScore").value = score;
-  document.getElementById("editQuestionId").value = currentQuestionId;
+function updateChoicesButton() {
+  const button = document.getElementById("editChoicesBtn");
+  if (!button) return;
+  button.textContent = choicesEditMode ? "Save Choices" : "Edit Choices";
+  button.classList.toggle("edit-btn", choicesEditMode);
+  button.classList.toggle("secondary-btn", !choicesEditMode);
 }
 
-document.getElementById("editChoiceForm").addEventListener("submit", function (e) {
-  e.preventDefault();
+function renderChoicesTable() {
+  const tbody = document.getElementById("choicesTableBody");
+  tbody.innerHTML = "";
 
-  const form = this;
-  const formData = new FormData(form);
+  currentChoices.forEach(choice => {
+    const scoreValue = Number(choice.choice_score);
+    tbody.innerHTML += choicesEditMode
+      ? `
+        <tr data-choice-id="${escapeHtml(choice.id)}">
+          <td>${escapeHtml(choice.choice_letter)}</td>
+          <td>
+            <textarea class="choice-edit-text" rows="3">${escapeHtml(choice.choice_text)}</textarea>
+          </td>
+          <td>
+            <input class="choice-edit-score" type="number" step="0.01" min="0" max="4" value="${escapeHtml(scoreValue)}">
+          </td>
+        </tr>
+      `
+      : `
+        <tr>
+          <td>${escapeHtml(choice.choice_letter)}</td>
+          <td>${escapeHtml(choice.choice_text)}</td>
+          <td>${escapeHtml(scoreValue)}</td>
+        </tr>
+      `;
+  });
+}
 
-  fetch(form.action, {
+function collectEditableChoices() {
+  return Array.from(document.querySelectorAll("#choicesTableBody tr")).map(row => ({
+    id: Number(row.dataset.choiceId),
+    choice_text: row.querySelector(".choice-edit-text").value,
+    choice_score: row.querySelector(".choice-edit-score").value
+  }));
+}
+
+function toggleChoicesEdit() {
+  if (!choicesEditMode) {
+    choicesEditMode = true;
+    updateChoicesButton();
+    renderChoicesTable();
+    return;
+  }
+
+  const choices = collectEditableChoices();
+
+  fetch(`/super-admin/question/${currentQuestionId}/choices/edit`, {
     method: "POST",
-    body: formData
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ choices })
   })
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        form.style.display = "none";
-
-        openChoicesModal(
-          data.question_id,
-          document.getElementById("modalQuestionText").textContent
-        );
+        currentChoices = data.choices || [];
+        choicesEditMode = false;
+        updateChoicesButton();
+        renderChoicesTable();
+      } else {
+        alert(data.error || "Unable to save choices.");
       }
+    })
+    .catch(() => {
+      alert("Unable to save choices.");
     });
-});
-
-
+}
 
 function toggleQuestionEdit() {
   const textarea = document.getElementById("modalQuestionText");
@@ -85,7 +147,7 @@ function toggleQuestionEdit() {
   if (textarea.hasAttribute("readonly")) {
     textarea.removeAttribute("readonly");
     textarea.focus();
-    button.textContent = "Save Question";
+    button.textContent = "Save as New Version";
   } else {
     const formData = new FormData();
     formData.append("question_text", textarea.value);
@@ -97,11 +159,44 @@ function toggleQuestionEdit() {
       .then(response => response.json())
       .then(data => {
         if (data.success) {
+          currentQuestionId = data.question_id;
           textarea.setAttribute("readonly", true);
-          button.textContent = "Edit Question";
+          button.textContent = "Create New Version";
 
-          // update visible question title inside modal
           textarea.value = data.question_text;
+
+          const rowButton = document.querySelector(`[data-question-id="${data.old_question_id}"]`);
+          if (rowButton) {
+            rowButton.dataset.questionId = data.question_id;
+            rowButton.dataset.questionVersion = data.version;
+            rowButton.dataset.questionText = JSON.stringify(data.question_text);
+            const row = rowButton.closest("tr");
+            const questionCell = row.children[2];
+            const versionCell = row.querySelector(".version-cell");
+            const statusCell = row.querySelector(".status-cell");
+
+            questionCell.textContent = data.question_text;
+            row.classList.add("new-version-row");
+            if (versionCell) {
+              versionCell.innerHTML = `
+                <span class="version-badge version-badge-new">
+                  Version ${data.version}
+                </span>
+              `;
+            }
+            if (statusCell) {
+              statusCell.innerHTML = `
+                <span class="record-status status-approved">
+                  Active
+                </span>
+              `;
+            }
+          }
+
+          openChoicesModal(data.question_id, data.question_text, {
+            questionNumber: currentQuestionNumber,
+            version: data.version
+          });
         }
       });
   }

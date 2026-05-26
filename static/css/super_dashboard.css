@@ -177,7 +177,7 @@ body {
 .card {
   background: white;
   padding: 28px;
-  border-radius: 20px;
+  border-radius: 8px;
   box-shadow: 0 12px 30px rgba(0,0,0,0.08);
 }
 
@@ -189,6 +189,39 @@ body {
 
 .card p {
   margin: 0;
+}
+
+.stat-card {
+  display: block;
+  color: inherit;
+  min-height: 156px;
+  text-decoration: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  border: 1px solid #e5edf7;
+}
+
+.stat-card span {
+  color: #0f766e;
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 16px;
+}
+
+.stat-card:hover {
+  border-color: #14b8a6;
+  box-shadow: 0 16px 32px rgba(20, 184, 166, 0.14);
+  transform: translateY(-2px);
+}
+
+.stat-card-muted {
+  cursor: default;
+}
+
+.stat-card-muted:hover {
+  border-color: #e5edf7;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+  transform: none;
 }
 
 

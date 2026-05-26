@@ -15,7 +15,7 @@ const CHOICES = [
 const EXAM_INSTRUCTION = "For each question, select ONE answer that best describes your organization's current state.";
 
 // Questions must match database question_bank (IDs 1-50)
-const exams = {
+const DEFAULT_EXAMS = {
     Hiring: {
         title: "Hiring System",
         startQuestionId: 1,
@@ -98,7 +98,13 @@ const exams = {
     }
 };
 
-const DIMENSION_ORDER = ["Hiring", "Onboarding", "Accommodation", "Retention", "Culture"];
+const exams = Object.keys(window.IIS_ACTIVE_EXAMS || {}).length
+    ? window.IIS_ACTIVE_EXAMS
+    : DEFAULT_EXAMS;
+
+const DIMENSION_ORDER = Object.keys(exams);
+const ANSWER_STORAGE_KEY = "iis_answers";
+const ANSWER_SIGNATURE_KEY = "iis_answers_signature";
 
 /* == STATE == */
 let userAnswers = {};  // { "Hiring": [4,3,2,...], "Onboarding": [...], ... }
@@ -117,19 +123,38 @@ window.onload = function() {
 
 /* == LOCAL STORAGE (for testing without login) == */
 function saveToLocalStorage() {
-    localStorage.setItem('iis_answers', JSON.stringify(userAnswers));
+    localStorage.setItem(ANSWER_STORAGE_KEY, JSON.stringify(userAnswers));
+    localStorage.setItem(ANSWER_SIGNATURE_KEY, getExamSignature());
 }
 
 function loadFromLocalStorage() {
     try {
-        const saved = localStorage.getItem('iis_answers');
+        const savedSignature = localStorage.getItem(ANSWER_SIGNATURE_KEY);
+        const currentSignature = getExamSignature();
+
+        if (savedSignature && savedSignature !== currentSignature) {
+            clearLocalStorage();
+            return;
+        }
+
+        const saved = localStorage.getItem(ANSWER_STORAGE_KEY);
         if (saved) userAnswers = JSON.parse(saved);
     } catch(e) {}
 }
 
 function clearLocalStorage() {
     userAnswers = {};
-    localStorage.removeItem('iis_answers');
+    localStorage.removeItem(ANSWER_STORAGE_KEY);
+    localStorage.removeItem(ANSWER_SIGNATURE_KEY);
+}
+
+function getExamSignature() {
+    return DIMENSION_ORDER.map(dim => {
+        const questionIds = exams[dim].questions.map((question, index) =>
+            getQuestionId(question, `${dim}-${index}`)
+        );
+        return `${dim}:${questionIds.join(",")}`;
+    }).join("|");
 }
 
 /* == SCORING (mirrors backend logic) == */
@@ -147,18 +172,52 @@ function getSeverity(score) {
     return "none";
 }
 
+function getAnswerScore(answer) {
+    if (answer && typeof answer === "object") return Number(answer.score);
+    return Number(answer);
+}
+
+function getAnswerChoiceId(answer) {
+    if (answer && typeof answer === "object") return answer.choiceId || null;
+    return null;
+}
+
+function getQuestionText(question) {
+    return question && typeof question === "object" ? question.text : question;
+}
+
+function getQuestionChoices(question) {
+    return question && typeof question === "object" && question.choices
+        ? question.choices
+        : CHOICES;
+}
+
+function getQuestionId(question, fallbackId) {
+    return question && typeof question === "object" ? question.id : fallbackId;
+}
+
+function escapeText(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
 function computeLocalScores() {
     const result = { dimensions: {}, overall: 0, completedCount: 0 };
     let total = 0;
 
     DIMENSION_ORDER.forEach(dim => {
         const answers = userAnswers[dim];
-        if (!answers || answers.length !== 10 || answers.some(a => a === null)) {
+        if (!answers || answers.length !== exams[dim].questions.length || answers.some(a => a === null)) {
             result.dimensions[dim] = null;
             return;
         }
-        const raw = answers.reduce((sum, v) => sum + v, 0);
-        const score = (raw / 40) * 100;
+        const raw = answers.reduce((sum, v) => sum + getAnswerScore(v), 0);
+        const maxRaw = exams[dim].questions.length * 4;
+        const score = (raw / maxRaw) * 100;
         result.dimensions[dim] = {
             score: score,
             raw: raw,
@@ -173,7 +232,7 @@ function computeLocalScores() {
         result.overall = total / result.completedCount;
         result.maturity = maturityLevel(result.overall);
     }
-    result.isComplete = result.completedCount === 5;
+    result.isComplete = result.completedCount === DIMENSION_ORDER.length;
     return result;
 }
 
@@ -282,12 +341,12 @@ function renderSubmitButton() {
                 Submit Assessment to Server
             </button>
             <p style="text-align:center;font-size:12px;color:#888;margin-top:8px;">
-                All 5 dimensions completed. Click to save your assessment.
+                All ${DIMENSION_ORDER.length} dimensions completed. Click to save your assessment.
             </p>`;
     } else {
         section.innerHTML = `
             <p style="text-align:center;font-size:13px;color:#888;margin-top:16px;">
-                Complete all 5 dimensions to submit your assessment (${scores.completedCount}/5 done).
+                Complete all ${DIMENSION_ORDER.length} dimensions to submit your assessment (${scores.completedCount}/${DIMENSION_ORDER.length} done).
             </p>`;
     }
 }
@@ -317,7 +376,9 @@ function startExamFromSidebar(dim) {
 /* == QUESTIONS == */
 function loadQuestion() {
     const exam = exams[currentExam];
-    const qText = exam.questions[questionIndex];
+    const question = exam.questions[questionIndex];
+    const qText = getQuestionText(question);
+    const choices = getQuestionChoices(question);
     const answers = userAnswers[currentExam] || [];
 
     document.getElementById("questionBox").innerHTML = `
@@ -326,19 +387,21 @@ function loadQuestion() {
                 Question ${questionIndex + 1} of ${exam.questions.length}
             </div>
             <div style="background:#f4f8fb;border-left:4px solid ${TEAL};padding:16px 18px;border-radius:8px;font-size:15px;line-height:1.6;color:#0E2240;">
-                ${qText}
+                ${escapeText(qText)}
             </div>
         </div>
-        ${CHOICES.map((c, i) => {
-            const sel = answers[questionIndex] === c.score;
+        ${choices.map((c, i) => {
+            const currentAnswer = answers[questionIndex];
+            const currentChoiceId = getAnswerChoiceId(currentAnswer);
+            const sel = currentChoiceId ? currentChoiceId === c.id : getAnswerScore(currentAnswer) === c.score;
             return `
                 <button class="answer-btn${sel?' selected':''}" id="opt${i}"
-                    onclick="selectAnswer(${c.score}, ${i})"
+                    onclick="selectAnswer(${c.score}, ${i}, ${c.id || 'null'})"
                     style="${sel ? `background:${TEAL};border-color:${TEAL};color:white;` : ''}">
                     <span class="choice-badge" style="background:${sel?'rgba(255,255,255,.25)':'#e0edf3'};color:${sel?'#fff':TEAL};">
                         ${c.letter}
                     </span>
-                    ${c.text}
+                    ${escapeText(c.text)}
                 </button>`;
         }).join("")}
         <div class="nav-buttons">
@@ -349,12 +412,12 @@ function loadQuestion() {
         </div>`;
 }
 
-function selectAnswer(score, optIndex) {
+function selectAnswer(score, optIndex, choiceId = null) {
     if (!userAnswers[currentExam]) userAnswers[currentExam] = new Array(exams[currentExam].questions.length).fill(null);
-    userAnswers[currentExam][questionIndex] = score;
+    userAnswers[currentExam][questionIndex] = choiceId ? { score, choiceId } : score;
     saveToLocalStorage();
 
-    CHOICES.forEach((c, i) => {
+    getQuestionChoices(exams[currentExam].questions[questionIndex]).forEach((c, i) => {
         const btn = document.getElementById(`opt${i}`);
         if (!btn) return;
         const badge = btn.querySelector(".choice-badge");
@@ -396,23 +459,52 @@ function submitAssessment() {
         return;
     }
 
-    // Build form data matching backend expectation (answer_QUESTIONID = choice_id)
-    // Backend expects: answer_1, answer_2, ... answer_50 with selected_choice_id values
-    // Since we store score values (1-4), we need to map them
-    // Score 4 = choice A, Score 3 = choice B, Score 2 = choice C, Score 1 = choice D
-
     const formData = new FormData();
+    let canSubmitToServer = true;
 
     DIMENSION_ORDER.forEach(dim => {
         const startId = exams[dim].startQuestionId;
-        userAnswers[dim].forEach((score, idx) => {
-            const questionId = startId + idx;
-            // We'll send the score directly - backend needs adjustment OR we send via JSON API
-            formData.append(`answer_${questionId}`, score);
+        userAnswers[dim].forEach((answer, idx) => {
+            const question = exams[dim].questions[idx];
+            const questionId = getQuestionId(question, startId + idx);
+            const choiceId = getAnswerChoiceId(answer);
+
+            if (!choiceId) {
+                canSubmitToServer = false;
+                return;
+            }
+
+            formData.append(`answer_${questionId}`, choiceId);
         });
     });
 
-    // Try JSON API first (preferred), fall back to form submit
+    if (canSubmitToServer) {
+        fetch('/submit_assessment', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.redirected) {
+                window.location.href = response.url;
+                return;
+            }
+
+            return response.text().then(text => {
+                if (response.ok) {
+                    alert("Assessment submitted successfully.");
+                    clearLocalStorage();
+                    showPage('dashboard');
+                } else {
+                    alert(text || "Unable to submit assessment.");
+                }
+            });
+        })
+        .catch(() => {
+            alert("Unable to submit assessment. Please check your connection and try again.");
+        });
+        return;
+    }
+
     fetch('/api/submit-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

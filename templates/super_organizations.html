@@ -53,6 +53,18 @@
       <p>Manage organization records and contact information.</p>
     </section>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
     <section class="dashboard-panel">
       <div class="org-header">
         <h1>Organizations</h1>
@@ -100,13 +112,13 @@
             <td>{{ org.company_number }}</td>
             <td>
               <button class="contact-link"
-                  onclick="openContactModal(
-                  '{{ org.contact_person }}',
-                  '{{ org.work_email }}',
-                  '{{ org.contact_number }}',
-                  '{{ org.position_title }}',
-                  '{{ org.status }}'
-                  )">
+                  onclick='openContactModal(
+                  {{ (org.contact_person or '')|tojson }},
+                  {{ (org.work_email or '')|tojson }},
+                  {{ (org.contact_number or '')|tojson }},
+                  {{ (org.position_title or '')|tojson }},
+                  {{ (org.status or '')|tojson }}
+                  )'>
                 {{ org.contact_person }}
               </button>
             </td>
@@ -121,19 +133,19 @@
             <td>
               <button type="button"
                     class="action-btn edit-btn"
-                    onclick="openEditOrgModal(
-                    '{{ org.id }}',
-                    '{{ org.company_name }}',
-                    '{{ org.industry }}',
-                    '{{ org.company_size }}',
-                    '{{ org.company_number }}',
-                    '{{ org.status }}'
-                  )">
+                    onclick='openEditOrgModal(
+                    {{ org.id|tojson }},
+                    {{ (org.company_name or '')|tojson }},
+                    {{ (org.industry or '')|tojson }},
+                    {{ (org.company_size or '')|tojson }},
+                    {{ (org.company_number or '')|tojson }},
+                    {{ (org.status or '')|tojson }}
+                  )'>
                 Edit
               </button>
 
               {% if org.status == 'suspended' %}
-                <form action="{{ url_for('super_admin.reactivate_organization', org_id=org.id) }}" method="POST" style="display:inline;">
+                <form action="{{ url_for('super_admin.reactivate_organization', org_id=org.id) }}" method="POST" class="inline-form">
                   <button class="action-btn reactivate-btn"
                           type="submit"
                           onclick="return confirm('Reactivate this organization?')">
@@ -141,7 +153,7 @@
                   </button>
                 </form>
               {% else %}
-                <form action="{{ url_for('super_admin.suspend_organization', org_id=org.id) }}" method="POST" style="display:inline;">
+                <form action="{{ url_for('super_admin.suspend_organization', org_id=org.id) }}" method="POST" class="inline-form">
                   <button class="action-btn suspend-btn"
                           type="submit"
                           onclick="return confirm('Suspend this organization?')">
@@ -154,7 +166,7 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="6">No organizations found.</td>
+            <td colspan="11">No organizations found.</td>
           </tr>
           {% endfor %}
           

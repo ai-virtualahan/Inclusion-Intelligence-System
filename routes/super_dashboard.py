@@ -40,9 +40,32 @@ def super_dashboard():
 
     # Active Users
     cursor.execute("""
-        SELECT COUNT(*) AS total FROM users
+        SELECT COUNT(*) AS total
+        FROM users
+        WHERE status = 'approved'
     """)
     active_users = cursor.fetchone()['total']
+
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM users
+        WHERE status = 'inactive'
+    """)
+    inactive_users = cursor.fetchone()['total']
+
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM organizations
+        WHERE status = 'suspended'
+    """)
+    suspended_organizations = cursor.fetchone()['total']
+
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM email_notifications
+        WHERE send_status = 'failed'
+    """)
+    failed_emails = cursor.fetchone()['total']
 
     cursor.execute("""
         SELECT COUNT(*) AS total
@@ -59,6 +82,9 @@ def super_dashboard():
         pending_approvals=pending_approvals,
         assessments_completed=assessments_completed,
         active_users=active_users,
+        inactive_users=inactive_users,
+        suspended_organizations=suspended_organizations,
+        failed_emails=failed_emails,
         generated_reports=generated_reports
     )
 
@@ -143,26 +169,58 @@ def edit_organization(org_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        UPDATE organizations
-        SET company_name = %s,
-            industry = %s,
-            company_size = %s,
-            company_number = %s,
-            status = %s
-        WHERE id = %s
-    """, (
-        company_name,
-        industry,
-        company_size,
-        company_number,
-        status,
-        org_id
-    ))
+    try:
+        cursor.execute("""
+            UPDATE organizations
+            SET company_name = %s,
+                industry = %s,
+                company_size = %s,
+                company_number = %s,
+                status = %s,
+                approved_at = CASE
+                    WHEN %s = 'approved' THEN COALESCE(approved_at, NOW())
+                    ELSE approved_at
+                END,
+                approved_by = CASE
+                    WHEN %s = 'approved' THEN COALESCE(approved_by, %s)
+                    ELSE approved_by
+                END
+            WHERE id = %s
+        """, (
+            company_name,
+            industry,
+            company_size,
+            company_number,
+            status,
+            status,
+            status,
+            session.get('user_id'),
+            org_id
+        ))
 
-    conn.commit()
-    cursor.close()
-    conn.close()
+        if status == 'approved':
+            cursor.execute("""
+                UPDATE users
+                SET status = 'approved'
+                WHERE organization_id = %s
+                  AND role = 'org_admin'
+            """, (org_id,))
+        elif status in ('suspended', 'rejected'):
+            cursor.execute("""
+                UPDATE users
+                SET status = 'inactive'
+                WHERE organization_id = %s
+                  AND role = 'org_admin'
+            """, (org_id,))
+
+        conn.commit()
+        flash("Organization updated successfully.", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to update organization: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
 
     return redirect(url_for('super_admin.organizations'))
     
@@ -174,15 +232,26 @@ def suspend_organization(org_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        UPDATE organizations
-        SET status = 'suspended'
-        WHERE id = %s
-    """, (org_id,))
-    conn.commit()
-
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute("""
+            UPDATE organizations
+            SET status = 'suspended'
+            WHERE id = %s
+        """, (org_id,))
+        cursor.execute("""
+            UPDATE users
+            SET status = 'inactive'
+            WHERE organization_id = %s
+              AND role = 'org_admin'
+        """, (org_id,))
+        conn.commit()
+        flash("Organization suspended and linked organization admins were deactivated.", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to suspend organization: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
 
     return redirect(url_for('super_admin.organizations'))
 
@@ -195,15 +264,28 @@ def reactivate_organization(org_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        UPDATE organizations
-        SET status = 'approved'
-        WHERE id = %s
-    """, (org_id,))
-    conn.commit()
-
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute("""
+            UPDATE organizations
+            SET status = 'approved',
+                approved_at = COALESCE(approved_at, NOW()),
+                approved_by = COALESCE(approved_by, %s)
+            WHERE id = %s
+        """, (session.get('user_id'), org_id))
+        cursor.execute("""
+            UPDATE users
+            SET status = 'approved'
+            WHERE organization_id = %s
+              AND role = 'org_admin'
+        """, (org_id,))
+        conn.commit()
+        flash("Organization reactivated and linked organization admins were approved.", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to reactivate organization: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
 
     return redirect(url_for('super_admin.organizations'))
 
@@ -214,6 +296,7 @@ def assessment_questions():
         return redirect(url_for('login.login'))
 
     selected_dimension = request.args.get('dimension_id')
+    selected_question_status = request.args.get('question_status', 'all')
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -225,33 +308,44 @@ def assessment_questions():
     """)
     dimensions = cursor.fetchall()
 
+    filters = []
+    params = []
+
     if selected_dimension:
-        cursor.execute("""
-            SELECT
-                qb.id,
-                qb.question_text,
-                ad.name AS dimension_name,
-                qb.version,
-                qb.is_active
-            FROM question_bank qb
-            LEFT JOIN assessment_dimensions ad
-                ON qb.dimension_id = ad.id
-            WHERE qb.dimension_id = %s
-            ORDER BY qb.id DESC
-        """, (selected_dimension,))
-    else:
-        cursor.execute("""
-            SELECT
-                qb.id,
-                qb.question_text,
-                ad.name AS dimension_name,
-                qb.version,
-                qb.is_active
-            FROM question_bank qb
-            LEFT JOIN assessment_dimensions ad
-                ON qb.dimension_id = ad.id
-            ORDER BY qb.id DESC
-        """)
+        filters.append("qb.dimension_id = %s")
+        params.append(selected_dimension)
+
+    if selected_question_status == 'active':
+        filters.append("qb.is_active = 1")
+    elif selected_question_status == 'inactive':
+        filters.append("qb.is_active = 0")
+    elif selected_question_status == 'version_1':
+        filters.append("qb.version = 1")
+    elif selected_question_status == 'version_2':
+        filters.append("qb.version = 2")
+
+    where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
+
+    cursor.execute(f"""
+        SELECT
+            qb.id,
+            qb.question_text,
+            ad.name AS dimension_name,
+            qb.version,
+            qb.is_active,
+            COALESCE(qb.version_group_id, qb.id) AS version_group_id,
+            (
+                SELECT COUNT(DISTINCT COALESCE(qb2.version_group_id, qb2.id))
+                FROM question_bank qb2
+                WHERE qb2.dimension_id = qb.dimension_id
+                  AND COALESCE(qb2.version_group_id, qb2.id) <= COALESCE(qb.version_group_id, qb.id)
+            ) AS question_number
+        FROM question_bank qb
+        LEFT JOIN assessment_dimensions ad
+            ON qb.dimension_id = ad.id
+        {where_clause}
+        ORDER BY ad.id ASC, question_number ASC, qb.version DESC
+    """, params)
 
     questions = cursor.fetchall()
 
@@ -262,7 +356,8 @@ def assessment_questions():
         'assessment_questions.html',
         questions=questions,
         dimensions=dimensions,
-        selected_dimension=selected_dimension
+        selected_dimension=selected_dimension,
+        selected_question_status=selected_question_status
 
     )
 
@@ -360,27 +455,226 @@ def question_choices_data(question_id):
 
     return {"choices": choices}
 
+
+@super_admin_bp.route('/super-admin/question/<int:question_id>/choices/edit', methods=['POST'])
+def edit_question_choices(question_id):
+    if session.get('role') != 'super_admin':
+        return {"error": "Unauthorized"}, 403
+
+    data = request.get_json(silent=True) or {}
+    choices = data.get('choices') or []
+
+    if not choices:
+        return {"error": "No choices were submitted."}, 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("SELECT id FROM question_bank WHERE id = %s", (question_id,))
+        if not cursor.fetchone():
+            return {"error": "Question not found."}, 404
+
+        for choice in choices:
+            choice_id = choice.get('id')
+            choice_text = (choice.get('choice_text') or '').strip()
+            choice_score = choice.get('choice_score')
+
+            if not choice_id or not choice_text:
+                return {"error": "Each choice must include text."}, 400
+
+            try:
+                choice_score = float(choice_score)
+            except (TypeError, ValueError):
+                return {"error": "Each choice score must be a number."}, 400
+
+            cursor.execute("""
+                UPDATE question_choices
+                SET choice_text = %s,
+                    choice_score = %s
+                WHERE id = %s
+                  AND question_id = %s
+            """, (choice_text, choice_score, choice_id, question_id))
+
+        conn.commit()
+
+        cursor.execute("""
+            SELECT id, choice_letter, choice_text, choice_score
+            FROM question_choices
+            WHERE question_id = %s
+            ORDER BY choice_letter ASC
+        """, (question_id,))
+
+        return {
+            "success": True,
+            "question_id": question_id,
+            "choices": cursor.fetchall()
+        }
+    except Exception as e:
+        conn.rollback()
+        return {"error": str(e)}, 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@super_admin_bp.route('/super-admin/question/<int:question_id>/activate', methods=['POST'])
+def activate_question(question_id):
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""
+            SELECT id, version_group_id
+            FROM question_bank
+            WHERE id = %s
+        """, (question_id,))
+        question = cursor.fetchone()
+
+        if not question:
+            flash("Question version not found.", "danger")
+            return redirect(url_for('super_admin.assessment_questions'))
+
+        version_group_id = question['version_group_id'] or question['id']
+
+        cursor.execute("""
+            UPDATE question_bank
+            SET is_active = 0
+            WHERE COALESCE(version_group_id, id) = %s
+        """, (version_group_id,))
+        cursor.execute("""
+            UPDATE question_bank
+            SET is_active = 1,
+                version_group_id = %s
+            WHERE id = %s
+        """, (version_group_id, question_id))
+
+        conn.commit()
+        flash("Question version activated. This version will be shown in assessments.", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to activate question version: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(request.referrer or url_for('super_admin.assessment_questions'))
+
+
+@super_admin_bp.route('/super-admin/question/<int:question_id>/deactivate', methods=['POST'])
+def deactivate_question(question_id):
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            UPDATE question_bank
+            SET is_active = 0,
+                version_group_id = COALESCE(version_group_id, id)
+            WHERE id = %s
+        """, (question_id,))
+        conn.commit()
+        flash("Question version deactivated. It will no longer appear in assessments.", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to deactivate question version: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(request.referrer or url_for('super_admin.assessment_questions'))
+
 @super_admin_bp.route('/super-admin/question/<int:question_id>/edit', methods=['POST'])
 def edit_question(question_id):
     if session.get('role') != 'super_admin':
         return {"error": "Unauthorized"}, 403
 
-    question_text = request.form['question_text']
+    question_text = (request.form.get('question_text') or '').strip()
+
+    if not question_text:
+        return {"error": "Question text is required."}, 400
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("""
-        UPDATE question_bank
-        SET question_text = %s
-        WHERE id = %s
-    """, (question_text, question_id))
+    try:
+        cursor.execute("""
+            SELECT id, dimension_id, version, is_active, version_group_id
+            FROM question_bank
+            WHERE id = %s
+        """, (question_id,))
+        current_question = cursor.fetchone()
 
-    conn.commit()
-    cursor.close()
-    conn.close()
+        if not current_question:
+            return {"error": "Question not found."}, 404
 
-    return {"success": True, "question_id": question_id, "question_text": question_text}
+        new_version = (current_question['version'] or 1) + 1
+        version_group_id = current_question['version_group_id'] or current_question['id']
+
+        cursor.execute("""
+            UPDATE question_bank
+            SET is_active = 0
+            WHERE id = %s
+        """, (question_id,))
+
+        cursor.execute("""
+            INSERT INTO question_bank (
+                dimension_id,
+                question_text,
+                version,
+                is_active,
+                version_group_id,
+                created_by
+            )
+            VALUES (%s, %s, %s, 1, %s, %s)
+        """, (
+            current_question['dimension_id'],
+            question_text,
+            new_version,
+            version_group_id,
+            session.get('user_id')
+        ))
+        new_question_id = cursor.lastrowid
+
+        cursor.execute("""
+            INSERT INTO question_choices (
+                question_id,
+                choice_letter,
+                choice_text,
+                choice_score
+            )
+            SELECT
+                %s,
+                choice_letter,
+                choice_text,
+                choice_score
+            FROM question_choices
+            WHERE question_id = %s
+            ORDER BY choice_letter ASC
+        """, (new_question_id, question_id))
+
+        conn.commit()
+
+        return {
+            "success": True,
+            "question_id": new_question_id,
+            "old_question_id": question_id,
+            "question_text": question_text,
+            "version": new_version,
+            "is_active": 1
+        }
+    except Exception as e:
+        conn.rollback()
+        return {"error": str(e)}, 500
+    finally:
+        cursor.close()
+        conn.close()
 
 
 
@@ -432,6 +726,13 @@ def users():
             SELECT *
             FROM users
             WHERE role = 'org_admin'
+            ORDER BY id DESC
+        """)
+    elif selected_role == 'inactive':
+        cursor.execute("""
+            SELECT *
+            FROM users
+            WHERE status = 'inactive'
             ORDER BY id DESC
         """)
     elif selected_role:

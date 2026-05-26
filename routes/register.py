@@ -1,4 +1,6 @@
 
+import re
+
 from flask import render_template, request, redirect, url_for, flash
 from mysql.connector import Error
 from werkzeug.security import generate_password_hash
@@ -7,6 +9,23 @@ from flask import Blueprint
 from db import get_db_connection
 
 register_bp = Blueprint('register', __name__)
+
+EMAIL_PATTERN = re.compile(
+    r"^[A-Za-z0-9._%+-]+@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$"
+)
+PHONE_PATTERN = re.compile(r"^\+?[0-9][0-9\s().-]{8,18}[0-9]$")
+
+
+def is_valid_email(email):
+    return bool(email and EMAIL_PATTERN.fullmatch(email.strip()))
+
+
+def is_valid_phone_number(phone_number):
+    if not phone_number or not PHONE_PATTERN.fullmatch(phone_number.strip()):
+        return False
+
+    digits = re.sub(r"\D", "", phone_number)
+    return 10 <= len(digits) <= 15
 
 
 @register_bp.route('/register')
@@ -37,6 +56,18 @@ def submit_registration():
 
     if password != confirm_password:
         flash("Passwords do not match.", "danger")
+        return redirect(url_for('register.register'))
+
+    if not is_valid_email(work_email):
+        flash("Please enter a valid work email address.", "danger")
+        return redirect(url_for('register.register'))
+
+    if not is_valid_phone_number(contact_number):
+        flash("Please enter a valid contact number.", "danger")
+        return redirect(url_for('register.register'))
+
+    if company_number and not is_valid_phone_number(company_number):
+        flash("Please enter a valid company number.", "danger")
         return redirect(url_for('register.register'))
 
     if not agree_terms:

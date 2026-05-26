@@ -113,17 +113,17 @@ def compute_assessment_scores(cursor, assessment_id):
             aa.assessment_id,
             qb.dimension_id,
             SUM(aa.score_value)                                     AS raw_score,
-            ROUND((SUM(aa.score_value) / %s) * 100, 2)             AS score,
+            ROUND((SUM(aa.score_value) / (COUNT(*) * %s)) * 100, 2) AS score,
             CASE
-                WHEN ROUND((SUM(aa.score_value) / %s) * 100, 2) <= 25 THEN 'critical'
-                WHEN ROUND((SUM(aa.score_value) / %s) * 100, 2) <= 50 THEN 'moderate'
+                WHEN ROUND((SUM(aa.score_value) / (COUNT(*) * %s)) * 100, 2) <= 25 THEN 'critical'
+                WHEN ROUND((SUM(aa.score_value) / (COUNT(*) * %s)) * 100, 2) <= 50 THEN 'moderate'
                 ELSE 'none'
             END AS severity_flag
         FROM assessment_answers aa
         JOIN question_bank qb ON aa.question_id = qb.id
         WHERE aa.assessment_id = %s
         GROUP BY aa.assessment_id, qb.dimension_id
-    """, (MAX_RAW, MAX_RAW, MAX_RAW, assessment_id))
+    """, (MAX_PER_QUESTION, MAX_PER_QUESTION, MAX_PER_QUESTION, assessment_id))
 
     # 3. Overall score = average of all dimension scores (equal 20% weight each)
     #    Maturity level assigned by threshold

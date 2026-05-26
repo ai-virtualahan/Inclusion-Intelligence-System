@@ -59,9 +59,12 @@ def login():
             flash("Incorrect password.", "error")
             return redirect(url_for('login.login'))
 
-        # 🔐 APPROVAL CHECK
-        if user['role'] == 'org_admin' and user['status'] != 'approved':
-            flash("Your account is still pending approval.", "warning")
+        # Approval/status check applies to all account types.
+        if user['status'] != 'approved':
+            if user['status'] == 'inactive':
+                flash("Your account is inactive. Please contact the administrator.", "warning")
+            else:
+                flash("Your account is still pending approval.", "warning")
             return redirect(url_for('login.login'))
 
         # ✅ SESSION

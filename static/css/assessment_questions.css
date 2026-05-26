@@ -47,6 +47,33 @@
   line-height: 1.6;
 }
 
+.choice-edit-text,
+.choice-edit-score {
+  width: 100%;
+  border: 1px solid #d6dce5;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #0b2345;
+  font: inherit;
+  padding: 10px 12px;
+}
+
+.choice-edit-text {
+  min-height: 78px;
+  resize: vertical;
+}
+
+.choice-edit-score {
+  max-width: 100px;
+}
+
+.choice-edit-text:focus,
+.choice-edit-score:focus {
+  outline: none;
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
+}
+
 #choicesModal tbody tr:nth-child(even) {
   background: #f9fbff;
 }
@@ -75,6 +102,24 @@
   margin-bottom: 10px;
 }
 
+.version-note {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: -2px 0 14px;
+}
+
+.version-context {
+  background: #eef4ff;
+  border-radius: 8px;
+  color: #0b2a66;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+}
+
 .question-textarea {
   width: 100%;
   min-height: 110px;
@@ -101,6 +146,20 @@
   background: white;
 
   box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
+}
+
+.choices-toolbar {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 10px 0 -6px;
+}
+
+.choices-toolbar h3 {
+  color: #0b2345;
+  font-size: 18px;
+  margin: 0;
 }
 
 /* ASSESSMENT QUESTIONS TABLE */
@@ -141,6 +200,14 @@
   background: #f5f8fc;
 }
 
+.questions-table-wrapper tbody tr:hover {
+  background: #eef4ff;
+}
+
+.questions-table-wrapper tbody tr:hover .version-badge {
+  border-color: #14b8a6;
+}
+
 .questions-table-wrapper tbody td:first-child {
   border-radius: 10px 0 0 10px;
 }
@@ -152,6 +219,52 @@
 .questions-table-wrapper td:nth-child(2) {
   max-width: 700px;
   line-height: 1.4;
+}
+
+.question-number-cell {
+  color: #0b2a66;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.version-badge {
+  background: #eef4ff;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: #0b2a66;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 12px;
+  white-space: nowrap;
+}
+
+.version-badge-new {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.new-version-row {
+  box-shadow: inset 4px 0 0 #38bdf8;
+}
+
+.org-controls form {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.org-controls select {
+  min-width: 180px;
+}
+
+.question-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
 }
 
 

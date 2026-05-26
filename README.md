@@ -11,6 +11,11 @@ across key dimensions such as hiring, onboarding, accommodation, retention and c
        git clone https://github.com/mock_iis.git
        cd (your-project-profile)
 
+    2. Configure environment variables
+
+       Copy .env.example to .env and replace the placeholder values with your local database, Flask secret key, and email app password.
+       The .env file is ignored by git so credentials stay on your machine.
+
 # DATABASE SETUP (MySQL Workbench)
     Step 1: Open MyQL Workbench and connect to your local server
     Step 2: Create Database

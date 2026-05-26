@@ -58,35 +58,58 @@
   <main class="main-content">
 
     <section class="page-header">
-      <h1>Welcome, Super Admin 👋</h1>
+      <h1>Welcome, Super Admin</h1>
       <p>Manage users, assessments, reports, and system operations.</p>
     </section>
 
     <section class="stats">
-      <div class="card">
+      <a class="card stat-card" href="{{ url_for('super_admin.organizations', status='approved') }}">
         <h2>{{ total_organizations }}</h2>
         <p>Approved Organizations</p>
-      </div>
+        <span>View organizations</span>
+      </a>
 
-      <div class="card">
+      <a class="card stat-card" href="{{ url_for('super_admin.organizations', status='suspended') }}">
+        <h2>{{ suspended_organizations }}</h2>
+        <p>Suspended Organizations</p>
+        <span>Review suspended</span>
+      </a>
+
+      <div class="card stat-card stat-card-muted">
         <h2>{{ pending_approvals }}</h2>
         <p>Pending Approvals</p>
+        <span>Handled by VHAN Admin</span>
       </div>
 
-      <div class="card">
+      <a class="card stat-card" href="{{ url_for('super_admin.reports') }}">
         <h2>{{ assessments_completed }}</h2>
         <p>Assessments Completed</p>
-      </div>
+        <span>Open reports</span>
+      </a>
 
-      <div class="card">
+      <a class="card stat-card" href="{{ url_for('super_admin.users') }}">
         <h2>{{ active_users }}</h2>
         <p>Active Users</p>
-      </div>
+        <span>Manage users</span>
+      </a>
 
-      <div class="card">
+      <a class="card stat-card" href="{{ url_for('super_admin.users', role='inactive') }}">
+        <h2>{{ inactive_users }}</h2>
+        <p>Inactive Users</p>
+        <span>Reactivate accounts</span>
+      </a>
+
+      <a class="card stat-card" href="{{ url_for('super_admin.email_logs') }}">
+        <h2>{{ failed_emails }}</h2>
+        <p>Failed Emails</p>
+        <span>Check logs</span>
+      </a>
+
+      <a class="card stat-card" href="{{ url_for('super_admin.reports') }}">
         <h2>{{ generated_reports }}</h2>
         <p>Saved Reports</p>
-      </div>
+        <span>Preview reports</span>
+      </a>
     </section>
 
     <section class="dashboard-panel">

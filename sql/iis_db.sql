@@ -416,6 +416,13 @@ INSERT INTO `question_bank` VALUES (1,1,'How are your job postings designed to a
 /*!40000 ALTER TABLE `question_bank` ENABLE KEYS */;
 UNLOCK TABLES;
 
+ALTER TABLE `question_bank`
+  ADD COLUMN `version_group_id` int DEFAULT NULL;
+
+UPDATE `question_bank`
+SET `version_group_id` = `id`
+WHERE `version_group_id` IS NULL;
+
 --
 -- Table structure for table `question_choices`
 --
