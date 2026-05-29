@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, session, redirect, url_for, reques
 from db import get_db_connection
 from flask_mail import Message
 from extensions import mail
+from routes.access_request_utils import approve_access_request, find_existing_registration
+from settings_utils import can_role_approve_access_requests, get_bool_setting, load_system_settings
 
 vhan_bp = Blueprint('vhan', __name__)
 
@@ -65,7 +67,7 @@ def vhan_dashboard():
     )
 
 
-@vhan_bp.route('/vhan/approve/<int:req_id>')
+@vhan_bp.route('/vhan/approve/<int:req_id>', methods=['POST'])
 def approve_request(req_id):
     if session.get('role') != 'vhan_admin':
         return redirect(url_for('login.login'))
@@ -73,80 +75,20 @@ def approve_request(req_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Get request data
-    cursor.execute("""
-        SELECT *
-        FROM access_requests
-        WHERE id = %s
-    """, (req_id,))
+    try:
+        if not can_role_approve_access_requests(cursor, session.get('role')):
+            flash("VHAN Admin approval is disabled in System Settings.", "warning")
+            return redirect(url_for('vhan.vhan_dashboard'))
 
-    req = cursor.fetchone()
-
-    # Safety check: if request does not exist
-    if not req:
+        _, message, category = approve_access_request(cursor, req_id, session.get('user_id'))
+        conn.commit()
+        flash(message, category)
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to approve access request: {e}", "danger")
+    finally:
         cursor.close()
         conn.close()
-        return redirect(url_for('vhan.vhan_dashboard'))
-
-    # Safety check: only pending requests can be approved
-    if req['status'] != 'pending':
-        cursor.close()
-        conn.close()
-        return redirect(url_for('vhan.vhan_dashboard'))
-
-    # Insert approved organization
-    cursor.execute("""
-        INSERT INTO organizations (
-            company_name,
-            industry,
-            company_size,
-            company_number,
-            status,
-            approved_at
-        )
-        VALUES (%s, %s, %s, %s, 'approved', NOW())
-    """, (
-        req['company_name'],
-        req['industry'],
-        req['company_size'],
-        req['company_number']
-    ))
-
-    org_id = cursor.lastrowid
-
-    # Insert organization admin user
-    cursor.execute("""
-        INSERT INTO users (
-            organization_id,
-            contact_person,
-            work_email,
-            password_hash,
-            role,
-            status,
-            contact_number,
-            position_title
-        )
-        VALUES (%s, %s, %s, %s, 'org_admin', 'approved', %s, %s)
-    """, (
-        org_id,
-        req['contact_person'],
-        req['work_email'],
-        req['password_hash'],
-        req['contact_number'],
-        req['position_title']
-    ))
-
-    # Update access request status
-    cursor.execute("""
-        UPDATE access_requests
-        SET status = 'approved'
-        WHERE id = %s
-    """, (req_id,))
-
-    conn.commit()
-
-    cursor.close()
-    conn.close()
 
     return redirect(url_for('vhan.vhan_dashboard'))
 
@@ -158,6 +100,14 @@ def reject_request(req_id):
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+
+    require_reason = get_bool_setting(cursor, "require_rejection_reason", True)
+    rejection_reason = (request.form.get('rejection_reason') or '').strip()
+    if require_reason and not rejection_reason:
+        cursor.close()
+        conn.close()
+        flash("Please provide a rejection reason before rejecting this request.", "warning")
+        return redirect(url_for('vhan.pending_approvals'))
 
     cursor.execute("""
         SELECT id, status
@@ -187,7 +137,7 @@ def reject_request(req_id):
         WHERE id = %s
     """, (
         session.get('user_id'),
-        'Rejected by VHAN admin.',
+        rejection_reason or 'Rejected by VHAN admin.',
         req_id
     ))
 
@@ -206,6 +156,7 @@ def pending_approvals():
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+    settings = load_system_settings(cursor)
 
     cursor.execute("""
         SELECT
@@ -230,7 +181,7 @@ def pending_approvals():
     cursor.close()
     conn.close()
 
-    return render_template('pending_approvals.html', requests=requests)
+    return render_template('pending_approvals.html', requests=requests, settings=settings)
 
 
 @vhan_bp.route('/vhan/email-logs', methods=['GET', 'POST'])
@@ -247,6 +198,12 @@ def email_logs():
         message_body = request.form.get('message_body')
 
         subject = "Registration Invitation - Inclusion Intelligence"
+        existing_registration = find_existing_registration(cursor, recipient_email)
+        if existing_registration:
+            flash("Invitation not sent. This email is already registered or has an access request.", "warning")
+            cursor.close()
+            conn.close()
+            return redirect(url_for('vhan.email_logs'))
 
         try:
             msg = Message(

@@ -33,7 +33,7 @@
     </a>
 
     <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">
-      Assessment Questions
+      Questionnaires
     </a>
 
     <a href="{{ url_for('super_admin.users') }}" class="side-link">
@@ -94,7 +94,6 @@
             <th>Size</th>
             <th>Company Number</th>
             <th>Contact Person</th>
-            <th>Status</th>
             <th>Created</th>
             <th>Approved At</th>
             <th>Approved By</th> 
@@ -122,11 +121,6 @@
                 {{ org.contact_person }}
               </button>
             </td>
-            <td>
-              <span class="record-status status-{{ org.status }}">
-                {{ org.status }}
-              </span>
-            </td>
             <td>{{ org.created_at }}</td>
             <td>{{ org.approved_at }}</td>
             <td>{{ org.approved_by }}</td>
@@ -146,6 +140,7 @@
 
               {% if org.status == 'suspended' %}
                 <form action="{{ url_for('super_admin.reactivate_organization', org_id=org.id) }}" method="POST" class="inline-form">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="action-btn reactivate-btn"
                           type="submit"
                           onclick="return confirm('Reactivate this organization?')">
@@ -154,6 +149,7 @@
                 </form>
               {% else %}
                 <form action="{{ url_for('super_admin.suspend_organization', org_id=org.id) }}" method="POST" class="inline-form">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="action-btn suspend-btn"
                           type="submit"
                           onclick="return confirm('Suspend this organization?')">
@@ -166,7 +162,7 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="11">No organizations found.</td>
+            <td colspan="10">No organizations found.</td>
           </tr>
           {% endfor %}
           
@@ -225,6 +221,7 @@
     <h2>Edit Organization</h2>
 
     <form id="editOrgForm" method="POST" class="edit-org-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label>Organization Name</label>
       <input type="text" name="company_name" id="editCompanyName" required>
 

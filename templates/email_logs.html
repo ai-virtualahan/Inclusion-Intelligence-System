@@ -24,7 +24,7 @@
 
     <a href="{{ url_for('super_admin.super_dashboard') }}" class="side-link">Dashboard Overview</a>
     <a href="{{ url_for('super_admin.organizations') }}" class="side-link">Organizations</a>
-    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">Assessment Questions</a>
+    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">Questionnaires</a>
     <a href="{{ url_for('super_admin.users') }}" class="side-link">Users</a>
     <a href="{{ url_for('super_admin.reports') }}" class="side-link">Reports</a>
     <a href="{{ url_for('super_admin.email_logs') }}" class="side-link active">Email Logs</a>
@@ -147,6 +147,7 @@
     <p class="modal-subtitle">Invite an organization representative to register.</p>
 
     <form method="POST" action="{{ url_for('super_admin.email_logs') }}" class="modal-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-group">
         <label>Company / Organization Name</label>
         <input type="text" name="company_name" placeholder="Enter company name">

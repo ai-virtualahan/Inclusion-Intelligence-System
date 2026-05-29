@@ -52,6 +52,7 @@
         {% endwith %}
 
         <form method="POST" action="{{ url_for('login.login') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="input-box">
             <input type="email" name="email" placeholder="Email Address" required>
             
@@ -94,6 +95,7 @@
         <p>Enter your work email and we'll generate a reset link.</p>
 
         <form action="/forgot-password" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="email" name="email" placeholder="Enter your work email" required>
           <button type="submit">Send Reset Link</button>
         </form>

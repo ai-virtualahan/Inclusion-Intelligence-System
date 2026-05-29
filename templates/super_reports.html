@@ -24,7 +24,7 @@
 
     <a href="{{ url_for('super_admin.super_dashboard') }}" class="side-link">Dashboard Overview</a>
     <a href="{{ url_for('super_admin.organizations') }}" class="side-link">Organizations</a>
-    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">Assessment Questions</a>
+    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">Questionnaires</a>
     <a href="{{ url_for('super_admin.users') }}" class="side-link">Users</a>
     <a href="{{ url_for('super_admin.reports') }}" class="side-link active">Reports</a>
     <a href="{{ url_for('super_admin.email_logs') }}" class="side-link">Email Logs</a>
@@ -97,6 +97,9 @@
             <p class="report-kicker">Inclusion Intelligence System</p>
             <h1>{{ selected_org.company_name }}</h1>
             <p>Inclusion Maturity Report</p>
+            {% if settings.report_include_generated_date == 'on' %}
+              <p class="report-date">Generated {{ generated_at.strftime('%B %d, %Y') }}</p>
+            {% endif %}
           </section>
 
           <section class="report-section">
@@ -163,39 +166,61 @@
             {% endif %}
           </section>
 
+          {% if settings.report_show_gap_analysis == 'on' %}
           <section class="report-section">
             <div class="section-heading">
-              <h2>Gaps</h2>
-              <p>Priority areas flagged from the latest assessment.</p>
+              <h2>Gap Analysis by Dimension</h2>
+              <p>Consolidated interpretation of priority gaps from the latest assessment.</p>
             </div>
 
-            {% if gap_flags %}
-              <div class="gap-list">
-                {% for gap in gap_flags %}
-                  <div class="gap-item {{ gap.severity }}">
-                    <span>{{ gap.severity }}</span>
-                    <strong>{{ gap.dimension }}</strong>
-                    <p>{{ gap.description }}</p>
+            {% if dimension_gap_analysis %}
+              <div class="gap-analysis-list">
+                {% for item in dimension_gap_analysis %}
+                  <div class="gap-analysis-card {{ 'critical' if item.critical_count else 'moderate' if item.moderate_count else 'none' }}">
+                    <div class="gap-analysis-head">
+                      <div>
+                        <strong>{{ item.dimension }}</strong>
+                        <span>{{ item.raw_score }}/40 raw score | {{ item.score }} scaled score</span>
+                      </div>
+                      <span class="priority-pill">{{ item.priority }}</span>
+                    </div>
+
+                    <p>{{ item.summary }}</p>
+
+                    <div class="gap-counts">
+                      <span>{{ item.critical_count }} critical</span>
+                      <span>{{ item.moderate_count }} moderate</span>
+                    </div>
                   </div>
                 {% endfor %}
               </div>
             {% else %}
-              <div class="empty-report-state">No gaps are currently available for this organization.</div>
+              <div class="empty-report-state">Gap analysis will appear once scoring data is available.</div>
             {% endif %}
           </section>
+          {% endif %}
 
+          {% if settings.report_show_recommendations == 'on' %}
           <section class="report-section">
             <div class="section-heading">
-              <h2>Recommendations</h2>
-              <p>Recommended actions based on available gap data.</p>
+              <h2>Recommended Actions</h2>
+              <p>Priority actions grouped by assessment dimension.</p>
             </div>
 
-            {% if gap_flags %}
+            {% if dimension_gap_analysis %}
               <div class="recommendation-list">
-                {% for gap in gap_flags %}
+                {% for item in dimension_gap_analysis %}
                   <div class="recommendation-item">
-                    <strong>{{ gap.dimension }}</strong>
-                    <p>Review the flagged practice, assign an owner, and create a measurable action plan with a target completion date.</p>
+                    <strong>{{ item.dimension }}</strong>
+                    {% if item.recommendations %}
+                      <ul>
+                        {% for recommendation in item.recommendations %}
+                          <li>{{ recommendation }}</li>
+                        {% endfor %}
+                      </ul>
+                    {% else %}
+                      <p>Maintain current practices, monitor progress, and document evidence for future reassessments.</p>
+                    {% endif %}
                   </div>
                 {% endfor %}
               </div>
@@ -203,6 +228,11 @@
               <div class="empty-report-state">Recommendations will appear when gap analysis data is available.</div>
             {% endif %}
           </section>
+          {% endif %}
+
+          <footer class="report-footer">
+            {{ settings.report_footer_text }}
+          </footer>
         {% else %}
           <div class="empty-report-state">No approved organizations are available for reporting yet.</div>
         {% endif %}

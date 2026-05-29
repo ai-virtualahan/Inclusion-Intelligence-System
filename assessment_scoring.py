@@ -1,6 +1,4 @@
-print("TOP LOADED")
-
-from datetime import datetime, timedelta
+from settings_utils import load_system_settings
 
 # ─────────────────────────────────────────────
 #  GAP RECOMMENDATIONS  (per question index)
@@ -68,23 +66,79 @@ RECOMMENDATIONS = {
     ],
 }
 
-print("RECOMMENDATIONS LOADED")
-
 DIMENSION_NAMES = ["Hiring", "Onboarding", "Accommodation", "Retention", "Culture"]
 MAX_PER_QUESTION = 4
 QUESTIONS_PER_DIM = 10
 MAX_RAW = MAX_PER_QUESTION * QUESTIONS_PER_DIM  # 40
 
+DIMENSION_WEIGHT_KEYS = {
+    "Hiring": "weight_hiring",
+    "Onboarding": "weight_onboarding",
+    "Accommodation": "weight_accommodation",
+    "Retention": "weight_retention",
+    "Culture": "weight_culture",
+}
 
-def maturity_level(score):
-    if score <= 25:   return "Emerging"
-    if score <= 50:   return "Developing"
-    if score <= 75:   return "Advancing"
-    if score <= 90:   return "Leading"
+
+def setting_number(settings, key, default):
+    try:
+        return float(settings.get(key, default))
+    except (TypeError, ValueError):
+        return float(default)
+
+
+def scoring_thresholds(settings):
+    emerging = setting_number(settings, "score_emerging_max", 25)
+    developing = max(emerging, setting_number(settings, "score_developing_max", 50))
+    advancing = max(developing, setting_number(settings, "score_advancing_max", 75))
+    leading = max(advancing, setting_number(settings, "score_leading_max", 90))
+    return emerging, developing, advancing, leading
+
+
+def maturity_level(score, settings=None):
+    settings = settings or {}
+    emerging, developing, advancing, leading = scoring_thresholds(settings)
+
+    if score <= emerging:   return "Emerging"
+    if score <= developing:   return "Developing"
+    if score <= advancing:   return "Advancing"
+    if score <= leading:   return "Leading"
     return "Exemplar"
 
 
-def compute_assessment_scores(cursor, assessment_id):
+def row_value(row, key, index):
+    return row[key] if isinstance(row, dict) else row[index]
+
+
+def recommendation_for_question(cursor, dimension_name, question_id):
+    """Return the recommendation mapped to a question's position in its dimension."""
+    cursor.execute("""
+        SELECT dimension_id, COALESCE(version_group_id, id) AS version_group_id
+        FROM question_bank
+        WHERE id = %s
+    """, (question_id,))
+    question = cursor.fetchone()
+    if not question:
+        return ""
+
+    dimension_id = question['dimension_id'] if isinstance(question, dict) else question[0]
+    version_group_id = question['version_group_id'] if isinstance(question, dict) else question[1]
+
+    cursor.execute("""
+        SELECT DISTINCT COALESCE(version_group_id, id) AS version_group_id
+        FROM question_bank
+        WHERE dimension_id = %s
+        ORDER BY version_group_id
+    """, (dimension_id,))
+
+    group_ids = [row['version_group_id'] if isinstance(row, dict) else row[0] for row in cursor.fetchall()]
+    question_index = group_ids.index(version_group_id) if version_group_id in group_ids else 0
+
+    recommendations = RECOMMENDATIONS.get(dimension_name, [])
+    return recommendations[question_index] if question_index < len(recommendations) else ""
+
+
+def compute_assessment_scores_legacy(cursor, assessment_id):
     """
     Full scoring pipeline:
       1. Delete old computed results
@@ -170,6 +224,128 @@ def compute_assessment_scores(cursor, assessment_id):
     """, (assessment_id,))
 
     # 5. Mark completed
+    cursor.execute("""
+        UPDATE assessments
+        SET status = 'completed',
+            submitted_at = CURRENT_TIMESTAMP
+        WHERE id = %s
+    """, (assessment_id,))
+
+
+def compute_assessment_scores(cursor, assessment_id):
+    """
+    Compute assessment results using configurable scoring settings.
+    """
+    settings = load_system_settings(cursor)
+    emerging_max, developing_max, _, _ = scoring_thresholds(settings)
+    critical_score_max = setting_number(settings, "gap_critical_score_max", 1)
+    moderate_score_max = max(
+        critical_score_max,
+        setting_number(settings, "gap_moderate_score_max", 2)
+    )
+
+    cursor.execute("DELETE FROM dimension_scores WHERE assessment_id = %s", (assessment_id,))
+    cursor.execute("DELETE FROM gap_flags WHERE assessment_id = %s", (assessment_id,))
+
+    cursor.execute("""
+        SELECT
+            qb.dimension_id,
+            ad.name AS dimension_name,
+            SUM(aa.score_value) AS raw_score,
+            COUNT(*) AS answer_count
+        FROM assessment_answers aa
+        JOIN question_bank qb
+            ON aa.question_id = qb.id
+        JOIN assessment_dimensions ad
+            ON qb.dimension_id = ad.id
+        WHERE aa.assessment_id = %s
+        GROUP BY qb.dimension_id, ad.name
+        ORDER BY ad.id
+    """, (assessment_id,))
+    dimension_rows = cursor.fetchall()
+
+    weighted_total = 0
+    weight_total = 0
+
+    for row in dimension_rows:
+        dimension_id = row_value(row, "dimension_id", 0)
+        dimension_name = row_value(row, "dimension_name", 1)
+        raw_score = float(row_value(row, "raw_score", 2) or 0)
+        answer_count = float(row_value(row, "answer_count", 3) or 0)
+        max_score = answer_count * MAX_PER_QUESTION
+        score = round((raw_score / max_score) * 100, 2) if max_score else 0
+
+        if score <= emerging_max:
+            severity_flag = "critical"
+        elif score <= developing_max:
+            severity_flag = "moderate"
+        else:
+            severity_flag = "none"
+
+        cursor.execute("""
+            INSERT INTO dimension_scores (
+                assessment_id,
+                dimension_id,
+                raw_score,
+                score,
+                severity_flag
+            )
+            VALUES (%s, %s, %s, %s, %s)
+        """, (assessment_id, dimension_id, raw_score, score, severity_flag))
+
+        weight_key = DIMENSION_WEIGHT_KEYS.get(dimension_name)
+        dimension_weight = setting_number(settings, weight_key, 20) if weight_key else 20
+        if dimension_weight > 0:
+            weighted_total += score * dimension_weight
+            weight_total += dimension_weight
+
+    overall_score = round(weighted_total / weight_total, 2) if weight_total else 0
+    overall_maturity = maturity_level(overall_score, settings)
+
+    cursor.execute("""
+        UPDATE assessments
+        SET overall_score = %s,
+            maturity_level = %s
+        WHERE id = %s
+    """, (overall_score, overall_maturity, assessment_id))
+
+    cursor.execute("""
+        SELECT
+            aa.question_id,
+            aa.score_value,
+            qb.dimension_id,
+            qb.question_text
+        FROM assessment_answers aa
+        JOIN question_bank qb
+            ON aa.question_id = qb.id
+        WHERE aa.assessment_id = %s
+    """, (assessment_id,))
+    answer_rows = cursor.fetchall()
+
+    for row in answer_rows:
+        question_id = row_value(row, "question_id", 0)
+        score_value = float(row_value(row, "score_value", 1) or 0)
+        dimension_id = row_value(row, "dimension_id", 2)
+        question_text = row_value(row, "question_text", 3)
+
+        if score_value <= critical_score_max:
+            severity = "critical"
+        elif score_value <= moderate_score_max:
+            severity = "moderate"
+        else:
+            continue
+
+        cursor.execute("""
+            INSERT INTO gap_flags (
+                assessment_id,
+                dimension_id,
+                question_id,
+                severity,
+                description
+            )
+            VALUES (%s, %s, %s, %s, %s)
+        """, (assessment_id, dimension_id, question_id, severity, question_text))
+
     cursor.execute("""
         UPDATE assessments
         SET status = 'completed',

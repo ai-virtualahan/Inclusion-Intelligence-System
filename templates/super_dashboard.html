@@ -35,7 +35,7 @@
     </a>
 
     <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">
-      Assessment Questions
+      Questionnaires
     </a>
 
     <a href="{{ url_for('super_admin.users') }}" class="side-link">
@@ -75,11 +75,11 @@
         <span>Review suspended</span>
       </a>
 
-      <div class="card stat-card stat-card-muted">
+      <a class="card stat-card" href="{{ url_for('super_admin.pending_approvals') }}">
         <h2>{{ pending_approvals }}</h2>
         <p>Pending Approvals</p>
-        <span>Handled by VHAN Admin</span>
-      </div>
+        <span>Review requests</span>
+      </a>
 
       <a class="card stat-card" href="{{ url_for('super_admin.reports') }}">
         <h2>{{ assessments_completed }}</h2>
@@ -93,7 +93,7 @@
         <span>Manage users</span>
       </a>
 
-      <a class="card stat-card" href="{{ url_for('super_admin.users', role='inactive') }}">
+      <a class="card stat-card" href="{{ url_for('super_admin.users', status='inactive') }}">
         <h2>{{ inactive_users }}</h2>
         <p>Inactive Users</p>
         <span>Reactivate accounts</span>

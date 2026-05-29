@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Assessment Questions</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Questionnaires</title>
 
   <link rel="stylesheet"
         href="{{ url_for('static', filename='css/super_dashboard.css') }}">
@@ -38,7 +39,7 @@
     </a>
 
     <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link active">
-      Assessment Questions
+      Questionnaires
     </a>
 
     <a href="{{ url_for('super_admin.users') }}" class="side-link">
@@ -54,8 +55,8 @@
   <main class="main-content">
 
     <section class="page-header">
-      <h1>Assessment Questions</h1>
-      <p>Manage assessment questions, answer choices, and scoring.</p>
+      <h1>Questionnaires</h1>
+      <p>Manage questionnaire questions, answer choices, and scoring.</p>
     </section>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -73,7 +74,7 @@
     <section class="dashboard-panel">
 
         <div class="org-header">
-          <h1>Assessment Questions</h1>
+          <h1>Questionnaires</h1>
 
           <div class="org-controls">
             <form method="GET" action="{{ url_for('super_admin.assessment_questions') }}">
@@ -152,6 +153,7 @@
 
                 {% if q.is_active %}
                   <form action="{{ url_for('super_admin.deactivate_question', question_id=q.id) }}" method="POST" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit"
                             class="action-btn suspend-btn"
                             onclick="return confirm('Deactivate this question version? It will no longer appear in assessments.')">
@@ -160,6 +162,7 @@
                   </form>
                 {% else %}
                   <form action="{{ url_for('super_admin.activate_question', question_id=q.id) }}" method="POST" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit"
                             class="action-btn reactivate-btn"
                             onclick="return confirm('Activate this question version? Other versions of this question will be inactivated.')">

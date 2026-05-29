@@ -7,6 +7,7 @@ from werkzeug.security import generate_password_hash
 
 from flask import Blueprint
 from db import get_db_connection
+from settings_utils import get_int_setting
 
 register_bp = Blueprint('register', __name__)
 
@@ -74,11 +75,14 @@ def submit_registration():
         flash("You must agree to the Terms of Use and Privacy Policy.", "danger")
         return redirect(url_for('register.register'))
 
-    hashed_password = generate_password_hash(password)
-
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
+
+        min_password_length = get_int_setting(cursor, "password_min_length", 8)
+        if len(password) < min_password_length:
+            flash(f"Password must be at least {min_password_length} characters long.", "danger")
+            return redirect(url_for('register.register'))
 
         check_request_sql = """
             SELECT id FROM access_requests
@@ -101,6 +105,8 @@ def submit_registration():
         if existing_user:
             flash("This email is already registered. Please log in.", "warning")
             return redirect(url_for('login.login'))
+
+        hashed_password = generate_password_hash(password)
 
         insert_sql = """
             INSERT INTO access_requests

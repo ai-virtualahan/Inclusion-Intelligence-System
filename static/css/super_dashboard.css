@@ -391,6 +391,15 @@ td{
   display: inline;
 }
 
+.reason-input {
+  border: 1px solid #d6dce5;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-left: 6px;
+  max-width: 150px;
+  padding: 9px 10px;
+}
+
 .record-status {
   display: inline-flex;
   align-items: center;

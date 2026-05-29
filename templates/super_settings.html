@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>System Settings | Super Admin</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/super_dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/super_settings.css') }}">
 </head>
 <body>
 <div class="top-navbar">
@@ -23,7 +24,7 @@
 
     <a href="{{ url_for('super_admin.super_dashboard') }}" class="side-link">Dashboard Overview</a>
     <a href="{{ url_for('super_admin.organizations') }}" class="side-link">Organizations</a>
-    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">Assessment Questions</a>
+    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">Questionnaires</a>
     <a href="{{ url_for('super_admin.users') }}" class="side-link">Users</a>
     <a href="{{ url_for('super_admin.reports') }}" class="side-link">Reports</a>
     <a href="{{ url_for('super_admin.email_logs') }}" class="side-link">Email Logs</a>
@@ -33,13 +34,281 @@
   <main class="main-content">
     <section class="page-header">
       <h1>System Settings</h1>
-      <p>Review core system configuration notes for administrators.</p>
+      <p>Control assessment rules, approvals, reports, security, and organization status behavior.</p>
     </section>
 
-    <section class="dashboard-panel">
-      <h2>Settings Workspace</h2>
-      <p>Settings controls can be added here when the team finalizes which configuration items should be editable from the app.</p>
-    </section>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('super_admin.system_settings') }}" class="settings-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <section class="settings-summary">
+        <div>
+          <span>Assessment Lock</span>
+          <strong>{{ settings.reassessment_lock_days }} days</strong>
+        </div>
+        <div>
+          <span>Scoring Model</span>
+          <strong>Weighted</strong>
+        </div>
+        <div>
+          <span>Approvers</span>
+          <strong>{{ settings.approval_reviewer|replace('_', ' ')|title }}</strong>
+        </div>
+        <div>
+          <span>Password Minimum</span>
+          <strong>{{ settings.password_min_length }} chars</strong>
+        </div>
+        <div>
+          <span>Report Controls</span>
+          <strong>{{ 'Enabled' if settings.report_show_gap_analysis == 'on' else 'Limited' }}</strong>
+        </div>
+      </section>
+
+      <section class="settings-grid">
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <span class="settings-icon">01</span>
+            <div>
+              <h2>Platform Identity</h2>
+              <p>Brand and support details shown across admin-ready outputs.</p>
+            </div>
+          </div>
+
+          <div class="settings-fields two-columns">
+            <label>
+              <span>System Name</span>
+              <input type="text" name="system_name" value="{{ settings.system_name }}" required>
+            </label>
+            <label>
+              <span>Support Email</span>
+              <input type="email" name="support_email" value="{{ settings.support_email }}" required>
+            </label>
+            <label class="full-width">
+              <span>Primary Contact</span>
+              <input type="text" name="primary_contact" value="{{ settings.primary_contact }}" required>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <span class="settings-icon">02</span>
+            <div>
+              <h2>Assessment Configuration</h2>
+              <p>Control reassessment timing and how scores are computed.</p>
+            </div>
+          </div>
+
+          <div class="settings-fields two-columns">
+            <label>
+              <span>Reassessment Lock Days</span>
+              <input type="number" min="1" name="reassessment_lock_days" value="{{ settings.reassessment_lock_days }}" required>
+            </label>
+            <div class="threshold-preview">
+              <span>Scoring Formula</span>
+              <div>Dimension Score = raw score / max possible score x 100</div>
+              <div>Overall Score = weighted average of dimension scores</div>
+              <div>Gap Flags = based on selected answer score</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-card scoring-card">
+          <div class="settings-card-header">
+            <span class="settings-icon">03</span>
+            <div>
+              <h2>Scoring Computation</h2>
+              <p>Adjust maturity thresholds, gap rules, and dimension weights.</p>
+            </div>
+          </div>
+
+          <div class="settings-subsection">
+            <h3>Maturity Thresholds</h3>
+            <div class="settings-fields compact-grid">
+              <label>
+                <span>Emerging Max</span>
+                <input type="number" min="0" max="100" name="score_emerging_max" value="{{ settings.score_emerging_max }}" required>
+              </label>
+              <label>
+                <span>Developing Max</span>
+                <input type="number" min="0" max="100" name="score_developing_max" value="{{ settings.score_developing_max }}" required>
+              </label>
+              <label>
+                <span>Advancing Max</span>
+                <input type="number" min="0" max="100" name="score_advancing_max" value="{{ settings.score_advancing_max }}" required>
+              </label>
+              <label>
+                <span>Leading Max</span>
+                <input type="number" min="0" max="100" name="score_leading_max" value="{{ settings.score_leading_max }}" required>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-subsection">
+            <h3>Gap Flag Rules</h3>
+            <div class="settings-fields two-columns">
+              <label>
+                <span>Critical If Answer Score Is Up To</span>
+                <input type="number" min="1" max="4" step="0.1" name="gap_critical_score_max" value="{{ settings.gap_critical_score_max }}" required>
+              </label>
+              <label>
+                <span>Moderate If Answer Score Is Up To</span>
+                <input type="number" min="1" max="4" step="0.1" name="gap_moderate_score_max" value="{{ settings.gap_moderate_score_max }}" required>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-subsection">
+            <h3>Dimension Weights</h3>
+            <div class="settings-fields compact-grid">
+              <label>
+                <span>Hiring</span>
+                <input type="number" min="0" max="100" name="weight_hiring" value="{{ settings.weight_hiring }}" required>
+              </label>
+              <label>
+                <span>Onboarding</span>
+                <input type="number" min="0" max="100" name="weight_onboarding" value="{{ settings.weight_onboarding }}" required>
+              </label>
+              <label>
+                <span>Accommodation</span>
+                <input type="number" min="0" max="100" name="weight_accommodation" value="{{ settings.weight_accommodation }}" required>
+              </label>
+              <label>
+                <span>Retention</span>
+                <input type="number" min="0" max="100" name="weight_retention" value="{{ settings.weight_retention }}" required>
+              </label>
+              <label>
+                <span>Culture</span>
+                <input type="number" min="0" max="100" name="weight_culture" value="{{ settings.weight_culture }}" required>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <span class="settings-icon">04</span>
+            <div>
+              <h2>Approval Workflow</h2>
+              <p>Decide who approves registrations and how review actions behave.</p>
+            </div>
+          </div>
+
+          <div class="settings-fields">
+            <label>
+              <span>Allowed Approver</span>
+              <select name="approval_reviewer">
+                <option value="both" {% if settings.approval_reviewer == 'both' %}selected{% endif %}>Super Admin and VHAN Admin</option>
+                <option value="super_admin" {% if settings.approval_reviewer == 'super_admin' %}selected{% endif %}>Super Admin only</option>
+                <option value="vhan_admin" {% if settings.approval_reviewer == 'vhan_admin' %}selected{% endif %}>VHAN Admin only</option>
+              </select>
+            </label>
+
+            <label class="toggle-row">
+              <input type="checkbox" name="require_rejection_reason" {% if settings.require_rejection_reason == 'on' %}checked{% endif %}>
+              <span>Require rejection reason</span>
+            </label>
+            <label class="toggle-row">
+              <input type="checkbox" name="auto_send_approval_email" {% if settings.auto_send_approval_email == 'on' %}checked{% endif %}>
+              <span>Auto-send approval email</span>
+            </label>
+            <label class="toggle-row">
+              <input type="checkbox" name="auto_send_rejection_email" {% if settings.auto_send_rejection_email == 'on' %}checked{% endif %}>
+              <span>Auto-send rejection email</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <span class="settings-icon">05</span>
+            <div>
+              <h2>Report Settings</h2>
+              <p>Make generated reports client-ready and easy to tailor.</p>
+            </div>
+          </div>
+
+          <div class="settings-fields">
+            <label>
+              <span>Report Footer Text</span>
+              <input type="text" name="report_footer_text" value="{{ settings.report_footer_text }}" required>
+            </label>
+            <label class="toggle-row">
+              <input type="checkbox" name="report_show_gap_analysis" {% if settings.report_show_gap_analysis == 'on' %}checked{% endif %}>
+              <span>Show gap analysis section</span>
+            </label>
+            <label class="toggle-row">
+              <input type="checkbox" name="report_show_recommendations" {% if settings.report_show_recommendations == 'on' %}checked{% endif %}>
+              <span>Show recommendations section</span>
+            </label>
+            <label class="toggle-row">
+              <input type="checkbox" name="report_include_generated_date" {% if settings.report_include_generated_date == 'on' %}checked{% endif %}>
+              <span>Include generated date on report</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <span class="settings-icon">06</span>
+            <div>
+              <h2>User & Security</h2>
+              <p>Basic account controls for safer administration.</p>
+            </div>
+          </div>
+
+          <div class="settings-fields two-columns">
+            <label>
+              <span>Password Minimum Length</span>
+              <input type="number" min="6" max="32" name="password_min_length" value="{{ settings.password_min_length }}" required>
+            </label>
+            <label>
+              <span>Session Timeout Minutes</span>
+              <input type="number" min="5" max="480" name="session_timeout_minutes" value="{{ settings.session_timeout_minutes }}" required>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <span class="settings-icon">07</span>
+            <div>
+              <h2>Organization Status Rules</h2>
+              <p>Define what suspension means across users, assessments, and reports.</p>
+            </div>
+          </div>
+
+          <div class="settings-fields">
+            <label class="toggle-row">
+              <input type="checkbox" name="suspend_deactivate_admins" {% if settings.suspend_deactivate_admins == 'on' %}checked{% endif %}>
+              <span>Deactivate organization admins when suspended</span>
+            </label>
+            <label class="toggle-row">
+              <input type="checkbox" name="suspend_lock_assessments" {% if settings.suspend_lock_assessments == 'on' %}checked{% endif %}>
+              <span>Lock assessment access for suspended organizations</span>
+            </label>
+            <label class="toggle-row">
+              <input type="checkbox" name="suspend_hide_reports" {% if settings.suspend_hide_reports == 'on' %}checked{% endif %}>
+              <span>Hide suspended organizations from report selection</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <div class="settings-actions">
+        <button type="submit" class="action-btn edit-btn">Save Settings</button>
+      </div>
+    </form>
   </main>
 </div>
 </body>

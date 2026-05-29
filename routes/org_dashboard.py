@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, session, redirect, url_for, jsonify
 from db import get_db_connection
-from assessment_scoring import RECOMMENDATIONS, DIMENSION_NAMES, maturity_level
+from assessment_scoring import maturity_level, recommendation_for_question
 from datetime import datetime, timedelta
 
 org_dashboard_bp = Blueprint('org_dashboard', __name__)
@@ -111,18 +111,7 @@ def dashboard_data():
     gaps = []
     for row in gap_rows:
         dim_name = row['dimension']
-        # Find 0-based question index within its dimension
-        q_id = row['question_id']
-        cursor.execute("""
-            SELECT id FROM question_bank
-            WHERE dimension_id = (SELECT dimension_id FROM question_bank WHERE id = %s)
-            ORDER BY id
-        """, (q_id,))
-        sibling_ids = [r['id'] for r in cursor.fetchall()]
-        q_index = sibling_ids.index(q_id) if q_id in sibling_ids else 0
-        rec = ""
-        if dim_name in RECOMMENDATIONS and q_index < len(RECOMMENDATIONS[dim_name]):
-            rec = RECOMMENDATIONS[dim_name][q_index]
+        rec = recommendation_for_question(cursor, dim_name, row['question_id'])
 
         gaps.append({
             "dimension": dim_name,

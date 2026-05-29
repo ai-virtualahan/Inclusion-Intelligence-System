@@ -1,10 +1,73 @@
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request
 from werkzeug.security import generate_password_hash
+from datetime import datetime
 from db import get_db_connection
 from flask_mail import Message
 from extensions import mail
+from assessment_scoring import recommendation_for_question
+from routes.access_request_utils import approve_access_request, find_existing_registration
+from settings_utils import (
+    can_role_approve_access_requests,
+    get_bool_setting,
+    get_int_setting,
+    load_system_settings,
+    save_system_settings,
+)
 
 super_admin_bp = Blueprint('super_admin', __name__)
+
+
+def build_dimension_gap_analysis(dimension_scores, gap_flags):
+    gaps_by_dimension = {}
+    for gap in gap_flags:
+        gaps_by_dimension.setdefault(gap['dimension'], []).append(gap)
+
+    analysis = []
+    for dimension in dimension_scores:
+        dimension_name = dimension['dimension']
+        dimension_gaps = gaps_by_dimension.get(dimension_name, [])
+        critical_count = sum(1 for gap in dimension_gaps if gap['severity'] == 'critical')
+        moderate_count = sum(1 for gap in dimension_gaps if gap['severity'] == 'moderate')
+        recommendations = []
+
+        for gap in dimension_gaps:
+            recommendation = gap.get('recommendation')
+            if recommendation and recommendation not in recommendations:
+                recommendations.append(recommendation)
+
+        if critical_count:
+            priority = "Critical priority"
+            summary = (
+                f"{dimension_name} needs immediate attention. "
+                f"{critical_count} critical and {moderate_count} moderate gap(s) suggest that key practices are missing "
+                "or not yet consistently implemented."
+            )
+        elif moderate_count:
+            priority = "Moderate priority"
+            summary = (
+                f"{dimension_name} has practices in progress, but {moderate_count} moderate gap(s) show areas "
+                "that need clearer ownership, timelines, and follow-through."
+            )
+        else:
+            priority = "On track"
+            summary = (
+                f"{dimension_name} is currently on track based on the latest assessment responses. "
+                "Continue monitoring and sustaining documented practices."
+            )
+
+        analysis.append({
+            "dimension": dimension_name,
+            "score": dimension['score'],
+            "raw_score": dimension['raw_score'],
+            "priority": priority,
+            "critical_count": critical_count,
+            "moderate_count": moderate_count,
+            "summary": summary,
+            "recommendations": recommendations[:3]
+        })
+
+    return analysis
+
 
 @super_admin_bp.route('/super-admin/dashboard')
 def super_dashboard():
@@ -155,6 +218,122 @@ def organizations():
     selected_status=selected_status)
 
 
+@super_admin_bp.route('/super-admin/pending-approvals')
+def pending_approvals():
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    settings = load_system_settings(cursor)
+
+    cursor.execute("""
+        SELECT
+            id,
+            company_name,
+            industry,
+            company_size,
+            company_number,
+            contact_person,
+            position_title,
+            contact_number,
+            work_email,
+            status,
+            created_at
+        FROM access_requests
+        WHERE status = 'pending'
+        ORDER BY created_at DESC
+    """)
+    requests = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        'super_pending_approvals.html',
+        requests=requests,
+        settings=settings
+    )
+
+
+@super_admin_bp.route('/super-admin/pending-approvals/approve/<int:req_id>', methods=['POST'])
+def approve_pending_request(req_id):
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        if not can_role_approve_access_requests(cursor, session.get('role')):
+            flash("Super Admin approval is disabled in System Settings.", "warning")
+            return redirect(url_for('super_admin.pending_approvals'))
+
+        _, message, category = approve_access_request(cursor, req_id, session.get('user_id'))
+        conn.commit()
+        flash(message, category)
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to approve access request: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('super_admin.pending_approvals'))
+
+
+@super_admin_bp.route('/super-admin/pending-approvals/reject/<int:req_id>', methods=['POST'])
+def reject_pending_request(req_id):
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        require_reason = get_bool_setting(cursor, "require_rejection_reason", True)
+        rejection_reason = (request.form.get('rejection_reason') or '').strip()
+
+        if require_reason and not rejection_reason:
+            flash("Please provide a rejection reason before rejecting this request.", "warning")
+            return redirect(url_for('super_admin.pending_approvals'))
+
+        cursor.execute("""
+            SELECT id, status
+            FROM access_requests
+            WHERE id = %s
+        """, (req_id,))
+        req = cursor.fetchone()
+
+        if not req:
+            flash("Access request not found.", "danger")
+        elif req['status'] != 'pending':
+            flash("Only pending requests can be rejected.", "warning")
+        else:
+            cursor.execute("""
+                UPDATE access_requests
+                SET status = 'rejected',
+                    reviewed_by = %s,
+                    reviewed_at = NOW(),
+                    rejection_reason = %s
+                WHERE id = %s
+            """, (
+                session.get('user_id'),
+                rejection_reason or 'Rejected by Super Admin.',
+                req_id
+            ))
+            conn.commit()
+            flash("Access request rejected successfully.", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to reject access request: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('super_admin.pending_approvals'))
+
+
 @super_admin_bp.route('/super-admin/organizations/edit/<int:org_id>', methods=['POST'])
 def edit_organization(org_id):
     if session.get('role') != 'super_admin':
@@ -233,19 +412,24 @@ def suspend_organization(org_id):
     cursor = conn.cursor()
 
     try:
+        deactivate_admins = get_bool_setting(cursor, "suspend_deactivate_admins", True)
         cursor.execute("""
             UPDATE organizations
             SET status = 'suspended'
             WHERE id = %s
         """, (org_id,))
-        cursor.execute("""
-            UPDATE users
-            SET status = 'inactive'
-            WHERE organization_id = %s
-              AND role = 'org_admin'
-        """, (org_id,))
+        if deactivate_admins:
+            cursor.execute("""
+                UPDATE users
+                SET status = 'inactive'
+                WHERE organization_id = %s
+                  AND role = 'org_admin'
+            """, (org_id,))
         conn.commit()
-        flash("Organization suspended and linked organization admins were deactivated.", "success")
+        if deactivate_admins:
+            flash("Organization suspended and linked organization admins were deactivated.", "success")
+        else:
+            flash("Organization suspended. Linked users were kept active based on System Settings.", "success")
     except Exception as e:
         conn.rollback()
         flash(f"Unable to suspend organization: {e}", "danger")
@@ -710,44 +894,45 @@ def users():
         return redirect(url_for('login.login'))
 
     selected_role = request.args.get('role')
+    selected_status = request.args.get('status')
+
+    if selected_role == 'inactive':
+        selected_status = 'inactive'
+        selected_role = ''
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
+    base_query = """
+        SELECT
+            u.*,
+            o.company_name AS organization_name
+        FROM users u
+        LEFT JOIN organizations o
+            ON u.organization_id = o.id
+    """
+
+    filters = []
+    params = []
+
     if selected_role == 'internal':
-        cursor.execute("""
-            SELECT *
-            FROM users
-            WHERE role IN ('super_admin', 'vhan_admin')
-            ORDER BY id DESC
-        """)
+        filters.append("u.role IN ('super_admin', 'vhan_admin')")
     elif selected_role == 'organization':
-        cursor.execute("""
-            SELECT *
-            FROM users
-            WHERE role = 'org_admin'
-            ORDER BY id DESC
-        """)
-    elif selected_role == 'inactive':
-        cursor.execute("""
-            SELECT *
-            FROM users
-            WHERE status = 'inactive'
-            ORDER BY id DESC
-        """)
+        filters.append("u.role = 'org_admin'")
     elif selected_role:
-        cursor.execute("""
-            SELECT *
-            FROM users
-            WHERE role = %s
-            ORDER BY id DESC
-        """, (selected_role,))
-    else:
-        cursor.execute("""
-            SELECT *
-            FROM users
-            ORDER BY id DESC
-        """)
+        filters.append("u.role = %s")
+        params.append(selected_role)
+
+    if selected_status:
+        filters.append("u.status = %s")
+        params.append(selected_status)
+
+    where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
+
+    cursor.execute(base_query + f"""
+        {where_clause}
+        ORDER BY u.id DESC
+    """, params)
 
     users = cursor.fetchall()
 
@@ -757,7 +942,8 @@ def users():
     return render_template(
         'super_users.html',
         users=users,
-        selected_role=selected_role
+        selected_role=selected_role,
+        selected_status=selected_status
     )
 
 
@@ -777,12 +963,17 @@ def add_user():
         flash("Passwords do not match.", "danger")
         return redirect(url_for('super_admin.users'))
 
-    password_hash = generate_password_hash(password)
-
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
+        min_password_length = get_int_setting(cursor, "password_min_length", 8)
+        if len(password) < min_password_length:
+            flash(f"Password must be at least {min_password_length} characters long.", "danger")
+            return redirect(url_for('super_admin.users'))
+
+        password_hash = generate_password_hash(password)
+
         cursor.execute("""
             INSERT INTO users (
                 organization_id,
@@ -928,6 +1119,12 @@ def email_logs():
         recipient_email = request.form.get('recipient_email')
         message_body = request.form.get('message_body')
         subject = "Registration Invitation - Inclusion Intelligence"
+        existing_registration = find_existing_registration(cursor, recipient_email)
+        if existing_registration:
+            cursor.close()
+            conn.close()
+            flash("Invitation not sent. This email is already registered or has an access request.", "warning")
+            return redirect(url_for('super_admin.email_logs'))
 
         try:
             msg = Message(
@@ -1014,6 +1211,7 @@ def reports():
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+    report_settings = load_system_settings(cursor)
 
     cursor.execute("""
         SELECT COUNT(*) AS total
@@ -1064,6 +1262,7 @@ def reports():
     latest_assessment = None
     dimension_scores = []
     gap_flags = []
+    dimension_gap_analysis = []
 
     if selected_org_id:
         selected_org = next((org for org in organizations if org['id'] == selected_org_id), None)
@@ -1089,13 +1288,22 @@ def reports():
             dimension_scores = cursor.fetchall()
 
             cursor.execute("""
-                SELECT ad.name AS dimension, gf.severity, gf.description
+                SELECT ad.name AS dimension, gf.severity, gf.description, gf.question_id
                 FROM gap_flags gf
                 JOIN assessment_dimensions ad ON gf.dimension_id = ad.id
                 WHERE gf.assessment_id = %s
                 ORDER BY FIELD(gf.severity, 'critical', 'moderate'), ad.id
             """, (latest_assessment['id'],))
             gap_flags = cursor.fetchall()
+
+            for gap in gap_flags:
+                gap['recommendation'] = recommendation_for_question(
+                    cursor,
+                    gap['dimension'],
+                    gap['question_id']
+                )
+
+            dimension_gap_analysis = build_dimension_gap_analysis(dimension_scores, gap_flags)
 
     cursor.close()
     conn.close()
@@ -1110,16 +1318,37 @@ def reports():
         selected_org=selected_org,
         latest_assessment=latest_assessment,
         dimension_scores=dimension_scores,
-        gap_flags=gap_flags
+        gap_flags=gap_flags,
+        dimension_gap_analysis=dimension_gap_analysis,
+        settings=report_settings,
+        generated_at=datetime.now()
     )
 
 
-@super_admin_bp.route('/super-admin/settings')
+@super_admin_bp.route('/super-admin/settings', methods=['GET', 'POST'])
 def system_settings():
     if session.get('role') != 'super_admin':
         return redirect(url_for('login.login'))
 
-    return render_template('super_settings.html')
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        if request.method == 'POST':
+            settings = save_system_settings(cursor, request.form, session.get('user_id'))
+            conn.commit()
+            flash("System settings saved successfully.", "success")
+        else:
+            settings = load_system_settings(cursor)
+    except Exception as e:
+        conn.rollback()
+        settings = load_system_settings(cursor)
+        flash(f"Unable to save system settings: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return render_template('super_settings.html', settings=settings)
 
 
 

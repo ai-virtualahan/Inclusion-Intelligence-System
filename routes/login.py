@@ -6,6 +6,7 @@ import secrets
 from flask_mail import Message
 from extensions import mail
 from config import MAIL_USERNAME
+from settings_utils import get_int_setting
 
 
 login_bp = Blueprint('login', __name__)
@@ -235,6 +236,13 @@ def reset_password(token):
 
         if new_password != confirm_password:
             flash("Passwords do not match.", "error")
+            cursor.close()
+            conn.close()
+            return render_template('reset_password.html', token=token)
+
+        min_password_length = get_int_setting(cursor, "password_min_length", 8)
+        if len(new_password) < min_password_length:
+            flash(f"Password must be at least {min_password_length} characters long.", "error")
             cursor.close()
             conn.close()
             return render_template('reset_password.html', token=token)

@@ -483,6 +483,61 @@ LOCK TABLES `reports` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `system_settings`
+--
+
+DROP TABLE IF EXISTS `system_settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `system_settings` (
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` text,
+  `updated_by` int DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`setting_key`),
+  KEY `fk_system_settings_updated_by` (`updated_by`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `system_settings`
+--
+
+LOCK TABLES `system_settings` WRITE;
+/*!40000 ALTER TABLE `system_settings` DISABLE KEYS */;
+INSERT INTO `system_settings` VALUES
+('approval_reviewer','both',NULL,'2026-05-29 00:00:00'),
+('auto_send_approval_email','on',NULL,'2026-05-29 00:00:00'),
+('auto_send_rejection_email','',NULL,'2026-05-29 00:00:00'),
+('gap_critical_score_max','1',NULL,'2026-05-29 00:00:00'),
+('gap_moderate_score_max','2',NULL,'2026-05-29 00:00:00'),
+('password_min_length','8',NULL,'2026-05-29 00:00:00'),
+('primary_contact','Virtualahan Admin Team',NULL,'2026-05-29 00:00:00'),
+('reassessment_lock_days','182',NULL,'2026-05-29 00:00:00'),
+('report_footer_text','Prepared by Inclusion Intelligence System',NULL,'2026-05-29 00:00:00'),
+('report_include_generated_date','on',NULL,'2026-05-29 00:00:00'),
+('report_show_gap_analysis','on',NULL,'2026-05-29 00:00:00'),
+('report_show_recommendations','on',NULL,'2026-05-29 00:00:00'),
+('require_rejection_reason','on',NULL,'2026-05-29 00:00:00'),
+('score_advancing_max','75',NULL,'2026-05-29 00:00:00'),
+('score_developing_max','50',NULL,'2026-05-29 00:00:00'),
+('score_emerging_max','25',NULL,'2026-05-29 00:00:00'),
+('score_leading_max','90',NULL,'2026-05-29 00:00:00'),
+('session_timeout_minutes','60',NULL,'2026-05-29 00:00:00'),
+('support_email','support@virtualahan.com',NULL,'2026-05-29 00:00:00'),
+('suspend_deactivate_admins','on',NULL,'2026-05-29 00:00:00'),
+('suspend_hide_reports','on',NULL,'2026-05-29 00:00:00'),
+('suspend_lock_assessments','on',NULL,'2026-05-29 00:00:00'),
+('system_name','Inclusion Intelligence System',NULL,'2026-05-29 00:00:00'),
+('weight_accommodation','20',NULL,'2026-05-29 00:00:00'),
+('weight_culture','20',NULL,'2026-05-29 00:00:00'),
+('weight_hiring','20',NULL,'2026-05-29 00:00:00'),
+('weight_onboarding','20',NULL,'2026-05-29 00:00:00'),
+('weight_retention','20',NULL,'2026-05-29 00:00:00');
+/*!40000 ALTER TABLE `system_settings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `users`
 --
 

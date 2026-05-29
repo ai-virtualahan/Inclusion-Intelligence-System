@@ -34,7 +34,7 @@
       <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard Overview</a>
       <a href="{{ url_for('vhan.pending_approvals') }}">Pending Approvals</a>
       <a href="#">Organizations</a>
-      <a href="#">Assessment Questions</a>
+      <a href="#">Questionnaires</a>
       <a href="{{ url_for('vhan.email_logs') }}" class="active">Email Logs</a>
       <a href="#">Reports & Analytics</a>
     </nav>
@@ -47,11 +47,24 @@
       <p>Monitor all outgoing emails and send registration invitations</p>
     </section>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
     <!-- INVITATION FORM -->
     <!-- <section class="table-container">
       <h2>Send Registration Invitation</h2>
 
       <form method="POST" action="#" class="modal-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <div class="form-group">
           <label>Company / Organization Name</label>
@@ -174,7 +187,8 @@ Inclusion Intelligence Team</textarea>
     <h2>Send Registration Invitation</h2>
     <p class="modal-subtitle">Invite an organization representative to register.</p>
 
-    <form method="POST" action="#" class="modal-form">
+    <form method="POST" action="{{ url_for('vhan.email_logs') }}" class="modal-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-group">
         <label>Company / Organization Name</label>
         <input type="text" name="company_name" placeholder="Enter company name">

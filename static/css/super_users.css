@@ -13,5 +13,56 @@
 .users-controls {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
+}
+
+.users-controls .filter-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.users-controls .filter-form label {
+  color: #0b2345;
+  font-size: 15px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.users-controls .filter-form select {
+  min-width: 150px;
+  height: 40px;
+  padding: 0 34px 0 13px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.users-controls .add-btn {
+  height: 40px;
+  margin: 0;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+@media (max-width: 1180px) {
+  .users-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 760px) {
+  .users-controls,
+  .users-controls .filter-form {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .users-controls .filter-form select,
+  .users-controls .add-btn {
+    width: 100%;
+  }
 }

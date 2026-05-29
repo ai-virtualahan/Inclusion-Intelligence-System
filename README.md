@@ -31,6 +31,18 @@ across key dimensions such as hiring, onboarding, accommodation, retention and c
     Step 4: Verify Tables
           Run this command: SHOW TABLES;
 
+# DEPLOYMENT NOTES
+    1. Set production environment variables
+          FLASK_DEBUG=0
+          SESSION_COOKIE_SECURE=1 when HTTPS is enabled
+          SECRET_KEY must be a long random secret
+
+    2. Apply database migrations before deployment
+          Run sql/migrations/001_system_settings.sql on the target database.
+
+    3. Use a production WSGI server
+          Do not run the app with Flask debug mode in production.
+
 # USER ROLES
   . VIRTUALAHAN ADMIN
       

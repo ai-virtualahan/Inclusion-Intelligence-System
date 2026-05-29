@@ -1,8 +1,12 @@
-from flask import Flask, render_template, request, redirect, session, url_for, jsonify
+import hmac
+import secrets
+
+from flask import Flask, abort, render_template, request, redirect, session, url_for, jsonify
 from collections import OrderedDict
 from db import get_db_connection
 from assessment_scoring import compute_assessment_scores
 from datetime import datetime, timedelta
+from settings_utils import get_int_setting
 
 from routes.login import login_bp
 from routes.super_dashboard import super_admin_bp
@@ -25,6 +29,36 @@ app.register_blueprint(super_admin_bp)
 app.register_blueprint(vhan_bp)
 app.register_blueprint(register_bp)
 app.register_blueprint(org_dashboard_bp)
+
+
+def csrf_token():
+    token = session.get("_csrf_token")
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session["_csrf_token"] = token
+    return token
+
+
+@app.context_processor
+def inject_csrf_token():
+    return {"csrf_token": csrf_token}
+
+
+@app.before_request
+def protect_post_requests():
+    if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
+        return None
+
+    if request.endpoint is None:
+        return None
+
+    expected_token = session.get("_csrf_token")
+    submitted_token = request.headers.get("X-CSRFToken") or request.form.get("csrf_token")
+
+    if not expected_token or not submitted_token or not hmac.compare_digest(expected_token, submitted_token):
+        abort(400, description="Invalid or missing CSRF token.")
+
+    return None
 
 
 @app.route('/')
@@ -154,7 +188,8 @@ def submit_assessment():
         last_date = last['submitted_at']
         if isinstance(last_date, str):
             last_date = datetime.fromisoformat(last_date)
-        unlock_date = last_date + timedelta(days=182)
+        lock_days = get_int_setting(cursor, "reassessment_lock_days", 182)
+        unlock_date = last_date + timedelta(days=lock_days)
         if datetime.now() < unlock_date:
             cursor.close()
             conn.close()
@@ -281,4 +316,4 @@ def assessment_result(assessment_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=app.config.get("DEBUG", False), use_reloader=app.config.get("DEBUG", False))

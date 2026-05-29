@@ -196,6 +196,11 @@ function getQuestionId(question, fallbackId) {
     return question && typeof question === "object" ? question.id : fallbackId;
 }
 
+function hasCurrentAnswer() {
+    const answers = userAnswers[currentExam] || [];
+    return answers[questionIndex] !== null && answers[questionIndex] !== undefined;
+}
+
 function escapeText(value) {
     return String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -380,6 +385,7 @@ function loadQuestion() {
     const qText = getQuestionText(question);
     const choices = getQuestionChoices(question);
     const answers = userAnswers[currentExam] || [];
+    const canContinue = hasCurrentAnswer();
 
     document.getElementById("questionBox").innerHTML = `
         <div style="margin-bottom:18px;">
@@ -406,7 +412,7 @@ function loadQuestion() {
         }).join("")}
         <div class="nav-buttons">
             ${questionIndex > 0 ? `<button class="nav-btn" onclick="prevQuestion()">Back</button>` : ''}
-            <button class="nav-btn primary-nav" onclick="nextOrFinish()">
+            <button class="nav-btn primary-nav" id="nextQuestionBtn" onclick="nextOrFinish()" ${canContinue ? '' : 'disabled'}>
                 ${questionIndex === exam.questions.length - 1 ? 'Finish' : 'Next'}
             </button>
         </div>`;
@@ -431,9 +437,14 @@ function selectAnswer(score, optIndex, choiceId = null) {
             if (badge) { badge.style.background = "#e0edf3"; badge.style.color = TEAL; }
         }
     });
+
+    const nextButton = document.getElementById("nextQuestionBtn");
+    if (nextButton) nextButton.disabled = false;
 }
 
 function nextOrFinish() {
+    if (!hasCurrentAnswer()) return;
+
     if (questionIndex < exams[currentExam].questions.length - 1) {
         questionIndex++;
         loadQuestion();
@@ -479,6 +490,11 @@ function submitAssessment() {
     });
 
     if (canSubmitToServer) {
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (csrfMeta) {
+            formData.append('csrf_token', csrfMeta.getAttribute('content'));
+        }
+
         fetch('/submit_assessment', {
             method: 'POST',
             body: formData
@@ -507,7 +523,10 @@ function submitAssessment() {
 
     fetch('/api/submit-assessment', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+        },
         body: JSON.stringify({ answers: userAnswers })
     })
     .then(r => {

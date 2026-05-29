@@ -3,6 +3,11 @@ let currentQuestionNumber = null;
 let currentChoices = [];
 let choicesEditMode = false;
 
+function csrfToken() {
+  const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+  return tokenMeta ? tokenMeta.getAttribute("content") : "";
+}
+
 function parseJsonDatasetValue(value) {
   try {
     return JSON.parse(value || "\"\"");
@@ -121,7 +126,10 @@ function toggleChoicesEdit() {
 
   fetch(`/super-admin/question/${currentQuestionId}/choices/edit`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken()
+    },
     body: JSON.stringify({ choices })
   })
     .then(response => response.json())
@@ -151,6 +159,7 @@ function toggleQuestionEdit() {
   } else {
     const formData = new FormData();
     formData.append("question_text", textarea.value);
+    formData.append("csrf_token", csrfToken());
 
     fetch(`/super-admin/question/${currentQuestionId}/edit`, {
       method: "POST",

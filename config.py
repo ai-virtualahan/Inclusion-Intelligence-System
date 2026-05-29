@@ -1,4 +1,6 @@
 import os
+from datetime import timedelta
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,6 +13,13 @@ MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
 
 # SECRET KEY
 SECRET_KEY = os.getenv("SECRET_KEY")
+DEBUG = os.getenv("FLASK_DEBUG", "0") == "1"
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "0") == "1"
+PERMANENT_SESSION_LIFETIME = timedelta(
+    minutes=int(os.getenv("SESSION_TIMEOUT_MINUTES", "60"))
+)
 
 # EMAIL CONFIG
 MAIL_SERVER = "smtp.gmail.com"

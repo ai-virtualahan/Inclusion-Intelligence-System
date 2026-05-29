@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pending Approvals | Super Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/super_dashboard.css') }}">
+</head>
+<body>
+<div class="top-navbar">
+  <div class="brand">Inclusion Intelligence</div>
+
+  <div class="top-links">
+    <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('super_admin.users') }}">Users</a>
+    <a href="{{ url_for('super_admin.reports') }}">Reports</a>
+    <a href="{{ url_for('login.logout') }}">Logout</a>
+  </div>
+</div>
+
+<div class="admin-layout">
+  <aside class="sidebar">
+    <h3>Super Admin</h3>
+
+    <a href="{{ url_for('super_admin.super_dashboard') }}" class="side-link">Dashboard Overview</a>
+    <a href="{{ url_for('super_admin.organizations') }}" class="side-link">Organizations</a>
+    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">Questionnaires</a>
+    <a href="{{ url_for('super_admin.users') }}" class="side-link">Users</a>
+    <a href="{{ url_for('super_admin.reports') }}" class="side-link">Reports</a>
+    <a href="{{ url_for('super_admin.email_logs') }}" class="side-link">Email Logs</a>
+    <a href="{{ url_for('super_admin.system_settings') }}" class="side-link">System Settings</a>
+  </aside>
+
+  <main class="main-content">
+    <section class="page-header">
+      <h1>Pending Approvals</h1>
+      <p>Review organization access requests and approve or reject registrations.</p>
+    </section>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <section class="dashboard-panel">
+      <div class="org-header">
+        <h1>Pending Requests</h1>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Industry</th>
+              <th>Company Size</th>
+              <th>Company No.</th>
+              <th>Contact Person</th>
+              <th>Position</th>
+              <th>Contact No.</th>
+              <th>Work Email</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for req in requests %}
+              <tr>
+                <td>{{ req.company_name }}</td>
+                <td>{{ req.industry }}</td>
+                <td>{{ req.company_size }}</td>
+                <td>{{ req.company_number or '-' }}</td>
+                <td>{{ req.contact_person }}</td>
+                <td>{{ req.position_title or '-' }}</td>
+                <td>{{ req.contact_number or '-' }}</td>
+                <td>{{ req.work_email }}</td>
+                <td>
+                  <span class="record-status status-pending">{{ req.status }}</span>
+                </td>
+                <td>
+                  <form action="{{ url_for('super_admin.approve_pending_request', req_id=req.id) }}" method="POST" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit"
+                            class="action-btn reactivate-btn"
+                            onclick="return confirm('Approve this access request?')">
+                      Approve
+                    </button>
+                  </form>
+
+                  <form action="{{ url_for('super_admin.reject_pending_request', req_id=req.id) }}" method="POST" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if settings.require_rejection_reason == 'on' %}
+                      <input type="text"
+                             name="rejection_reason"
+                             class="reason-input"
+                             placeholder="Reason"
+                             required>
+                    {% endif %}
+                    <button type="submit"
+                            class="action-btn suspend-btn"
+                            onclick="return confirm('Reject this access request?')">
+                      Reject
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="10">No pending approvals found.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>
