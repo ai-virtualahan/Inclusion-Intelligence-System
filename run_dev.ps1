@@ -28,6 +28,29 @@ foreach ($processId in $processIds) {
     }
 }
 
+try {
+    $projectPath = (Resolve-Path $PSScriptRoot).Path
+    $projectPythonPath = Join-Path $projectPath "venv\Scripts\python.exe"
+    $stalePythonProcesses = Get-CimInstance Win32_Process -ErrorAction Stop |
+        Where-Object {
+            $_.CommandLine -and
+            $_.CommandLine -match "(^|\\s|`")app\.py(`"|\\s|$)" -and
+            (
+                $_.CommandLine -like "*$projectPath*" -or
+                $_.ExecutablePath -eq $projectPythonPath
+            )
+        }
+
+    foreach ($staleProcess in $stalePythonProcesses) {
+        if ($staleProcess.ProcessId -and $staleProcess.ProcessId -ne $PID) {
+            Write-Host "Stopping stale Flask app.py process (PID $($staleProcess.ProcessId))..."
+            Stop-Process -Id $staleProcess.ProcessId -Force -ErrorAction SilentlyContinue
+        }
+    }
+} catch {
+    Write-Host "Could not inspect stale app.py processes. Continuing with startup..."
+}
+
 $pythonPath = Join-Path $PSScriptRoot "venv\Scripts\python.exe"
 if (-not (Test-Path $pythonPath)) {
     throw "Virtual environment Python was not found at $pythonPath"
