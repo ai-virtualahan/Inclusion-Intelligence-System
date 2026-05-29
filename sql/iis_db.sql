@@ -33,8 +33,11 @@ CREATE TABLE `access_requests` (
   `contact_number` varchar(50) DEFAULT NULL,
   `work_email` varchar(150) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
+  `email_verified_at` timestamp NULL DEFAULT NULL,
+  `verification_token_hash` varchar(64) DEFAULT NULL,
+  `verification_token_expiry` timestamp NULL DEFAULT NULL,
   `notes` text,
-  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  `status` enum('email_unverified','pending','approved','rejected') NOT NULL DEFAULT 'email_unverified',
   `reviewed_by` int DEFAULT NULL,
   `reviewed_at` timestamp NULL DEFAULT NULL,
   `rejection_reason` varchar(255) DEFAULT NULL,
@@ -50,7 +53,7 @@ CREATE TABLE `access_requests` (
 
 LOCK TABLES `access_requests` WRITE;
 /*!40000 ALTER TABLE `access_requests` DISABLE KEYS */;
-INSERT INTO `access_requests` VALUES (1,'Crochet with Love','Manufacturing','1-50 employees','09531080123','Jinalie C. Arbuis','Manager','09531080123','arbuisjinalie@gmail.com','scrypt:32768:8:1$MByC8iAmVfXRtN7J$9ba0ab2898bee77e464ac79e668f2e4d79bb9f5be91634a5670fbca2ff155558b240cf7b5ef56f5ddf24262188c8127b7030ad6d3728db090b6121aa7abb2a3a',NULL,'approved',NULL,NULL,NULL,'2026-05-15 10:16:59'),(2,'Japan Surplus Incorporated','Retail','1-50 employees','09531080123','Jinah Cuizon','HR','09531080123','jinarbz@gmail.com','scrypt:32768:8:1$Y23YMfA3FJZDq3mH$fac769906085f67533a233476587894317994221c7f1144cba89a6ea905e0d975e21fb747c7ac8b187bbbdf640a349832af8cc769b31620e72fc4be3c4cd673e',NULL,'pending',NULL,NULL,NULL,'2026-05-15 10:19:34'),(3,'Virtualahan','Information Technology','1-50 employees','+639163657571','Cynthia','Project Manager','+639163657571','cynthia@virtualahan.com','scrypt:32768:8:1$XlADXu1QLdUbUcij$2b7d41e2984682aa9343225e0ee007ce1dd07ef86494c611c8c5cef0e15774a7d2b5cfb056c69aba842716c7630dd63d3818fc41538a73309a6e3eb5d17ab31f',NULL,'approved',NULL,NULL,NULL,'2026-05-19 05:55:52');
+INSERT INTO `access_requests` VALUES (1,'Crochet with Love','Manufacturing','1-50 employees','09531080123','Jinalie C. Arbuis','Manager','09531080123','arbuisjinalie@gmail.com','scrypt:32768:8:1$MByC8iAmVfXRtN7J$9ba0ab2898bee77e464ac79e668f2e4d79bb9f5be91634a5670fbca2ff155558b240cf7b5ef56f5ddf24262188c8127b7030ad6d3728db090b6121aa7abb2a3a','2026-05-15 10:16:59',NULL,NULL,NULL,'approved',NULL,NULL,NULL,'2026-05-15 10:16:59'),(2,'Japan Surplus Incorporated','Retail','1-50 employees','09531080123','Jinah Cuizon','HR','09531080123','jinarbz@gmail.com','scrypt:32768:8:1$Y23YMfA3FJZDq3mH$fac769906085f67533a233476587894317994221c7f1144cba89a6ea905e0d975e21fb747c7ac8b187bbbdf640a349832af8cc769b31620e72fc4be3c4cd673e','2026-05-15 10:19:34',NULL,NULL,NULL,'pending',NULL,NULL,NULL,'2026-05-15 10:19:34'),(3,'Virtualahan','Information Technology','1-50 employees','+639163657571','Cynthia','Project Manager','+639163657571','cynthia@virtualahan.com','scrypt:32768:8:1$XlADXu1QLdUbUcij$2b7d41e2984682aa9343225e0ee007ce1dd07ef86494c611c8c5cef0e15774a7d2b5cfb056c69aba842716c7630dd63d3818fc41538a73309a6e3eb5d17ab31f','2026-05-19 05:55:52',NULL,NULL,NULL,'approved',NULL,NULL,NULL,'2026-05-19 05:55:52');
 /*!40000 ALTER TABLE `access_requests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -222,7 +225,7 @@ CREATE TABLE `email_notifications` (
   `user_id` int DEFAULT NULL,
   `organization_id` int DEFAULT NULL,
   `assessment_id` int DEFAULT NULL,
-  `notification_type` enum('registration_invitation','account_approval','account_rejection','password_reset','assessment_reminder','report_ready') NOT NULL,
+  `notification_type` enum('email_verification','registration_invitation','account_approval','account_rejection','password_reset','assessment_reminder','report_ready') NOT NULL,
   `recipient_email` varchar(150) NOT NULL,
   `subject` varchar(255) NOT NULL,
   `message_body` text,

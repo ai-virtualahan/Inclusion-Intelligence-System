@@ -49,6 +49,10 @@ def login():
                 flash("Your access request is still pending approval.", "warning")
                 return redirect(url_for('login.login'))
 
+            if access_request and access_request['status'] == 'email_unverified':
+                flash("Please verify your email address before your access request can be reviewed.", "warning")
+                return redirect(url_for('login.login'))
+
             if access_request and access_request['status'] == 'rejected':
                 flash("Your access request was rejected. Please contact the administrator.", "error")
                 return redirect(url_for('login.login'))

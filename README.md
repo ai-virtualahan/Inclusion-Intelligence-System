@@ -39,6 +39,7 @@ across key dimensions such as hiring, onboarding, accommodation, retention and c
 
     2. Apply database migrations before deployment
           Run sql/migrations/001_system_settings.sql on the target database.
+          Run sql/migrations/002_email_verification.sql on the target database.
 
     3. Use a production WSGI server
           Do not run the app with Flask debug mode in production.
