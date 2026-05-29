@@ -1,11 +1,66 @@
+from datetime import datetime
+
 from flask import Blueprint, render_template, session, redirect, url_for, request, flash
 from db import get_db_connection
 from flask_mail import Message
 from extensions import mail
+from assessment_scoring import recommendation_for_question
 from routes.access_request_utils import approve_access_request, find_existing_registration
 from settings_utils import can_role_approve_access_requests, get_bool_setting, load_system_settings
 
 vhan_bp = Blueprint('vhan', __name__)
+
+
+def build_dimension_gap_analysis(dimension_scores, gap_flags):
+    gaps_by_dimension = {}
+    for gap in gap_flags:
+        gaps_by_dimension.setdefault(gap['dimension'], []).append(gap)
+
+    analysis = []
+    for dimension in dimension_scores:
+        dimension_name = dimension['dimension']
+        dimension_gaps = gaps_by_dimension.get(dimension_name, [])
+        critical_count = sum(1 for gap in dimension_gaps if gap['severity'] == 'critical')
+        moderate_count = sum(1 for gap in dimension_gaps if gap['severity'] == 'moderate')
+        recommendations = []
+
+        for gap in dimension_gaps:
+            recommendation = gap.get('recommendation')
+            if recommendation and recommendation not in recommendations:
+                recommendations.append(recommendation)
+
+        if critical_count:
+            priority = "Critical priority"
+            summary = (
+                f"{dimension_name} needs immediate attention. "
+                f"{critical_count} critical and {moderate_count} moderate gap(s) suggest that key practices are missing "
+                "or not yet consistently implemented."
+            )
+        elif moderate_count:
+            priority = "Moderate priority"
+            summary = (
+                f"{dimension_name} has practices in progress, but {moderate_count} moderate gap(s) show areas "
+                "that need clearer ownership, timelines, and follow-through."
+            )
+        else:
+            priority = "On track"
+            summary = (
+                f"{dimension_name} is currently on track based on the latest assessment responses. "
+                "Continue monitoring and sustaining documented practices."
+            )
+
+        analysis.append({
+            "dimension": dimension_name,
+            "score": dimension['score'],
+            "raw_score": dimension['raw_score'],
+            "priority": priority,
+            "critical_count": critical_count,
+            "moderate_count": moderate_count,
+            "summary": summary,
+            "recommendations": recommendations[:3]
+        })
+
+    return analysis
 
 
 @vhan_bp.route('/vhan/dashboard')
@@ -182,6 +237,274 @@ def pending_approvals():
     conn.close()
 
     return render_template('pending_approvals.html', requests=requests, settings=settings)
+
+
+@vhan_bp.route('/vhan/organizations')
+def organizations():
+    if session.get('role') != 'vhan_admin':
+        return redirect(url_for('login.login'))
+
+    selected_status = request.args.get('status', '')
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    filters = []
+    params = []
+    if selected_status:
+        filters.append("o.status = %s")
+        params.append(selected_status)
+
+    where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
+
+    cursor.execute(f"""
+        SELECT
+            o.id,
+            o.company_name,
+            o.industry,
+            o.company_size,
+            o.company_number,
+            o.status,
+            o.created_at,
+            o.approved_at,
+            reviewer.contact_person AS approved_by,
+            admin.contact_person,
+            admin.work_email,
+            admin.position_title,
+            admin.contact_number,
+            latest.id AS latest_assessment_id,
+            latest.status AS latest_assessment_status,
+            latest.overall_score,
+            latest.maturity_level
+        FROM organizations o
+        LEFT JOIN users admin
+            ON o.id = admin.organization_id
+            AND admin.role = 'org_admin'
+        LEFT JOIN users reviewer
+            ON o.approved_by = reviewer.id
+        LEFT JOIN (
+            SELECT a1.*
+            FROM assessments a1
+            INNER JOIN (
+                SELECT organization_id, MAX(id) AS latest_id
+                FROM assessments
+                GROUP BY organization_id
+            ) a2 ON a1.id = a2.latest_id
+        ) latest ON latest.organization_id = o.id
+        {where_clause}
+        ORDER BY o.created_at DESC, o.id DESC
+    """, params)
+    organizations = cursor.fetchall()
+
+    cursor.execute("SELECT status, COUNT(*) AS total FROM organizations GROUP BY status")
+    status_rows = cursor.fetchall()
+    status_counts = {row['status']: row['total'] for row in status_rows}
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        'vhan_organizations.html',
+        organizations=organizations,
+        selected_status=selected_status,
+        status_counts=status_counts
+    )
+
+
+@vhan_bp.route('/vhan/questionnaires')
+def questionnaires():
+    if session.get('role') != 'vhan_admin':
+        return redirect(url_for('login.login'))
+
+    selected_dimension = request.args.get('dimension_id')
+    selected_question_status = request.args.get('question_status', 'active')
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT id, name
+        FROM assessment_dimensions
+        ORDER BY name ASC
+    """)
+    dimensions = cursor.fetchall()
+
+    filters = []
+    params = []
+
+    if selected_dimension:
+        filters.append("qb.dimension_id = %s")
+        params.append(selected_dimension)
+
+    if selected_question_status == 'active':
+        filters.append("qb.is_active = 1")
+    elif selected_question_status == 'inactive':
+        filters.append("qb.is_active = 0")
+    elif selected_question_status == 'all':
+        pass
+
+    where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
+
+    cursor.execute(f"""
+        SELECT
+            qb.id,
+            qb.question_text,
+            ad.name AS dimension_name,
+            qb.version,
+            qb.is_active,
+            COALESCE(qb.version_group_id, qb.id) AS version_group_id,
+            (
+                SELECT COUNT(DISTINCT COALESCE(qb2.version_group_id, qb2.id))
+                FROM question_bank qb2
+                WHERE qb2.dimension_id = qb.dimension_id
+                  AND COALESCE(qb2.version_group_id, qb2.id) <= COALESCE(qb.version_group_id, qb.id)
+            ) AS question_number,
+            (
+                SELECT COUNT(*)
+                FROM question_choices qc
+                WHERE qc.question_id = qb.id
+            ) AS choice_count
+        FROM question_bank qb
+        LEFT JOIN assessment_dimensions ad
+            ON qb.dimension_id = ad.id
+        {where_clause}
+        ORDER BY ad.id ASC, question_number ASC, qb.version DESC
+    """, params)
+    questions = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        'vhan_questionnaires.html',
+        questions=questions,
+        dimensions=dimensions,
+        selected_dimension=selected_dimension,
+        selected_question_status=selected_question_status
+    )
+
+
+@vhan_bp.route('/vhan/reports')
+def reports():
+    if session.get('role') != 'vhan_admin':
+        return redirect(url_for('login.login'))
+
+    selected_org_id = request.args.get('organization_id', type=int)
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    report_settings = load_system_settings(cursor)
+
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM reports
+    """)
+    total_reports = cursor.fetchone()['total']
+
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM assessments
+        WHERE status IN ('submitted', 'completed')
+    """)
+    completed_assessments = cursor.fetchone()['total']
+
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM organizations
+        WHERE status = 'approved'
+    """)
+    approved_organizations = cursor.fetchone()['total']
+
+    cursor.execute("""
+        SELECT
+            o.id,
+            o.company_name,
+            o.industry,
+            o.company_size,
+            o.company_number,
+            o.status,
+            o.created_at,
+            admin.contact_person,
+            admin.work_email,
+            admin.position_title,
+            admin.contact_number
+        FROM organizations o
+        LEFT JOIN users admin
+            ON o.id = admin.organization_id
+            AND admin.role = 'org_admin'
+        WHERE o.status = 'approved'
+        ORDER BY o.company_name ASC
+    """)
+    organizations = cursor.fetchall()
+
+    if not selected_org_id and organizations:
+        selected_org_id = organizations[0]['id']
+
+    selected_org = None
+    latest_assessment = None
+    dimension_scores = []
+    gap_flags = []
+    dimension_gap_analysis = []
+
+    if selected_org_id:
+        selected_org = next((org for org in organizations if org['id'] == selected_org_id), None)
+
+        cursor.execute("""
+            SELECT id, assessment_type, status, cycle_number, overall_score,
+                   maturity_level, started_at, submitted_at
+            FROM assessments
+            WHERE organization_id = %s
+            ORDER BY COALESCE(submitted_at, started_at) DESC, id DESC
+            LIMIT 1
+        """, (selected_org_id,))
+        latest_assessment = cursor.fetchone()
+
+        if latest_assessment:
+            cursor.execute("""
+                SELECT ad.name AS dimension, ds.score, ds.raw_score, ds.severity_flag
+                FROM dimension_scores ds
+                JOIN assessment_dimensions ad ON ds.dimension_id = ad.id
+                WHERE ds.assessment_id = %s
+                ORDER BY ad.id
+            """, (latest_assessment['id'],))
+            dimension_scores = cursor.fetchall()
+
+            cursor.execute("""
+                SELECT ad.name AS dimension, gf.severity, gf.description, gf.question_id
+                FROM gap_flags gf
+                JOIN assessment_dimensions ad ON gf.dimension_id = ad.id
+                WHERE gf.assessment_id = %s
+                ORDER BY FIELD(gf.severity, 'critical', 'moderate'), ad.id
+            """, (latest_assessment['id'],))
+            gap_flags = cursor.fetchall()
+
+            for gap in gap_flags:
+                gap['recommendation'] = recommendation_for_question(
+                    cursor,
+                    gap['dimension'],
+                    gap['question_id']
+                )
+
+            dimension_gap_analysis = build_dimension_gap_analysis(dimension_scores, gap_flags)
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        'vhan_reports.html',
+        total_reports=total_reports,
+        completed_assessments=completed_assessments,
+        approved_organizations=approved_organizations,
+        organizations=organizations,
+        selected_org_id=selected_org_id,
+        selected_org=selected_org,
+        latest_assessment=latest_assessment,
+        dimension_scores=dimension_scores,
+        gap_flags=gap_flags,
+        dimension_gap_analysis=dimension_gap_analysis,
+        settings=report_settings,
+        generated_at=datetime.now()
+    )
 
 
 @vhan_bp.route('/vhan/email-logs', methods=['GET', 'POST'])

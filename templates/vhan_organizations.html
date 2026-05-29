@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VHAN Admin | Organizations</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/vhan_dashboard.css') }}">
+</head>
+<body>
+<div class="top-navbar">
+  <div class="logo-section">
+    <h2>Inclusion Intelligence</h2>
+  </div>
+
+  <div class="top-nav-links">
+    <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('vhan.organizations') }}">Organizations</a>
+    <a href="{{ url_for('vhan.reports') }}">Reports</a>
+    <a href="{{ url_for('login.logout') }}">Logout</a>
+  </div>
+</div>
+
+<div class="dashboard-container">
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>VHAN Admin</h2>
+        <p>Inclusion Intelligence</p>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard Overview</a>
+        <a href="{{ url_for('vhan.pending_approvals') }}">Pending Approvals</a>
+        <a href="{{ url_for('vhan.organizations') }}" class="active">Organizations</a>
+        <a href="{{ url_for('vhan.questionnaires') }}">Questionnaires</a>
+        <a href="{{ url_for('vhan.email_logs') }}">Email Logs</a>
+        <a href="{{ url_for('vhan.reports') }}">Reports & Analytics</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="welcome-banner">
+        <div>
+          <h1>Organizations</h1>
+          <p>Monitor approved, suspended, and rejected organization records.</p>
+        </div>
+      </header>
+
+      <section class="overview-cards three-cards">
+        <a href="{{ url_for('vhan.organizations', status='approved') }}" class="card overview-card-link">
+          <h3>Approved</h3>
+          <p class="card-number">{{ status_counts.get('approved', 0) }}</p>
+          <span>Organizations with active access</span>
+        </a>
+
+        <a href="{{ url_for('vhan.organizations', status='suspended') }}" class="card overview-card-link">
+          <h3>Suspended</h3>
+          <p class="card-number">{{ status_counts.get('suspended', 0) }}</p>
+          <span>Organizations currently on hold</span>
+        </a>
+
+        <a href="{{ url_for('vhan.organizations', status='rejected') }}" class="card overview-card-link">
+          <h3>Rejected</h3>
+          <p class="card-number">{{ status_counts.get('rejected', 0) }}</p>
+          <span>Organizations not approved</span>
+        </a>
+      </section>
+
+      <section class="content-panel">
+        <div class="panel-header split-header">
+          <div>
+            <h2>Organization Directory</h2>
+            <p>Read-only view of organization profiles and latest assessment status.</p>
+          </div>
+
+          <form method="GET" action="{{ url_for('vhan.organizations') }}" class="toolbar-form">
+            <label for="status">Status</label>
+            <select name="status" id="status" onchange="this.form.submit()">
+              <option value="" {% if not selected_status %}selected{% endif %}>All Status</option>
+              <option value="approved" {% if selected_status == 'approved' %}selected{% endif %}>Approved</option>
+              <option value="suspended" {% if selected_status == 'suspended' %}selected{% endif %}>Suspended</option>
+              <option value="rejected" {% if selected_status == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+          </form>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Organization</th>
+                <th>Industry</th>
+                <th>Size</th>
+                <th>Contact</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Latest Assessment</th>
+                <th>Score</th>
+                <th>Approved At</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for org in organizations %}
+              <tr>
+                <td>
+                  <strong>{{ org.company_name }}</strong>
+                  <span class="cell-subtext">{{ org.company_number or 'No company number' }}</span>
+                </td>
+                <td>{{ org.industry or 'Not provided' }}</td>
+                <td>{{ org.company_size or 'Not provided' }}</td>
+                <td>
+                  {{ org.contact_person or 'Not provided' }}
+                  <span class="cell-subtext">{{ org.position_title or 'No position title' }}</span>
+                </td>
+                <td>{{ org.work_email or 'Not provided' }}</td>
+                <td><span class="status-badge status-{{ org.status }}">{{ org.status }}</span></td>
+                <td>{{ (org.latest_assessment_status or 'No assessment')|replace('_', ' ')|title }}</td>
+                <td>
+                  {% if org.overall_score is not none %}
+                    {{ org.overall_score }} - {{ org.maturity_level or 'Unrated' }}
+                  {% else %}
+                    Not available
+                  {% endif %}
+                </td>
+                <td>{{ org.approved_at or 'Not available' }}</td>
+                <td>
+                  {% if org.status == 'approved' %}
+                    <a class="table-link" href="{{ url_for('vhan.reports', organization_id=org.id) }}">View Report</a>
+                  {% else %}
+                    <span class="cell-subtext">Not available</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="10" class="empty-message">No organizations found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

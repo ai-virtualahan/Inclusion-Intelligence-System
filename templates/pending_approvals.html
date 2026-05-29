@@ -13,9 +13,9 @@
     </div>
 
     <div class="top-nav-links">
-        <a href="#">Dashboard</a>
-        <a href="#">Organizations</a>
-        <a href="#">Reports</a>
+        <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('vhan.organizations') }}">Organizations</a>
+        <a href="{{ url_for('vhan.reports') }}">Reports</a>
         <a href="{{ url_for('login.logout') }}">Logout</a>
     </div>
 </div>
@@ -33,10 +33,10 @@
       <nav class="sidebar-menu">
         <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard Overview</a>
         <a href="{{ url_for('vhan.pending_approvals') }}" class="active">Pending Approvals</a>
-        <a href="#">Organizations</a>
-        <a href="#">Questionnaires</a>
+        <a href="{{ url_for('vhan.organizations') }}">Organizations</a>
+        <a href="{{ url_for('vhan.questionnaires') }}">Questionnaires</a>
         <a href="{{ url_for('vhan.email_logs') }}">Email Logs</a>
-        <a href="#">Reports & Analytics</a>
+        <a href="{{ url_for('vhan.reports') }}">Reports & Analytics</a>
       </nav>
     </aside>
 

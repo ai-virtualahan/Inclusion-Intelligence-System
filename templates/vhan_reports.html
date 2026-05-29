@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VHAN Admin | Reports</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/vhan_dashboard.css') }}">
+</head>
+<body>
+<div class="top-navbar">
+  <div class="logo-section">
+    <h2>Inclusion Intelligence</h2>
+  </div>
+
+  <div class="top-nav-links">
+    <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('vhan.organizations') }}">Organizations</a>
+    <a href="{{ url_for('vhan.reports') }}">Reports</a>
+    <a href="{{ url_for('login.logout') }}">Logout</a>
+  </div>
+</div>
+
+<div class="dashboard-container">
+  <div class="dashboard-wrapper">
+    <aside class="sidebar no-print">
+      <div class="sidebar-header">
+        <h2>VHAN Admin</h2>
+        <p>Inclusion Intelligence</p>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard Overview</a>
+        <a href="{{ url_for('vhan.pending_approvals') }}">Pending Approvals</a>
+        <a href="{{ url_for('vhan.organizations') }}">Organizations</a>
+        <a href="{{ url_for('vhan.questionnaires') }}">Questionnaires</a>
+        <a href="{{ url_for('vhan.email_logs') }}">Email Logs</a>
+        <a href="{{ url_for('vhan.reports') }}" class="active">Reports & Analytics</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="welcome-banner no-print">
+        <div>
+          <h1>Reports & Analytics</h1>
+          <p>Preview organization assessment results, gap analysis, and recommended actions.</p>
+        </div>
+      </header>
+
+      <section class="overview-cards three-cards no-print">
+        <div class="card">
+          <h3>Saved Reports</h3>
+          <p class="card-number">{{ total_reports }}</p>
+          <span>Generated report records</span>
+        </div>
+
+        <div class="card">
+          <h3>Completed Assessments</h3>
+          <p class="card-number">{{ completed_assessments }}</p>
+          <span>Submitted or completed assessments</span>
+        </div>
+
+        <div class="card">
+          <h3>Organizations</h3>
+          <p class="card-number">{{ approved_organizations }}</p>
+          <span>Approved organizations</span>
+        </div>
+      </section>
+
+      <section class="report-workspace">
+        <aside class="report-selector no-print">
+          <h2>Organization</h2>
+          <p>Select an approved organization to preview its report.</p>
+
+          <form method="GET" action="{{ url_for('vhan.reports') }}" class="report-filter">
+            <label for="organization_id">Organization</label>
+            <select name="organization_id" id="organization_id" onchange="this.form.submit()">
+              {% if organizations %}
+                {% for org in organizations %}
+                  <option value="{{ org.id }}" {% if selected_org_id == org.id %}selected{% endif %}>
+                    {{ org.company_name }}
+                  </option>
+                {% endfor %}
+              {% else %}
+                <option>No approved organizations available</option>
+              {% endif %}
+            </select>
+          </form>
+
+          <div class="report-help">
+            <strong>Report includes</strong>
+            <span>Company profile</span>
+            <span>Assessment result</span>
+            <span>Gap summary</span>
+            <span>Recommendations</span>
+          </div>
+        </aside>
+
+        <section class="report-preview" id="printableReport">
+          {% if selected_org %}
+            <div class="report-actions no-print">
+              <div>
+                <h2>{{ selected_org.company_name }}</h2>
+                <p>Organization report preview</p>
+              </div>
+              <button type="button" class="print-btn" onclick="window.print()">Print Report</button>
+            </div>
+
+            <section class="print-cover">
+              <p class="report-kicker">Inclusion Intelligence System</p>
+              <h1>{{ selected_org.company_name }}</h1>
+              <p>Inclusion Maturity Report</p>
+              {% if settings.report_include_generated_date == 'on' %}
+                <p class="report-date">Generated {{ generated_at.strftime('%B %d, %Y') }}</p>
+              {% endif %}
+            </section>
+
+            <section class="report-section">
+              <div class="section-heading">
+                <h2>Company Profile</h2>
+                <p>Registered organization information and primary contact.</p>
+              </div>
+
+              <div class="profile-grid">
+                <div><span>Company</span><strong>{{ selected_org.company_name }}</strong></div>
+                <div><span>Industry</span><strong>{{ selected_org.industry or 'Not provided' }}</strong></div>
+                <div><span>Company Size</span><strong>{{ selected_org.company_size or 'Not provided' }}</strong></div>
+                <div><span>Company Number</span><strong>{{ selected_org.company_number or 'Not provided' }}</strong></div>
+                <div><span>Contact Person</span><strong>{{ selected_org.contact_person or 'Not provided' }}</strong></div>
+                <div><span>Work Email</span><strong>{{ selected_org.work_email or 'Not provided' }}</strong></div>
+                <div><span>Position</span><strong>{{ selected_org.position_title or 'Not provided' }}</strong></div>
+                <div><span>Contact Number</span><strong>{{ selected_org.contact_number or 'Not provided' }}</strong></div>
+              </div>
+            </section>
+
+            <section class="report-section">
+              <div class="section-heading">
+                <h2>Assessment Result</h2>
+                <p>Latest available assessment result for this organization.</p>
+              </div>
+
+              {% if latest_assessment %}
+                <div class="result-summary">
+                  <div class="score-panel">
+                    <span>Overall Score</span>
+                    <strong>{{ latest_assessment.overall_score or 'Pending' }}</strong>
+                  </div>
+                  <div>
+                    <span>Maturity Level</span>
+                    <strong>{{ latest_assessment.maturity_level or 'Pending' }}</strong>
+                  </div>
+                  <div>
+                    <span>Assessment Type</span>
+                    <strong>{{ latest_assessment.assessment_type|replace('_', ' ')|title }}</strong>
+                  </div>
+                  <div>
+                    <span>Status</span>
+                    <strong>{{ latest_assessment.status|title }}</strong>
+                  </div>
+                </div>
+
+                {% if dimension_scores %}
+                  <div class="dimension-list">
+                    {% for dim in dimension_scores %}
+                      <div class="dimension-row">
+                        <div>
+                          <strong>{{ dim.dimension }}</strong>
+                          <span>{{ dim.severity_flag }} severity</span>
+                        </div>
+                        <div class="dimension-score">{{ dim.score }}</div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <div class="empty-report-state">Dimension scores will appear once scoring data is available.</div>
+                {% endif %}
+              {% else %}
+                <div class="empty-report-state">No assessment result is available for this organization yet.</div>
+              {% endif %}
+            </section>
+
+            {% if settings.report_show_gap_analysis == 'on' %}
+            <section class="report-section">
+              <div class="section-heading">
+                <h2>Gap Analysis by Dimension</h2>
+                <p>Consolidated interpretation of priority gaps from the latest assessment.</p>
+              </div>
+
+              {% if dimension_gap_analysis %}
+                <div class="gap-analysis-list">
+                  {% for item in dimension_gap_analysis %}
+                    <div class="gap-analysis-card {{ 'critical' if item.critical_count else 'moderate' if item.moderate_count else 'none' }}">
+                      <div class="gap-analysis-head">
+                        <div>
+                          <strong>{{ item.dimension }}</strong>
+                          <span>{{ item.raw_score }}/40 raw score | {{ item.score }} scaled score</span>
+                        </div>
+                        <span class="priority-pill">{{ item.priority }}</span>
+                      </div>
+
+                      <p>{{ item.summary }}</p>
+
+                      <div class="gap-counts">
+                        <span>{{ item.critical_count }} critical</span>
+                        <span>{{ item.moderate_count }} moderate</span>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="empty-report-state">Gap analysis will appear once scoring data is available.</div>
+              {% endif %}
+            </section>
+            {% endif %}
+
+            {% if settings.report_show_recommendations == 'on' %}
+            <section class="report-section">
+              <div class="section-heading">
+                <h2>Recommended Actions</h2>
+                <p>Priority actions grouped by assessment dimension.</p>
+              </div>
+
+              {% if dimension_gap_analysis %}
+                <div class="recommendation-list">
+                  {% for item in dimension_gap_analysis %}
+                    <div class="recommendation-item">
+                      <strong>{{ item.dimension }}</strong>
+                      {% if item.recommendations %}
+                        <ul>
+                          {% for recommendation in item.recommendations %}
+                            <li>{{ recommendation }}</li>
+                          {% endfor %}
+                        </ul>
+                      {% else %}
+                        <p>Maintain current practices, monitor progress, and document evidence for future reassessments.</p>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="empty-report-state">Recommendations will appear when gap analysis data is available.</div>
+              {% endif %}
+            </section>
+            {% endif %}
+
+            <footer class="report-footer">
+              {{ settings.report_footer_text }}
+            </footer>
+          {% else %}
+            <div class="empty-report-state">No approved organizations are available for reporting yet.</div>
+          {% endif %}
+        </section>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

@@ -13,9 +13,9 @@
     </div>
 
     <div class="top-nav-links">
-        <a href="#">Dashboard</a>
-        <a href="#">Organizations</a>
-        <a href="#">Reports</a>
+        <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('vhan.organizations') }}">Organizations</a>
+        <a href="{{ url_for('vhan.reports') }}">Reports</a>
         <a href="{{ url_for('login.logout') }}">Logout</a>
     </div>
 </div>
@@ -33,10 +33,10 @@
       <nav class="sidebar-menu">
         <a href="{{ url_for('vhan.vhan_dashboard') }}" class="active">Dashboard Overview</a>
         <a href="{{ url_for('vhan.pending_approvals') }}">Pending Approvals</a>
-        <a href="#">Organizations</a>
-        <a href="#">Questionnaires</a>
+        <a href="{{ url_for('vhan.organizations') }}">Organizations</a>
+        <a href="{{ url_for('vhan.questionnaires') }}">Questionnaires</a>
         <a href="{{ url_for('vhan.email_logs') }}">Email Logs</a>
-        <a href="#">Reports & Analytics</a>
+        <a href="{{ url_for('vhan.reports') }}">Reports & Analytics</a>
       </nav>
     </aside>
 
@@ -54,29 +54,29 @@
 
       <!-- OVERVIEW CARDS -->
       <section class="overview-cards">
-        <div class="card">
+        <a href="{{ url_for('vhan.pending_approvals') }}" class="card overview-card-link">
           <h3>Pending Approvals</h3>
           <p class="card-number">{{ requests|length }}</p>
           <span>Organization access requests</span>
-        </div>
+        </a>
 
-        <div class="card">
+        <a href="{{ url_for('vhan.organizations') }}" class="card overview-card-link">
           <h3>Organizations</h3>
           <p class="card-number">{{ approved_organizations }}</p>
           <span>Approved organizations</span>
-        </div>
+        </a>
 
-        <div class="card">
+        <a href="{{ url_for('vhan.email_logs') }}" class="card overview-card-link">
           <h3>Email Logs</h3>
           <p class="card-number">{{ email_logs_count }}</p>
           <span>Invitation emails sent</span>
-        </div>
+        </a>
 
-        <div class="card">
+        <a href="{{ url_for('vhan.reports') }}" class="card overview-card-link">
           <h3>Reports</h3>
           <p class="card-number">{{ reports_count }}</p>
           <span>Reports and analytics</span>
-        </div>
+        </a>
       </section>
 
       

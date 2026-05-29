@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VHAN Admin | Questionnaires</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/vhan_dashboard.css') }}">
+</head>
+<body>
+<div class="top-navbar">
+  <div class="logo-section">
+    <h2>Inclusion Intelligence</h2>
+  </div>
+
+  <div class="top-nav-links">
+    <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('vhan.organizations') }}">Organizations</a>
+    <a href="{{ url_for('vhan.reports') }}">Reports</a>
+    <a href="{{ url_for('login.logout') }}">Logout</a>
+  </div>
+</div>
+
+<div class="dashboard-container">
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>VHAN Admin</h2>
+        <p>Inclusion Intelligence</p>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard Overview</a>
+        <a href="{{ url_for('vhan.pending_approvals') }}">Pending Approvals</a>
+        <a href="{{ url_for('vhan.organizations') }}">Organizations</a>
+        <a href="{{ url_for('vhan.questionnaires') }}" class="active">Questionnaires</a>
+        <a href="{{ url_for('vhan.email_logs') }}">Email Logs</a>
+        <a href="{{ url_for('vhan.reports') }}">Reports & Analytics</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="welcome-banner">
+        <div>
+          <h1>Questionnaires</h1>
+          <p>Review active and historical assessment questions by dimension.</p>
+        </div>
+      </header>
+
+      <section class="content-panel">
+        <div class="panel-header split-header">
+          <div>
+            <h2>Question Bank</h2>
+            <p>Read-only view of the scoring questionnaire used by organizations.</p>
+          </div>
+
+          <form method="GET" action="{{ url_for('vhan.questionnaires') }}" class="toolbar-form wide-toolbar">
+            <label for="dimension_id">Dimension</label>
+            <select name="dimension_id" id="dimension_id" onchange="this.form.submit()">
+              <option value="" {% if not selected_dimension %}selected{% endif %}>All Dimensions</option>
+              {% for dim in dimensions %}
+                <option value="{{ dim.id }}" {% if selected_dimension == dim.id|string %}selected{% endif %}>
+                  {{ dim.name }}
+                </option>
+              {% endfor %}
+            </select>
+
+            <label for="question_status">Status</label>
+            <select name="question_status" id="question_status" onchange="this.form.submit()">
+              <option value="active" {% if selected_question_status == 'active' %}selected{% endif %}>Active</option>
+              <option value="inactive" {% if selected_question_status == 'inactive' %}selected{% endif %}>Inactive</option>
+              <option value="all" {% if selected_question_status == 'all' %}selected{% endif %}>All Versions</option>
+            </select>
+          </form>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>Dimension</th>
+                <th>Question</th>
+                <th>Version</th>
+                <th>Choices</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for q in questions %}
+              <tr>
+                <td>Q{{ q.question_number }}</td>
+                <td>{{ q.dimension_name }}</td>
+                <td>{{ q.question_text }}</td>
+                <td>Version {{ q.version }}</td>
+                <td>{{ q.choice_count }}</td>
+                <td>
+                  <span class="status-badge status-{{ 'approved' if q.is_active else 'inactive' }}">
+                    {% if q.is_active %}Active{% else %}Inactive{% endif %}
+                  </span>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="empty-message">No questions found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>
