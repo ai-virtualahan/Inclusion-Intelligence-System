@@ -301,22 +301,43 @@ main {
 }
 
 .hiring {
-  background-image: linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.12)), url("../images/login.png");
+  background-image: linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.12)), url("../images/hiring.jpg");
 }
 
-.onboarding,
-.culture,
+.onboarding {
+  background-image: linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.12)), url("../images/onboarding.jpg");
+}
+
+.accommodation {
+  background-image: linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.12)), url("../images/accomodation.jpg");
+}
+
+.retention {
+  background-image: linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.12)), url("../images/retention.jpg");
+}
+
+.culture {
+  background-image: linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.12)), url("../images/culture.jpg");
+}
+
+.emerging {
+  background-image: linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.12)), url("../images/emerging.jpg");
+}
+
+.developing {
+  background-image: linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.12)), url("../images/developing.jpg");
+}
+
+.advancing {
+  background-image: linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.12)), url("../images/advancing.jpg");
+}
+
 .leading {
-  background-image: linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.12)), url("../images/hero-right.png");
+  background-image: linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.12)), url("../images/leading.jpg");
 }
 
-.accommodation,
-.retention,
-.emerging,
-.developing,
-.advancing,
 .exemplar {
-  background-image: linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.12)), url("../images/vhan-logo.png");
+  background-image: linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.12)), url("../images/exemplar.jpg");
 }
 
 .dimension-grid .image-card:nth-child(4),
@@ -393,7 +414,6 @@ main {
   border-left: 0;
   border-radius: 0 24px 24px 0;
   justify-self: stretch;
-  min-height: clamp(300px, 38vw, 470px);
   padding-left: clamp(56px, 5vw, 84px);
 }
 
@@ -568,7 +588,6 @@ main {
   .process-section .section-title-box {
     border-left: 0;
     border-radius: 0 20px 20px 0;
-    min-height: 180px;
     padding-left: clamp(30px, 5vw, 56px);
   }
 
