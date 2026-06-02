@@ -3,7 +3,7 @@ from db import get_db_connection
 
 DEFAULT_SYSTEM_SETTINGS = {
     "system_name": "Inclusion Intelligence System",
-    "support_email": "support@virtualahan.com",
+    "support_email": "iis@virtualahan.com",
     "primary_contact": "Virtualahan Admin Team",
     "reassessment_lock_days": "182",
     "score_emerging_max": "25",

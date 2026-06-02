@@ -1,42 +1,48 @@
+function isLoggedIn() {
+  return localStorage.getItem("loggedIn") === "true";
+}
+
 function handleAuth() {
-      let isLoggedIn = localStorage.getItem("loggedIn");
+  if (isLoggedIn()) {
+    localStorage.setItem("loggedIn", "false");
+    window.location.reload();
+    return;
+  }
 
-      if (isLoggedIn === "true") {
-        localStorage.setItem("loggedIn", "false");
-        // alert("Logged out successfully!");
-        location.reload();
-      } else {
-        window.location.href = "/login";
-      }
-    }
+  window.location.href = "/login";
+}
 
-    function goToAssessment(e) {
-      e.preventDefault();
+function goToAssessment() {
+  window.location.href = isLoggedIn() ? "/assessment" : "/login";
+}
 
-      let isLoggedIn = localStorage.getItem("loggedIn");
+function updateUI() {
+  const loginButton = document.querySelector(".login-btn");
+  const startButton = document.getElementById("startBtn");
+  const assessmentButton = document.getElementById("assessmentBtn");
 
-      if (isLoggedIn === "true") {
-        window.location.href = "/assessment";
-      } else {
-        window.location.href = "/login";
-      }
-    }
+  if (isLoggedIn()) {
+    if (loginButton) loginButton.textContent = "Logout";
+    if (startButton) startButton.textContent = "Start Assessment";
+    if (assessmentButton) assessmentButton.textContent = "Start Assessment";
+  } else {
+    if (loginButton) loginButton.textContent = "Login";
+    if (startButton) startButton.textContent = "Login to Start Assessment";
+    if (assessmentButton) assessmentButton.textContent = "Login to Start Assessment";
+  }
+}
 
-    window.onload = function () {
-      let btn = document.querySelector(".login-btn");
-      let welcome = document.getElementById("welcomeText");
-      let startBtn = document.getElementById("startBtn");
+window.addEventListener("DOMContentLoaded", function () {
+  updateUI();
 
-      
-      updateUI();
+  const startButton = document.getElementById("startBtn");
+  const assessmentButton = document.getElementById("assessmentBtn");
 
-      startBtn.onclick = function () {
-        let isLoggedIn = localStorage.getItem("loggedIn");
+  if (startButton) {
+    startButton.addEventListener("click", goToAssessment);
+  }
 
-        if (isLoggedIn === "true") {
-          window.location.href = "/assessment";
-        } else {
-          window.location.href = "/login";
-        }
-      };
-    };
+  if (assessmentButton) {
+    assessmentButton.addEventListener("click", goToAssessment);
+  }
+});

@@ -27,7 +27,7 @@ VALUES
 ('score_emerging_max','25',NULL),
 ('score_leading_max','90',NULL),
 ('session_timeout_minutes','60',NULL),
-('support_email','support@virtualahan.com',NULL),
+('support_email','iis@virtualahan.com',NULL),
 ('suspend_deactivate_admins','on',NULL),
 ('suspend_hide_reports','on',NULL),
 ('suspend_lock_assessments','on',NULL),

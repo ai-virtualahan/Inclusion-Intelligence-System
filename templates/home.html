@@ -1,111 +1,256 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Inclusion Intelligence</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  
 </head>
 <body>
+  <main>
+    <section class="hero-shell" id="home">
+      <div class="hero-copy">
+        <div class="eyebrow">
+          <span class="brand-icon small"><i class="fa-solid fa-check"></i></span>
+          <span id="welcomeText">Inclusion Intelligence System</span>
+        </div>
 
-  <div class="page-wrapper">
-    <!-- HEADER -->
-    <header class="navbar">
-      <div class="logo-area">
-        <h1>Inclusion Intelligence</h1>
-      </div>
-
-      <nav class="nav-links">
-        <a href="#">About</a>
-        <a href="#">Contact Us</a>
-        <a href="#">Help</a>
-      </nav>
-
-      <div class="nav-actions">
-        <button class="login-btn" onclick="handleAuth()">Login</button>
-      </div>
-    </header>
-
-    <!-- HERO -->
-    <section class="hero-section">
-      <div class="hero-left">
-        <span class="welcome-badge" id="welcomeText">Welcome. . .</span>
-
-        <h2>
-          Track your progress.<br>
-          <span>Unlock your potential.</span>
-        </h2>
+        <h1>
+          Track your progress
+          <span>Unlock your potential</span>
+        </h1>
 
         <p>
-          Inclusion Intelligence helps you assess your
-          skills, track your growth, and build a more
-          inclusive future — one step at a time.
+          Inclusion Intelligence helps organizations assess inclusion readiness,
+          track growth, and build a more inclusive future one step at a time.
         </p>
 
-        <button class="start-btn" id="startBtn">
-          <i class="fa-solid fa-arrow-right"></i>
-          You may log in to start your Assessment
+        <button class="primary-action" id="startBtn">
+          Login to Start Assessment
         </button>
-
-        <div class="time-note">
-          <i class="fa-regular fa-clock"></i>
-          <span>Takes about 10–15 minutes</span>
-        </div>
       </div>
 
-      <div class="hero-right">
-        <img src="{{ url_for('static', filename='images/hero-right.png') }}" alt="Dashboard Preview">
+      <div class="hero-visual">
+        <img src="{{ url_for('static', filename='images/hero-right.png') }}" alt="Digital assessment dashboard preview">
       </div>
     </section>
 
-    <!-- STATS -->
-    <section class="stats-section">
-      <h3>Quick Stats</h3>
+    <section class="info-section split-section" id="about">
+      <div class="section-title-box">
+        <h2>What is IIS?</h2>
+      </div>
+
+      <div class="section-copy">
+        
+        <p><strong>The Inclusion Intelligence System (IIS)</strong></p> 
+        <p>
+          is a data-driven inclusion diagnostics platform that 
+          enables organizations to evaluate disability inclusion 
+          readiness and transformation progress.
+        </p>
+        <p>
+          The system provides structured assessments, scoring, modules
+          and maturity classifications to help organizations identify
+          strengths, gaps, and actionable next steps.
+        </p>
+
+        <h3>Core Objectives:</h3>
+        <ul>
+          <li>Measure whether inclusion is happening inside organizations.</li>
+          <li>Provide verifiable evidence of inclusion transformation.</li>
+          <li>Help teams move from compliance to inclusive culture.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="white-section" id="dimensions">
+      <h2>Five Inclusion Dimensions</h2>
+
+      <div class="dimension-grid">
+        <article class="image-card">
+          <div class="image-card-media hiring"></div>
+          <h3>Hiring System</h3>
+          <p>Evaluate accessible recruitment, inclusive hiring practices, and disability-focused outreach.</p>
+        </article>
+
+        <article class="image-card">
+          <div class="image-card-media onboarding"></div>
+          <h3>Onboarding</h3>
+          <p>Assess orientation accessibility, communication support, and inclusive onboarding processes.</p>
+        </article>
+
+        <article class="image-card">
+          <div class="image-card-media accommodation"></div>
+          <h3>Accommodation</h3>
+          <p>Measure accommodation policies, response systems, and workplace accessibility readiness.</p>
+        </article>
+
+        <article class="image-card">
+          <div class="image-card-media retention"></div>
+          <h3>Retention</h3>
+          <p>Analyze career development, support systems, and retention practices for employees with disabilities.</p>
+        </article>
+
+        <article class="image-card">
+          <div class="image-card-media culture"></div>
+          <h3>Culture</h3>
+          <p>Evaluate leadership commitment, inclusive policies, awareness initiatives, and workplace belonging.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="info-section process-section" id="process">
+      <div class="section-title-box">
+        <h2>How IIS Works</h2>
+      </div>
+
+      <div class="process-list">
+        <article>
+          <h3>Discovery</h3>
+          <p>Organizations begin by completing the IIS Inclusion Readiness Assessment, a structured
+             diagnostic tool designed to measure their current inclusion maturity across key dimensions
+             such as hiring, onboarding, accommodation, retention, accessibility, and workplace culture.
+             The assessment identifies organizational strengths, inclusion gaps, accessibility barriers, and
+             opportunities for improvement.
+          </p>
+        </article>
+        <article>
+          <h3>Analysis</h3>
+          <p>
+            After the assessment is completed, IIS generates inclusion scores, maturity classifications, and
+            analytics-based insights to help organizations better understand their current state.
+            The platform highlights critical gaps, priority focus areas, and inclusion risks that may impact
+            employee experience and organizational readiness.
+          </p>
+        </article>
+        <article>
+          <h3>Insights</h3>
+          <p>
+            Based on assessment results, IIS provides tailored recommendations and strategic guidance
+            aligned with the organization’s maturity level and identified needs.
+            Organizations receive actionable insights that can support policy improvements, accessibility
+            enhancements, inclusive hiring practices, and culture-building initiatives.
+          </p>
+        </article>
+        <article>
+          <h3>Roadmap</h3>
+          <p>
+            IIS helps organizations build a structured inclusion roadmap by identifying measurable goals,
+            recommended actions, and suggested implementation priorities.
+            The roadmap serves as a practical guide for organizations as they strengthen disability
+            inclusion and workplace accessibility efforts over time.
+          </p>
+        </article>
+        <article>
+          <h3>Monitoring</h3>
+          <p>
+            Organizations can continuously monitor their inclusion progress through dashboards, reporting
+            tools, and periodic reassessments within the IIS platform.
+            This allows teams to measure improvements, track accountability, and evaluate the impact of
+            their inclusion initiatives over time.
+          </p>
+        </article>
+        <article>
+          <h3>Sustainability</h3>
+          <p>
+            IIS supports long-term inclusion transformation by enabling organizations to continuously
+            evaluate, refine, and strengthen their inclusion practices through data-informed decision-
+            making.
+            As organizations mature, IIS helps sustain accountability, accessibility, and inclusive
+            workplace culture through ongoing measurement and improvement pathways.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="white-section" id="maturity">
+      <h2>Inclusion Maturity Levels</h2>
+
+      <div class="maturity-grid">
+        <article class="image-card">
+          <div class="image-card-media emerging"></div>
+          <h3>Emerging</h3>
+          <p>Inclusion efforts are minimal, informal, and largely reactive.</p>
+        </article>
+
+        <article class="image-card">
+          <div class="image-card-media developing"></div>
+          <h3>Developing</h3>
+          <p>Foundational inclusion practices are being introduced but remain inconsistent.</p>
+        </article>
+
+        <article class="image-card">
+          <div class="image-card-media advancing"></div>
+          <h3>Advancing</h3>
+          <p>Strategies show increasing accountability and measurable progress.</p>
+        </article>
+
+        <article class="image-card">
+          <div class="image-card-media leading"></div>
+          <h3>Leading</h3>
+          <p>Inclusion is embedded into systems, culture, and decision-making processes.</p>
+        </article>
+
+        <article class="image-card">
+          <div class="image-card-media exemplar"></div>
+          <h3>Exemplar</h3>
+          <p>The organization demonstrates sustainable and industry-leading inclusion practices.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="info-section split-section why-section">
+      <div class="section-title-box">
+        <h2>Why Organizations Need IIS</h2>
+      </div>
+
+      <div class="reason-list">
+        <div><span>1</span><p>Data-backed inclusion insights</p></div>
+        <div><span>2</span><p>Benchmarking and measurable progress tracking</p></div>
+        <div><span>3</span><p>Structured and standardized scoring</p></div>
+        <div><span>4</span><p>Actionable recommendations and roadmap guidance</p></div>
+        <div><span>5</span><p>Supports ESG, DEI, and accessibility goals</p></div>
+      </div>
+    </section>
+
+    <section class="stats-section" id="quick-stats">
+      <h2>Quick Stats</h2>
       <p>A snapshot of our growing community</p>
 
       <div class="stats-grid">
-        <div class="stat-card mint">
+        <article class="stat-card stat-users">
           <div class="stat-icon">
             <i class="fa-solid fa-users"></i>
           </div>
-          <div class="stat-text">
-            <h4>{{ users_assessed }}</h4>
-            <h5>Users Assessed</h5>
-            <p>
-              People have completed assessments
-              and shared their insights.
-            </p>
+          <div>
+            <strong>{{ users_assessed }}</strong>
+            <h3>Users Assessed</h3>
+            <p>People have completed assessments and shared their insights.</p>
           </div>
-        </div>
+        </article>
 
-        <div class="stat-card blue">
+        <article class="stat-card stat-progress">
           <div class="stat-icon">
             <i class="fa-solid fa-chart-line"></i>
           </div>
-          <div class="stat-text">
-            <h4>{{ progress_tracked }}</h4>
-            <h5>Progress Tracked</h5>
-            <p>
-              Assessments completed and progress
-              tracked over time.
-            </p>
+          <div>
+            <strong>{{ progress_tracked }}</strong>
+            <h3>Progress Tracked</h3>
+            <p>Assessments completed and progress tracked over time.</p>
           </div>
-        </div>
+        </article>
       </div>
     </section>
+  </main>
 
-    <!-- FOOTER -->
-    <footer class="footer">
-      <p>© 2026 Inclusion Intelligence. All rights reserved.</p>
-      <div class="footer-links">
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Use</a>
-      </div>
-    </footer>
-  </div>
+  <footer class="site-footer">
+    <p>&copy; 2026 Inclusion Intelligence. All rights reserved.</p>
+    <div>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Use</a>
+    </div>
+  </footer>
 
   <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 </body>
