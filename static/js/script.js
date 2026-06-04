@@ -14,6 +14,50 @@ const CHOICES = [
 
 const EXAM_INSTRUCTION = "For each question, select ONE answer that best describes your organization's current state.";
 
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function groupGapsByDimension(gaps = []) {
+    const groups = [];
+    const groupMap = new Map();
+
+    gaps.forEach(gap => {
+        const dimension = gap.dimension || "Other";
+        if (!groupMap.has(dimension)) {
+            const group = {
+                dimension,
+                criticalCount: 0,
+                moderateCount: 0,
+                recommendations: [],
+                gaps: []
+            };
+            groupMap.set(dimension, group);
+            groups.push(group);
+        }
+
+        const group = groupMap.get(dimension);
+        if (gap.severity === "critical") {
+            group.criticalCount += 1;
+        } else if (gap.severity === "moderate") {
+            group.moderateCount += 1;
+        }
+
+        if (gap.recommendation && !group.recommendations.includes(gap.recommendation)) {
+            group.recommendations.push(gap.recommendation);
+        }
+
+        group.gaps.push(gap);
+    });
+
+    return groups;
+}
+
 // Questions must match database question_bank (IDs 1-50)
 const DEFAULT_EXAMS = {
     Hiring: {
@@ -102,7 +146,11 @@ const exams = Object.keys(window.IIS_ACTIVE_EXAMS || {}).length
     ? window.IIS_ACTIVE_EXAMS
     : DEFAULT_EXAMS;
 
-const DIMENSION_ORDER = Object.keys(exams);
+const PREFERRED_DIMENSION_ORDER = ["Hiring", "Onboarding", "Accommodation", "Retention", "Culture"];
+const DIMENSION_ORDER = [
+    ...PREFERRED_DIMENSION_ORDER.filter(dim => exams[dim]),
+    ...Object.keys(exams).filter(dim => !PREFERRED_DIMENSION_ORDER.includes(dim))
+];
 const ANSWER_STORAGE_KEY = "iis_answers";
 const ANSWER_SIGNATURE_KEY = "iis_answers_signature";
 
@@ -629,16 +677,38 @@ function renderDashboardFromAPI(data) {
 
     // Gaps
     if (gaps && gaps.length > 0) {
-        html += `<div class="imd-section-title">Identified Gaps</div><div class="gap-list">`;
-        gaps.forEach(g => {
+        const groupedGaps = groupGapsByDimension(gaps);
+        html += `<div class="imd-section-title">Priority Recommendations by Dimension</div><div class="gap-group-list">`;
+        groupedGaps.forEach(group => {
+            const priorityClass = group.criticalCount ? "critical" : "moderate";
+            const recommendations = group.recommendations.slice(0, 3).map(recommendation => `
+                <li>${escapeHtml(recommendation)}</li>
+            `).join("");
+            const answeredGaps = group.gaps.map(g => `
+                <div class="gap-question-row">
+                    <div class="gap-question">${escapeHtml(g.question)}</div>
+                    ${g.selected_answer ? `
+                        <div class="gap-answer">
+                            Selected answer: ${g.selected_choice ? `${escapeHtml(g.selected_choice)}. ` : ''}${escapeHtml(g.selected_answer)}
+                            ${g.score !== null && g.score !== undefined ? `(Score: ${escapeHtml(g.score)})` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join("");
             html += `
-                <div class="gap-card ${g.severity}">
-                    <div class="gap-header">
-                        <span class="gap-badge ${g.severity}">${g.severity}</span>
-                        <span class="gap-dim">${g.dimension}</span>
+                <div class="gap-group-card ${priorityClass}">
+                    <div class="gap-group-head">
+                        <strong>${escapeHtml(group.dimension)}</strong>
+                        <div class="gap-counts">
+                            ${group.criticalCount ? `<span class="gap-badge critical">${group.criticalCount} critical</span>` : ''}
+                            ${group.moderateCount ? `<span class="gap-badge moderate">${group.moderateCount} moderate</span>` : ''}
+                        </div>
                     </div>
-                    <div class="gap-question">${g.question}</div>
-                    ${g.recommendation ? `<div class="gap-rec">${g.recommendation}</div>` : ''}
+                    ${recommendations ? `<ul class="gap-rec-list">${recommendations}</ul>` : ''}
+                    <details class="gap-details">
+                        <summary>View answered gaps</summary>
+                        ${answeredGaps}
+                    </details>
                 </div>`;
         });
         html += `</div>`;

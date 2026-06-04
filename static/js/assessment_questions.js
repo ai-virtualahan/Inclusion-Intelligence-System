@@ -84,6 +84,8 @@ function renderChoicesTable() {
 
   currentChoices.forEach(choice => {
     const scoreValue = Number(choice.choice_score);
+    const recommendationSeverity = choice.recommendation_severity || severityFromScore(scoreValue);
+    const recommendationText = choice.recommendation_text || "";
     tbody.innerHTML += choicesEditMode
       ? `
         <tr data-choice-id="${escapeHtml(choice.id)}">
@@ -94,6 +96,14 @@ function renderChoicesTable() {
           <td>
             <input class="choice-edit-score" type="number" step="0.01" min="0" max="4" value="${escapeHtml(scoreValue)}">
           </td>
+          <td>
+            <select class="choice-edit-rec-severity">
+              ${renderSeverityOptions(recommendationSeverity)}
+            </select>
+          </td>
+          <td>
+            <textarea class="choice-edit-rec" rows="3">${escapeHtml(recommendationText)}</textarea>
+          </td>
         </tr>
       `
       : `
@@ -101,16 +111,45 @@ function renderChoicesTable() {
           <td>${escapeHtml(choice.choice_letter)}</td>
           <td>${escapeHtml(choice.choice_text)}</td>
           <td>${escapeHtml(scoreValue)}</td>
+          <td>${escapeHtml(formatSeverityLabel(recommendationSeverity))}</td>
+          <td>${recommendationText ? escapeHtml(recommendationText) : '<span class="empty-rec">None</span>'}</td>
         </tr>
       `;
   });
+}
+
+function severityFromScore(scoreValue) {
+  if (scoreValue <= 1) return "critical";
+  if (scoreValue <= 2) return "moderate";
+  if (scoreValue <= 3) return "optional";
+  return "none";
+}
+
+function formatSeverityLabel(severity) {
+  const labels = {
+    none: "None",
+    optional: "Optional",
+    moderate: "Moderate",
+    critical: "Critical"
+  };
+  return labels[severity] || "None";
+}
+
+function renderSeverityOptions(selectedSeverity) {
+  return ["none", "optional", "moderate", "critical"].map(severity => `
+    <option value="${severity}" ${severity === selectedSeverity ? "selected" : ""}>
+      ${formatSeverityLabel(severity)}
+    </option>
+  `).join("");
 }
 
 function collectEditableChoices() {
   return Array.from(document.querySelectorAll("#choicesTableBody tr")).map(row => ({
     id: Number(row.dataset.choiceId),
     choice_text: row.querySelector(".choice-edit-text").value,
-    choice_score: row.querySelector(".choice-edit-score").value
+    choice_score: row.querySelector(".choice-edit-score").value,
+    recommendation_severity: row.querySelector(".choice-edit-rec-severity").value,
+    recommendation_text: row.querySelector(".choice-edit-rec").value
   }));
 }
 

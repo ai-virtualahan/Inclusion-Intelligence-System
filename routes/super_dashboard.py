@@ -1,20 +1,42 @@
+import re
+
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request
 from werkzeug.security import generate_password_hash
 from datetime import datetime
 from db import get_db_connection
 from flask_mail import Message
 from extensions import mail
-from assessment_scoring import recommendation_for_question
 from routes.access_request_utils import approve_access_request, find_existing_registration
 from settings_utils import (
     can_role_approve_access_requests,
     get_bool_setting,
     get_int_setting,
+    load_user_roles,
     load_system_settings,
     save_system_settings,
 )
 
 super_admin_bp = Blueprint('super_admin', __name__)
+
+
+def make_role_key(role_label):
+    role_key = re.sub(r"[^a-z0-9]+", "_", (role_label or "").strip().lower())
+    return role_key.strip("_")
+
+
+def recommendation_severity_from_score(score):
+    try:
+        score = float(score)
+    except (TypeError, ValueError):
+        return "none"
+
+    if score <= 1:
+        return "critical"
+    if score <= 2:
+        return "moderate"
+    if score <= 3:
+        return "optional"
+    return "none"
 
 
 def build_dimension_gap_analysis(dimension_scores, gap_flags):
@@ -409,7 +431,7 @@ def suspend_organization(org_id):
         return redirect(url_for('login.login'))
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
     try:
         deactivate_admins = get_bool_setting(cursor, "suspend_deactivate_admins", True)
@@ -446,7 +468,7 @@ def reactivate_organization(org_id):
         return redirect(url_for('login.login'))
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
     try:
         cursor.execute("""
@@ -567,12 +589,22 @@ def question_choices(question_id):
 
     cursor.execute("""
         SELECT
-            id,
-            choice_letter,
-            choice_text,
-            choice_score
-        FROM question_choices
-        WHERE question_id = %s
+            qc.id,
+            qc.choice_letter,
+            qc.choice_text,
+            qc.choice_score,
+            qcr.severity AS recommendation_severity,
+            qcr.recommendation_text
+        FROM question_choices qc
+        LEFT JOIN question_choice_recommendations qcr
+            ON qcr.id = (
+                SELECT qcr2.id
+                FROM question_choice_recommendations qcr2
+                WHERE qcr2.choice_id = qc.id
+                ORDER BY qcr2.id ASC
+                LIMIT 1
+            )
+        WHERE qc.question_id = %s
         ORDER BY choice_letter ASC
     """, (question_id,))
     choices = cursor.fetchall()
@@ -595,9 +627,11 @@ def edit_choice(choice_id):
     choice_text = request.form['choice_text']
     choice_score = request.form['choice_score']
     question_id = request.form['question_id']
+    recommendation_text = (request.form.get('recommendation_text') or '').strip()
+    recommendation_severity = request.form.get('recommendation_severity') or recommendation_severity_from_score(choice_score)
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
     cursor.execute("""
         UPDATE question_choices
@@ -605,6 +639,21 @@ def edit_choice(choice_id):
             choice_score = %s
         WHERE id = %s
     """, (choice_text, choice_score, choice_id))
+
+    cursor.execute("""
+        DELETE FROM question_choice_recommendations
+        WHERE choice_id = %s
+    """, (choice_id,))
+
+    if recommendation_text:
+        cursor.execute("""
+            INSERT INTO question_choice_recommendations (
+                choice_id,
+                severity,
+                recommendation_text
+            )
+            VALUES (%s, %s, %s)
+        """, (choice_id, recommendation_severity, recommendation_text))
 
     conn.commit()
     cursor.close()
@@ -623,12 +672,22 @@ def question_choices_data(question_id):
 
     cursor.execute("""
         SELECT
-            id,
-            choice_letter,
-            choice_text,
-            choice_score
-        FROM question_choices
-        WHERE question_id = %s
+            qc.id,
+            qc.choice_letter,
+            qc.choice_text,
+            qc.choice_score,
+            qcr.severity AS recommendation_severity,
+            qcr.recommendation_text
+        FROM question_choices qc
+        LEFT JOIN question_choice_recommendations qcr
+            ON qcr.id = (
+                SELECT qcr2.id
+                FROM question_choice_recommendations qcr2
+                WHERE qcr2.choice_id = qc.id
+                ORDER BY qcr2.id ASC
+                LIMIT 1
+            )
+        WHERE qc.question_id = %s
         ORDER BY choice_letter ASC
     """, (question_id,))
 
@@ -663,6 +722,11 @@ def edit_question_choices(question_id):
             choice_id = choice.get('id')
             choice_text = (choice.get('choice_text') or '').strip()
             choice_score = choice.get('choice_score')
+            recommendation_text = (choice.get('recommendation_text') or '').strip()
+            recommendation_severity = (
+                choice.get('recommendation_severity')
+                or recommendation_severity_from_score(choice_score)
+            )
 
             if not choice_id or not choice_text:
                 return {"error": "Each choice must include text."}, 400
@@ -672,6 +736,9 @@ def edit_question_choices(question_id):
             except (TypeError, ValueError):
                 return {"error": "Each choice score must be a number."}, 400
 
+            if recommendation_severity not in ("none", "optional", "moderate", "critical"):
+                return {"error": "Recommendation severity is invalid."}, 400
+
             cursor.execute("""
                 UPDATE question_choices
                 SET choice_text = %s,
@@ -680,12 +747,41 @@ def edit_question_choices(question_id):
                   AND question_id = %s
             """, (choice_text, choice_score, choice_id, question_id))
 
+            cursor.execute("""
+                DELETE FROM question_choice_recommendations
+                WHERE choice_id = %s
+            """, (choice_id,))
+
+            if recommendation_text:
+                cursor.execute("""
+                    INSERT INTO question_choice_recommendations (
+                        choice_id,
+                        severity,
+                        recommendation_text
+                    )
+                    VALUES (%s, %s, %s)
+                """, (choice_id, recommendation_severity, recommendation_text))
+
         conn.commit()
 
         cursor.execute("""
-            SELECT id, choice_letter, choice_text, choice_score
-            FROM question_choices
-            WHERE question_id = %s
+            SELECT
+                qc.id,
+                qc.choice_letter,
+                qc.choice_text,
+                qc.choice_score,
+                qcr.severity AS recommendation_severity,
+                qcr.recommendation_text
+            FROM question_choices qc
+            LEFT JOIN question_choice_recommendations qcr
+                ON qcr.id = (
+                    SELECT qcr2.id
+                    FROM question_choice_recommendations qcr2
+                    WHERE qcr2.choice_id = qc.id
+                    ORDER BY qcr2.id ASC
+                    LIMIT 1
+                )
+            WHERE qc.question_id = %s
             ORDER BY choice_letter ASC
         """, (question_id,))
 
@@ -700,6 +796,127 @@ def edit_question_choices(question_id):
     finally:
         cursor.close()
         conn.close()
+
+
+@super_admin_bp.route('/super-admin/gap-recommendations', methods=['GET', 'POST'])
+def gap_recommendations():
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    selected_dimension = request.values.get('dimension_id', type=int)
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""
+            SELECT id, name
+            FROM assessment_dimensions
+            ORDER BY id ASC
+        """)
+        dimensions = cursor.fetchall()
+
+        if not selected_dimension and dimensions:
+            selected_dimension = dimensions[0]['id']
+
+        if request.method == 'POST':
+            cursor.execute("""
+                SELECT qc.id, qc.choice_score
+                FROM question_choices qc
+                JOIN question_bank qb
+                    ON qc.question_id = qb.id
+                WHERE qb.dimension_id = %s
+                  AND qc.choice_score <= 3
+            """, (selected_dimension,))
+            editable_choices = cursor.fetchall()
+
+            for choice in editable_choices:
+                choice_id = choice['id']
+                recommendation_text = (request.form.get(f"recommendation_{choice_id}") or "").strip()
+                severity = (
+                    request.form.get(f"severity_{choice_id}")
+                    or recommendation_severity_from_score(choice['choice_score'])
+                )
+
+                if severity not in ("none", "optional", "moderate", "critical"):
+                    raise ValueError("Recommendation severity is invalid.")
+
+                cursor.execute("""
+                    DELETE FROM question_choice_recommendations
+                    WHERE choice_id = %s
+                """, (choice_id,))
+
+                if recommendation_text:
+                    cursor.execute("""
+                        INSERT INTO question_choice_recommendations (
+                            choice_id,
+                            severity,
+                            recommendation_text
+                        )
+                        VALUES (%s, %s, %s)
+                    """, (choice_id, severity, recommendation_text))
+
+                cursor.execute("""
+                    UPDATE gap_flags
+                    SET recommendation_text = %s
+                    WHERE selected_choice_id = %s
+                """, (recommendation_text or None, choice_id))
+
+            conn.commit()
+            flash("Gap recommendations saved successfully.", "success")
+            return redirect(url_for(
+                'super_admin.gap_recommendations',
+                dimension_id=selected_dimension
+            ))
+
+        cursor.execute("""
+            SELECT
+                ad.name AS dimension_name,
+                qb.id AS question_id,
+                qb.question_text,
+                qc.id AS choice_id,
+                qc.choice_letter,
+                qc.choice_text,
+                qc.choice_score,
+                qcr.severity,
+                qcr.recommendation_text
+            FROM question_choices qc
+            JOIN question_bank qb
+                ON qc.question_id = qb.id
+            JOIN assessment_dimensions ad
+                ON qb.dimension_id = ad.id
+            LEFT JOIN question_choice_recommendations qcr
+                ON qcr.id = (
+                    SELECT qcr2.id
+                    FROM question_choice_recommendations qcr2
+                    WHERE qcr2.choice_id = qc.id
+                    ORDER BY qcr2.id ASC
+                    LIMIT 1
+                )
+            WHERE qb.dimension_id = %s
+              AND qc.choice_score <= 3
+            ORDER BY
+                COALESCE(qb.version_group_id, qb.id) ASC,
+                qb.id ASC,
+                qc.choice_score ASC,
+                qc.choice_letter ASC
+        """, (selected_dimension,))
+        rows = cursor.fetchall()
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to load gap recommendations: {e}", "danger")
+        dimensions = []
+        rows = []
+    finally:
+        cursor.close()
+        conn.close()
+
+    return render_template(
+        'super_gap_recommendations.html',
+        dimensions=dimensions,
+        selected_dimension=selected_dimension,
+        rows=rows
+    )
 
 
 @super_admin_bp.route('/super-admin/question/<int:question_id>/activate', methods=['POST'])
@@ -754,7 +971,7 @@ def deactivate_question(question_id):
         return redirect(url_for('login.login'))
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
     try:
         cursor.execute("""
@@ -843,6 +1060,25 @@ def edit_question(question_id):
             ORDER BY choice_letter ASC
         """, (new_question_id, question_id))
 
+        cursor.execute("""
+            INSERT INTO question_choice_recommendations (
+                choice_id,
+                severity,
+                recommendation_text
+            )
+            SELECT
+                new_choice.id,
+                qcr.severity,
+                qcr.recommendation_text
+            FROM question_choices old_choice
+            JOIN question_choices new_choice
+                ON new_choice.question_id = %s
+                AND new_choice.choice_letter = old_choice.choice_letter
+            JOIN question_choice_recommendations qcr
+                ON qcr.choice_id = old_choice.id
+            WHERE old_choice.question_id = %s
+        """, (new_question_id, question_id))
+
         conn.commit()
 
         return {
@@ -902,23 +1138,28 @@ def users():
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+    user_roles = load_user_roles(cursor, active_only=True)
 
     base_query = """
         SELECT
             u.*,
-            o.company_name AS organization_name
+            o.company_name AS organization_name,
+            COALESCE(ur.role_label, u.role) AS role_label,
+            COALESCE(ur.access_role, u.role) AS access_role
         FROM users u
         LEFT JOIN organizations o
             ON u.organization_id = o.id
+        LEFT JOIN user_roles ur
+            ON u.role = ur.role_key
     """
 
     filters = []
     params = []
 
     if selected_role == 'internal':
-        filters.append("u.role IN ('super_admin', 'vhan_admin')")
+        filters.append("COALESCE(ur.access_role, u.role) IN ('super_admin', 'vhan_admin')")
     elif selected_role == 'organization':
-        filters.append("u.role = 'org_admin'")
+        filters.append("COALESCE(ur.access_role, u.role) = 'org_admin'")
     elif selected_role:
         filters.append("u.role = %s")
         params.append(selected_role)
@@ -943,7 +1184,8 @@ def users():
         'super_users.html',
         users=users,
         selected_role=selected_role,
-        selected_status=selected_status
+        selected_status=selected_status,
+        user_roles=user_roles
     )
 
 
@@ -964,12 +1206,20 @@ def add_user():
         return redirect(url_for('super_admin.users'))
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
     try:
         min_password_length = get_int_setting(cursor, "password_min_length", 8)
         if len(password) < min_password_length:
             flash(f"Password must be at least {min_password_length} characters long.", "danger")
+            return redirect(url_for('super_admin.users'))
+
+        active_roles = {
+            row['role_key']
+            for row in load_user_roles(cursor, active_only=True)
+        }
+        if role not in active_roles:
+            flash("Please choose an active user role.", "danger")
             return redirect(url_for('super_admin.users'))
 
         password_hash = generate_password_hash(password)
@@ -1017,9 +1267,17 @@ def edit_user(user_id):
     contact_number = request.form.get('contact_number') or None
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
     try:
+        active_roles = {
+            row['role_key']
+            for row in load_user_roles(cursor, active_only=True)
+        }
+        if role not in active_roles:
+            flash("Please choose an active user role.", "danger")
+            return redirect(url_for('super_admin.users'))
+
         cursor.execute("""
             UPDATE users
             SET contact_person = %s,
@@ -1288,20 +1546,25 @@ def reports():
             dimension_scores = cursor.fetchall()
 
             cursor.execute("""
-                SELECT ad.name AS dimension, gf.severity, gf.description, gf.question_id
+                SELECT
+                    ad.name AS dimension,
+                    gf.severity,
+                    gf.description,
+                    gf.question_id,
+                    gf.score_value,
+                    gf.recommendation_text,
+                    qc.choice_letter,
+                    qc.choice_text
                 FROM gap_flags gf
                 JOIN assessment_dimensions ad ON gf.dimension_id = ad.id
+                LEFT JOIN question_choices qc ON gf.selected_choice_id = qc.id
                 WHERE gf.assessment_id = %s
                 ORDER BY FIELD(gf.severity, 'critical', 'moderate'), ad.id
             """, (latest_assessment['id'],))
             gap_flags = cursor.fetchall()
 
             for gap in gap_flags:
-                gap['recommendation'] = recommendation_for_question(
-                    cursor,
-                    gap['dimension'],
-                    gap['question_id']
-                )
+                gap['recommendation'] = gap.get('recommendation_text') or ""
 
             dimension_gap_analysis = build_dimension_gap_analysis(dimension_scores, gap_flags)
 
@@ -1348,7 +1611,111 @@ def system_settings():
         cursor.close()
         conn.close()
 
-    return render_template('super_settings.html', settings=settings)
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        user_roles = load_user_roles(cursor, active_only=False)
+    finally:
+        cursor.close()
+        conn.close()
+
+    return render_template('super_settings.html', settings=settings, user_roles=user_roles)
+
+
+@super_admin_bp.route('/super-admin/settings/roles/add', methods=['POST'])
+def add_user_role():
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    role_label = (request.form.get('role_label') or '').strip()
+    access_role = request.form.get('access_role') or 'org_admin'
+    role_key = make_role_key(role_label)
+
+    if not role_label or not role_key:
+        flash("Role name is required.", "danger")
+        return redirect(url_for('super_admin.system_settings'))
+
+    if access_role not in {"org_admin", "vhan_admin", "super_admin"}:
+        flash("Role access type is invalid.", "danger")
+        return redirect(url_for('super_admin.system_settings'))
+
+    if role_key in {"org_admin", "vhan_admin", "super_admin"}:
+        flash("Built-in role names already exist.", "warning")
+        return redirect(url_for('super_admin.system_settings'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        load_user_roles(cursor, active_only=False)
+        cursor.execute("""
+            INSERT INTO user_roles (
+                role_key,
+                role_label,
+                access_role,
+                is_builtin,
+                is_active
+            )
+            VALUES (%s, %s, %s, 0, 1)
+            ON DUPLICATE KEY UPDATE
+                role_label = VALUES(role_label),
+                access_role = VALUES(access_role),
+                is_active = 1
+        """, (role_key, role_label, access_role))
+        conn.commit()
+        flash("User role saved successfully.", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to save user role: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('super_admin.system_settings'))
+
+
+@super_admin_bp.route('/super-admin/settings/roles/<role_key>/deactivate', methods=['POST'])
+def deactivate_user_role(role_key):
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        load_user_roles(cursor, active_only=False)
+        cursor.execute("""
+            SELECT is_builtin
+            FROM user_roles
+            WHERE role_key = %s
+        """, (role_key,))
+        role = cursor.fetchone()
+
+        if not role:
+            flash("User role not found.", "danger")
+        elif role['is_builtin']:
+            flash("Built-in roles cannot be deactivated.", "warning")
+        else:
+            cursor.execute("SELECT COUNT(*) AS total FROM users WHERE role = %s", (role_key,))
+            assigned_count = cursor.fetchone()['total']
+            if assigned_count:
+                flash("This role is assigned to users. Reassign them before deactivating it.", "warning")
+            else:
+                cursor.execute("""
+                    UPDATE user_roles
+                    SET is_active = 0
+                    WHERE role_key = %s
+                """, (role_key,))
+                conn.commit()
+                flash("User role deactivated.", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to deactivate user role: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('super_admin.system_settings'))
 
 
 

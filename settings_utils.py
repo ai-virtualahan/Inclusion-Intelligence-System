@@ -1,6 +1,30 @@
 from db import get_db_connection
 
 
+BUILTIN_USER_ROLES = [
+    {
+        "role_key": "super_admin",
+        "role_label": "Super Admin",
+        "access_role": "super_admin",
+        "is_builtin": 1,
+        "is_active": 1,
+    },
+    {
+        "role_key": "vhan_admin",
+        "role_label": "VHAN Admin",
+        "access_role": "vhan_admin",
+        "is_builtin": 1,
+        "is_active": 1,
+    },
+    {
+        "role_key": "org_admin",
+        "role_label": "Org Admin",
+        "access_role": "org_admin",
+        "is_builtin": 1,
+        "is_active": 1,
+    },
+]
+
 DEFAULT_SYSTEM_SETTINGS = {
     "system_name": "Inclusion Intelligence System",
     "support_email": "iis@virtualahan.com",
@@ -55,6 +79,73 @@ def ensure_settings_table(cursor):
             PRIMARY KEY (setting_key)
         )
     """)
+
+
+def ensure_user_roles_table(cursor):
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_roles (
+            id INT NOT NULL AUTO_INCREMENT,
+            role_key VARCHAR(50) NOT NULL,
+            role_label VARCHAR(100) NOT NULL,
+            access_role VARCHAR(50) NOT NULL DEFAULT 'org_admin',
+            is_builtin TINYINT(1) NOT NULL DEFAULT 0,
+            is_active TINYINT(1) NOT NULL DEFAULT 1,
+            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uq_user_roles_key (role_key)
+        )
+    """)
+
+    for role in BUILTIN_USER_ROLES:
+        cursor.execute("""
+            INSERT INTO user_roles (
+                role_key,
+                role_label,
+                access_role,
+                is_builtin,
+                is_active
+            )
+            VALUES (%s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                role_label = VALUES(role_label),
+                access_role = VALUES(access_role),
+                is_builtin = VALUES(is_builtin),
+                is_active = 1
+        """, (
+            role["role_key"],
+            role["role_label"],
+            role["access_role"],
+            role["is_builtin"],
+            role["is_active"],
+        ))
+
+
+def load_user_roles(cursor, active_only=True):
+    ensure_user_roles_table(cursor)
+    where_clause = "WHERE is_active = 1" if active_only else ""
+    cursor.execute(f"""
+        SELECT role_key, role_label, access_role, is_builtin, is_active
+        FROM user_roles
+        {where_clause}
+        ORDER BY is_builtin DESC, role_label ASC
+    """)
+    return cursor.fetchall()
+
+
+def get_role_access(cursor, role_key):
+    ensure_user_roles_table(cursor)
+    cursor.execute("""
+        SELECT access_role
+        FROM user_roles
+        WHERE role_key = %s
+          AND is_active = 1
+        LIMIT 1
+    """, (role_key,))
+    row = cursor.fetchone()
+    if not row:
+        return role_key if role_key in {"super_admin", "vhan_admin", "org_admin"} else None
+    return row["access_role"] if isinstance(row, dict) else row[0]
 
 
 def number_from_settings(settings, key, minimum=None, maximum=None):

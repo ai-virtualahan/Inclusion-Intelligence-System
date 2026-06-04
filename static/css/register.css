@@ -1,3 +1,5 @@
+@import url("typography.css");
+
 * {
   margin: 0;
   padding: 0;
@@ -67,6 +69,24 @@ body {
   gap: 16px;
   z-index: 2;
   margin-bottom: 22px;
+}
+
+.home-link {
+  position: absolute;
+  top: 28px;
+  right: 42px;
+  z-index: 5;
+  background: #0b1f3a;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 10px;
+  box-shadow: 0 8px 18px rgba(11, 31, 58, 0.18);
+}
+
+.home-link:hover {
+  background: #159e9a;
 }
 
 .logo {

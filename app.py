@@ -310,9 +310,60 @@ def assessment_result(assessment_id):
     """, (assessment_id,))
     scores = cursor.fetchall()
 
+    cursor.execute("""
+        SELECT
+            ad.name AS dimension,
+            gf.severity,
+            gf.description AS question_text,
+            gf.score_value,
+            gf.recommendation_text,
+            qc.choice_letter,
+            qc.choice_text
+        FROM gap_flags gf
+        JOIN assessment_dimensions ad
+            ON gf.dimension_id = ad.id
+        LEFT JOIN question_choices qc
+            ON gf.selected_choice_id = qc.id
+        WHERE gf.assessment_id = %s
+        ORDER BY FIELD(gf.severity, 'critical', 'moderate'), ad.id, gf.id
+    """, (assessment_id,))
+    gaps = cursor.fetchall()
+
+    gap_groups_by_dimension = OrderedDict()
+    for gap in gaps:
+        dimension = gap['dimension']
+        if dimension not in gap_groups_by_dimension:
+            gap_groups_by_dimension[dimension] = {
+                "dimension": dimension,
+                "critical_count": 0,
+                "moderate_count": 0,
+                "recommendations": [],
+                "gaps": []
+            }
+
+        group = gap_groups_by_dimension[dimension]
+        if gap['severity'] == 'critical':
+            group["critical_count"] += 1
+        elif gap['severity'] == 'moderate':
+            group["moderate_count"] += 1
+
+        recommendation = gap.get('recommendation_text')
+        if recommendation and recommendation not in group["recommendations"]:
+            group["recommendations"].append(recommendation)
+
+        group["gaps"].append(gap)
+
+    gap_groups = list(gap_groups_by_dimension.values())
+
     cursor.close()
     conn.close()
-    return render_template('assessment_result.html', assessment=assessment, scores=scores)
+    return render_template(
+        'assessment_result.html',
+        assessment=assessment,
+        scores=scores,
+        gaps=gaps,
+        gap_groups=gap_groups
+    )
 
 
 if __name__ == '__main__':

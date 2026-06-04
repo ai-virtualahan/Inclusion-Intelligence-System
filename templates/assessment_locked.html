@@ -37,6 +37,7 @@
       font-weight: 600;
       font-size: 15px;
     }
+    .back-btn + .back-btn { margin-left: 8px; }
   </style>
 </head>
 <body style="background:#0E2240; min-height:100vh;">
@@ -50,6 +51,7 @@
     </p>
     <div class="lock-date">Next eligible: {{ next_eligible }}</div>
     <br>
+    <a href="{{ url_for('home') }}" class="back-btn">Home</a>
     <a href="{{ url_for('assessment') }}" class="back-btn">Back to Dashboard</a>
   </div>
 </body>

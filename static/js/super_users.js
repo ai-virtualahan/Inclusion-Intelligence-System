@@ -22,7 +22,14 @@ function openEditUserModal(
 
   document.getElementById("editUserName").value = name || "";
   document.getElementById("editUserEmail").value = email || "";
-  document.getElementById("editUserRole").value = role || "org_admin";
+  const roleSelect = document.getElementById("editUserRole");
+  if (role && !Array.from(roleSelect.options).some(option => option.value === role)) {
+    const option = document.createElement("option");
+    option.value = role;
+    option.textContent = role;
+    roleSelect.appendChild(option);
+  }
+  roleSelect.value = role || "org_admin";
   document.getElementById("editUserStatus").value = status || "approved";
   document.getElementById("editUserPosition").value = position || "";
   document.getElementById("editUserNumber").value = number || "";

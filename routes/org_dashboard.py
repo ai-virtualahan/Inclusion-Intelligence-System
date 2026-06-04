@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, session, redirect, url_for, jsonify
 from db import get_db_connection
-from assessment_scoring import maturity_level, recommendation_for_question
+from assessment_scoring import maturity_level
 from datetime import datetime, timedelta
 
 org_dashboard_bp = Blueprint('org_dashboard', __name__)
@@ -97,12 +97,17 @@ def dashboard_data():
         SELECT
             gf.severity,
             gf.description        AS question_text,
+            gf.score_value,
+            gf.recommendation_text,
             ad.name               AS dimension,
             gf.question_id,
-            qb.dimension_id
+            qb.dimension_id,
+            qc.choice_letter,
+            qc.choice_text
         FROM gap_flags gf
         JOIN assessment_dimensions ad ON gf.dimension_id = ad.id
         JOIN question_bank qb ON gf.question_id = qb.id
+        LEFT JOIN question_choices qc ON gf.selected_choice_id = qc.id
         WHERE gf.assessment_id = %s
         ORDER BY gf.severity DESC, ad.id
     """, (assessment_id,))
@@ -110,14 +115,14 @@ def dashboard_data():
 
     gaps = []
     for row in gap_rows:
-        dim_name = row['dimension']
-        rec = recommendation_for_question(cursor, dim_name, row['question_id'])
-
         gaps.append({
-            "dimension": dim_name,
+            "dimension": row['dimension'],
             "severity": row['severity'],
             "question": row['question_text'],
-            "recommendation": rec
+            "selected_answer": row['choice_text'],
+            "selected_choice": row['choice_letter'],
+            "score": float(row['score_value']) if row['score_value'] is not None else None,
+            "recommendation": row['recommendation_text'] or ""
         })
 
     # ── Score history (timeline) ─────────────────────────────────────────

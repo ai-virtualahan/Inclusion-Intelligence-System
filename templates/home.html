@@ -8,14 +8,30 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
+  <header class="site-header">
+    <a class="brand-mark" href="#home">
+      <span class="brand-icon">
+        <img src="{{ url_for('static', filename='images/vhan-logo.png') }}" alt="Inclusion Intelligence logo">
+      </span>
+      <span>Inclusion Intelligence</span>
+    </a>
+
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a class="active" href="#about">About</a>
+      <a href="#contact">Contact Us</a>
+      <a href="#help">Help</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="login-btn" type="button" onclick="handleAuth()">
+        <span>Login</span>
+      </button>
+    </div>
+  </header>
+
   <main>
     <section class="hero-shell" id="home">
       <div class="hero-copy">
-        <div class="eyebrow">
-          <span class="brand-icon small"><i class="fa-solid fa-check"></i></span>
-          <span id="welcomeText">Inclusion Intelligence System</span>
-        </div>
-
         <h1>
           Track your progress
           <span>Unlock your potential</span>
@@ -32,7 +48,7 @@
       </div>
 
       <div class="hero-visual">
-        <img src="{{ url_for('static', filename='images/hero-right.png') }}" alt="Digital assessment dashboard preview">
+        <img src="{{ url_for('static', filename='images/right-hero.jpg') }}" alt="Digital assessment dashboard preview">
       </div>
     </section>
 
@@ -244,9 +260,9 @@
     </section>
   </main>
 
-  <footer class="site-footer">
+  <footer class="site-footer" id="contact">
     <p>&copy; 2026 Inclusion Intelligence. All rights reserved.</p>
-    <div>
+    <div id="help">
       <a href="#">Privacy Policy</a>
       <a href="#">Terms of Use</a>
     </div>

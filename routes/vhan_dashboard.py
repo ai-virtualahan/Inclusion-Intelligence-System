@@ -4,7 +4,6 @@ from flask import Blueprint, render_template, session, redirect, url_for, reques
 from db import get_db_connection
 from flask_mail import Message
 from extensions import mail
-from assessment_scoring import recommendation_for_question
 from routes.access_request_utils import approve_access_request, find_existing_registration
 from settings_utils import can_role_approve_access_requests, get_bool_setting, load_system_settings
 
@@ -470,20 +469,25 @@ def reports():
             dimension_scores = cursor.fetchall()
 
             cursor.execute("""
-                SELECT ad.name AS dimension, gf.severity, gf.description, gf.question_id
+                SELECT
+                    ad.name AS dimension,
+                    gf.severity,
+                    gf.description,
+                    gf.question_id,
+                    gf.score_value,
+                    gf.recommendation_text,
+                    qc.choice_letter,
+                    qc.choice_text
                 FROM gap_flags gf
                 JOIN assessment_dimensions ad ON gf.dimension_id = ad.id
+                LEFT JOIN question_choices qc ON gf.selected_choice_id = qc.id
                 WHERE gf.assessment_id = %s
                 ORDER BY FIELD(gf.severity, 'critical', 'moderate'), ad.id
             """, (latest_assessment['id'],))
             gap_flags = cursor.fetchall()
 
             for gap in gap_flags:
-                gap['recommendation'] = recommendation_for_question(
-                    cursor,
-                    gap['dimension'],
-                    gap['question_id']
-                )
+                gap['recommendation'] = gap.get('recommendation_text') or ""
 
             dimension_gap_analysis = build_dimension_gap_analysis(dimension_scores, gap_flags)
 

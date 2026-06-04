@@ -1,3 +1,5 @@
+@import url("typography.css");
+
 .settings-form {
   display: flex;
   flex-direction: column;
@@ -50,6 +52,25 @@
 
 .scoring-card {
   grid-column: 1 / -1;
+}
+
+.recommendation-library-card {
+  align-items: center;
+  display: flex;
+  gap: 24px;
+  grid-column: 1 / -1;
+  justify-content: space-between;
+}
+
+.recommendation-library-card .settings-card-header {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.recommendation-library-card .settings-link-btn {
+  flex: 0 0 auto;
+  justify-content: center;
+  min-width: 320px;
 }
 
 .settings-card-header {
@@ -204,9 +225,156 @@
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
   display: flex;
   justify-content: flex-end;
+  margin-top: 22px;
   padding: 18px;
   position: sticky;
   bottom: 0;
+  z-index: 10;
+}
+
+.settings-secondary-grid {
+  margin-top: 22px;
+}
+
+.role-list {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.role-row {
+  align-items: center;
+  background: #f8fbff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px;
+}
+
+.role-row.inactive {
+  opacity: 0.72;
+}
+
+.role-row strong,
+.role-row span {
+  display: block;
+}
+
+.role-row strong {
+  color: #0b2345;
+  font-size: 14px;
+}
+
+.role-row span {
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+.role-badge,
+.small-danger-btn,
+.settings-link-btn {
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 8px 11px;
+}
+
+.role-badge {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.role-badge.muted {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.small-danger-btn {
+  background: #fee2e2;
+  border: 0;
+  color: #991b1b;
+  cursor: pointer;
+}
+
+.role-add-form {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 16px;
+}
+
+.settings-link-btn {
+  align-items: center;
+  background: #0b9b8a;
+  color: #ffffff;
+  display: inline-flex;
+  min-height: 42px;
+  text-decoration: none;
+}
+
+.recommendation-editor-list {
+  display: grid;
+  gap: 14px;
+}
+
+.recommendation-editor-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 5px solid #14b8a6;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+  padding: 16px;
+}
+
+.recommendation-editor-head {
+  align-items: flex-start;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  margin-bottom: 12px;
+}
+
+.recommendation-editor-head strong,
+.recommendation-editor-head span {
+  display: block;
+}
+
+.recommendation-editor-head strong {
+  color: #0b2345;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.recommendation-editor-head span {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.45;
+  margin-top: 5px;
+}
+
+.recommendation-editor-head select,
+.recommendation-editor-card textarea {
+  background: #f8fbff;
+  border: 1px solid #d6dce5;
+  border-radius: 8px;
+  color: #0f172a;
+  font: inherit;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.recommendation-editor-card textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.recommendation-editor-head select:focus,
+.recommendation-editor-card textarea:focus {
+  background: #ffffff;
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
+  outline: none;
 }
 
 @media (max-width: 1120px) {
@@ -226,5 +394,15 @@
 
   .settings-card-header {
     flex-direction: column;
+  }
+
+  .recommendation-library-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .recommendation-library-card .settings-link-btn {
+    min-width: 0;
+    width: 100%;
   }
 }

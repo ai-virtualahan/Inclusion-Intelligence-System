@@ -13,6 +13,7 @@
   <div class="brand">Inclusion Intelligence</div>
 
   <div class="top-links">
+    <a href="{{ url_for('home') }}">Home</a>
     <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
     <a href="{{ url_for('super_admin.users') }}">Users</a>
     <a href="{{ url_for('super_admin.reports') }}">Reports</a>
@@ -35,6 +36,10 @@
 
     <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">
       Questionnaires
+    </a>
+
+    <a href="{{ url_for('super_admin.gap_recommendations') }}" class="side-link">
+      Gap Recommendations
     </a>
 
     <a href="{{ url_for('super_admin.users') }}" class="side-link active">
@@ -80,8 +85,9 @@
                 <option value="">All Roles</option>
                 <option value="internal" {% if selected_role == 'internal' %}selected{% endif %}>Internal Admins</option>
                 <option value="organization" {% if selected_role == 'organization' %}selected{% endif %}>Organization Users</option>
-                <option value="super_admin" {% if selected_role == 'super_admin' %}selected{% endif %}>Super Admin</option>
-                <option value="vhan_admin" {% if selected_role == 'vhan_admin' %}selected{% endif %}>VHAN Admin</option>
+                {% for role in user_roles %}
+                  <option value="{{ role.role_key }}" {% if selected_role == role.role_key %}selected{% endif %}>{{ role.role_label }}</option>
+                {% endfor %}
                 </select>
 
                 <label for="status"><strong>Status:</strong></label>
@@ -120,7 +126,7 @@
                 <td>{{ user.id }}</td>
                 <td>{{ user.contact_person }}</td>
                 <td>{{ user.work_email }}</td>
-                <td>{{ user.role }}</td>
+                <td>{{ user.role_label or user.role }}</td>
                 <td>{{ user.organization_name or 'No organization' }}</td>
                 <td>{{ user.position_title }}</td>
                 <td>{{ user.contact_number }}</td>
@@ -204,8 +210,9 @@
       <div class="form-group">
         <label>Role</label>
         <select name="role" required>
-          <option value="super_admin">Super Admin</option>
-          <option value="vhan_admin">VHAN Admin</option>
+          {% for role in user_roles %}
+            <option value="{{ role.role_key }}">{{ role.role_label }}</option>
+          {% endfor %}
         </select>
       </div>
 
@@ -259,11 +266,9 @@
       <div class="form-group">      
         <label>Role</label>
         <select name="role" id="editUserRole">
-
-          <option value="super_admin">Super Admin</option>
-          <option value="vhan_admin">VHAN Admin</option>
-          <option value="org_admin">Org Admin</option>
-
+          {% for role in user_roles %}
+            <option value="{{ role.role_key }}">{{ role.role_label }}</option>
+          {% endfor %}
         </select>
       </div>
 

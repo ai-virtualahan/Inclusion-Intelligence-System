@@ -11,6 +11,7 @@
   <div class="brand">Inclusion Intelligence</div>
 
   <div class="top-links">
+    <a href="{{ url_for('home') }}">Home</a>
     <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
     <a href="{{ url_for('super_admin.users') }}">Users</a>
     <a href="{{ url_for('super_admin.reports') }}">Reports</a>
@@ -25,6 +26,7 @@
     <a href="{{ url_for('super_admin.super_dashboard') }}" class="side-link">Dashboard Overview</a>
     <a href="{{ url_for('super_admin.organizations') }}" class="side-link">Organizations</a>
     <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">Questionnaires</a>
+    <a href="{{ url_for('super_admin.gap_recommendations') }}" class="side-link">Gap Recommendations</a>
     <a href="{{ url_for('super_admin.users') }}" class="side-link">Users</a>
     <a href="{{ url_for('super_admin.reports') }}" class="side-link">Reports</a>
     <a href="{{ url_for('super_admin.email_logs') }}" class="side-link">Email Logs</a>
@@ -49,7 +51,7 @@
       {% endif %}
     {% endwith %}
 
-    <form method="POST" action="{{ url_for('super_admin.system_settings') }}" class="settings-form">
+    <form id="settingsForm" method="POST" action="{{ url_for('super_admin.system_settings') }}" class="settings-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <section class="settings-summary">
         <div>
@@ -195,9 +197,23 @@
           </div>
         </div>
 
-        <div class="settings-card">
+        <div class="settings-card recommendation-library-card">
           <div class="settings-card-header">
             <span class="settings-icon">04</span>
+            <div>
+              <h2>Gap & Recommendation Library</h2>
+              <p>Edit the recommendation tied to each low-scoring answer choice.</p>
+            </div>
+          </div>
+
+          <a class="settings-link-btn" href="{{ url_for('super_admin.gap_recommendations') }}">
+            Manage Gap Recommendations
+          </a>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <span class="settings-icon">05</span>
             <div>
               <h2>Approval Workflow</h2>
               <p>Decide who approves registrations and how review actions behave.</p>
@@ -231,7 +247,7 @@
 
         <div class="settings-card">
           <div class="settings-card-header">
-            <span class="settings-icon">05</span>
+            <span class="settings-icon">06</span>
             <div>
               <h2>Report Settings</h2>
               <p>Make generated reports client-ready and easy to tailor.</p>
@@ -260,7 +276,7 @@
 
         <div class="settings-card">
           <div class="settings-card-header">
-            <span class="settings-icon">06</span>
+            <span class="settings-icon">07</span>
             <div>
               <h2>User & Security</h2>
               <p>Basic account controls for safer administration.</p>
@@ -281,7 +297,7 @@
 
         <div class="settings-card">
           <div class="settings-card-header">
-            <span class="settings-icon">07</span>
+            <span class="settings-icon">08</span>
             <div>
               <h2>Organization Status Rules</h2>
               <p>Define what suspension means across users, assessments, and reports.</p>
@@ -303,12 +319,63 @@
             </label>
           </div>
         </div>
-      </section>
 
-      <div class="settings-actions">
-        <button type="submit" class="action-btn edit-btn">Save Settings</button>
-      </div>
+      </section>
     </form>
+
+    <section class="settings-grid settings-secondary-grid">
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <span class="settings-icon">09</span>
+          <div>
+            <h2>User Roles</h2>
+            <p>Add assignable roles and map each one to a built-in access level.</p>
+          </div>
+        </div>
+
+        <div class="role-list">
+          {% for role in user_roles %}
+            <div class="role-row {{ 'inactive' if not role.is_active else '' }}">
+              <div>
+                <strong>{{ role.role_label }}</strong>
+                <span>{{ role.role_key }} | Access: {{ role.access_role|replace('_', ' ')|title }}</span>
+              </div>
+              {% if role.is_builtin %}
+                <span class="role-badge">Built-in</span>
+              {% elif role.is_active %}
+                <form method="POST" action="{{ url_for('super_admin.deactivate_user_role', role_key=role.role_key) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="small-danger-btn" onclick="return confirm('Deactivate this role?')">Deactivate</button>
+                </form>
+              {% else %}
+                <span class="role-badge muted">Inactive</span>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+
+        <form method="POST" action="{{ url_for('super_admin.add_user_role') }}" class="settings-fields role-add-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label>
+            <span>New Role Name</span>
+            <input type="text" name="role_label" placeholder="Example: Report Reviewer" required>
+          </label>
+          <label>
+            <span>Access Level</span>
+            <select name="access_role">
+              <option value="vhan_admin">VHAN Admin access</option>
+              <option value="super_admin">Super Admin access</option>
+              <option value="org_admin">Organization access</option>
+            </select>
+          </label>
+          <button type="submit" class="action-btn edit-btn">Add Role</button>
+        </form>
+      </div>
+    </section>
+
+    <div class="settings-actions">
+      <button type="submit" form="settingsForm" class="action-btn edit-btn">Save Settings</button>
+    </div>
   </main>
 </div>
 </body>

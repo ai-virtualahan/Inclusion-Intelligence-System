@@ -11,6 +11,7 @@
   <div class="brand">Inclusion Intelligence</div>
 
   <div class="top-links">
+    <a href="{{ url_for('home') }}">Home</a>
     <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
     <a href="{{ url_for('super_admin.users') }}">Users</a>
     <a href="{{ url_for('super_admin.reports') }}">Reports</a>
@@ -25,6 +26,7 @@
     <a href="{{ url_for('super_admin.super_dashboard') }}" class="side-link">Dashboard Overview</a>
     <a href="{{ url_for('super_admin.organizations') }}" class="side-link">Organizations</a>
     <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">Questionnaires</a>
+    <a href="{{ url_for('super_admin.gap_recommendations') }}" class="side-link">Gap Recommendations</a>
     <a href="{{ url_for('super_admin.users') }}" class="side-link">Users</a>
     <a href="{{ url_for('super_admin.reports') }}" class="side-link active">Reports</a>
     <a href="{{ url_for('super_admin.email_logs') }}" class="side-link">Email Logs</a>
@@ -198,6 +200,7 @@
               <div class="empty-report-state">Gap analysis will appear once scoring data is available.</div>
             {% endif %}
           </section>
+
           {% endif %}
 
           {% if settings.report_show_recommendations == 'on' %}

@@ -17,16 +17,16 @@ function goToAssessment() {
 }
 
 function updateUI() {
-  const loginButton = document.querySelector(".login-btn");
+  const loginButtonLabel = document.querySelector(".login-btn span");
   const startButton = document.getElementById("startBtn");
   const assessmentButton = document.getElementById("assessmentBtn");
 
   if (isLoggedIn()) {
-    if (loginButton) loginButton.textContent = "Logout";
+    if (loginButtonLabel) loginButtonLabel.textContent = "Logout";
     if (startButton) startButton.textContent = "Start Assessment";
     if (assessmentButton) assessmentButton.textContent = "Start Assessment";
   } else {
-    if (loginButton) loginButton.textContent = "Login";
+    if (loginButtonLabel) loginButtonLabel.textContent = "Login";
     if (startButton) startButton.textContent = "Login to Start Assessment";
     if (assessmentButton) assessmentButton.textContent = "Login to Start Assessment";
   }

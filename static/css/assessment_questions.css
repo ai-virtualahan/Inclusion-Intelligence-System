@@ -1,3 +1,5 @@
+@import url("typography.css");
+
 /* =========================
    QUESTION CHOICES MODAL POPUP
 ========================= */
@@ -48,7 +50,9 @@
 }
 
 .choice-edit-text,
-.choice-edit-score {
+.choice-edit-score,
+.choice-edit-rec,
+.choice-edit-rec-severity {
   width: 100%;
   border: 1px solid #d6dce5;
   border-radius: 8px;
@@ -58,7 +62,8 @@
   padding: 10px 12px;
 }
 
-.choice-edit-text {
+.choice-edit-text,
+.choice-edit-rec {
   min-height: 78px;
   resize: vertical;
 }
@@ -67,8 +72,14 @@
   max-width: 100px;
 }
 
+.choice-edit-rec-severity {
+  min-width: 120px;
+}
+
 .choice-edit-text:focus,
-.choice-edit-score:focus {
+.choice-edit-score:focus,
+.choice-edit-rec:focus,
+.choice-edit-rec-severity:focus {
   outline: none;
   border-color: #14b8a6;
   box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
@@ -82,16 +93,31 @@
   background: #eef4ff;
 }
 
-#choicesModal td:last-child,
-#choicesModal th:last-child {
+#choicesModal td:nth-child(3),
+#choicesModal th:nth-child(3) {
   text-align: center;
   width: 90px;
+}
+
+#choicesModal td:nth-child(4),
+#choicesModal th:nth-child(4) {
+  width: 140px;
+}
+
+#choicesModal td:nth-child(5),
+#choicesModal th:nth-child(5) {
+  width: 32%;
 }
 
 #choicesModal td:first-child,
 #choicesModal th:first-child {
   width: 70px;
   font-weight: 600;
+}
+
+.empty-rec {
+  color: #94a3b8;
+  font-style: italic;
 }
 
 .question-header {

@@ -18,6 +18,7 @@
   <div class="brand">Inclusion Intelligence</div>
 
   <div class="top-links">
+    <a href="{{ url_for('home') }}">Home</a>
     <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
     <a href="{{ url_for('super_admin.users') }}">Users</a>
     <a href="{{ url_for('super_admin.reports') }}">Reports</a>
@@ -40,6 +41,10 @@
 
     <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link active">
       Questionnaires
+    </a>
+
+    <a href="{{ url_for('super_admin.gap_recommendations') }}" class="side-link">
+      Gap Recommendations
     </a>
 
     <a href="{{ url_for('super_admin.users') }}" class="side-link">
@@ -226,16 +231,20 @@
       </button>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Letter</th>
-          <th>Choice</th>
-          <th>Score</th>
-        </tr>
-      </thead>
-      <tbody id="choicesTableBody"></tbody>
-    </table>
+    <div class="choices-table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Letter</th>
+            <th>Choice</th>
+            <th>Score</th>
+            <th>Rec. Severity</th>
+            <th>Recommendation</th>
+          </tr>
+        </thead>
+        <tbody id="choicesTableBody"></tbody>
+      </table>
+    </div>
 
   </div>
 </div>

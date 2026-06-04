@@ -134,10 +134,19 @@
 
         /* Gap cards */
         .gap-list { display:flex; flex-direction:column; gap:10px; margin-bottom:24px; }
+        .gap-group-list { display:flex; flex-direction:column; gap:12px; margin-bottom:24px; }
         .gap-card {
             border-radius:12px; padding:14px 16px;
             border-left:5px solid #e53e3e; background:#fff5f5;
         }
+        .gap-group-card {
+            border-radius:12px; padding:14px 16px;
+            border-left:5px solid #d97706; background:#fffbeb;
+        }
+        .gap-group-card.critical { border-color:#e53e3e; background:#fff5f5; }
+        .gap-group-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:8px; }
+        .gap-group-head strong { color:#0E2240; font-size:14px; }
+        .gap-counts { display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; }
         .gap-card.moderate { border-color:#d97706; background:#fffbeb; }
         .gap-header { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
         .gap-badge {
@@ -148,7 +157,13 @@
         .gap-badge.moderate { background:#fef3c7; color:#92400e; }
         .gap-dim { font-size:11px; color:#888; }
         .gap-question { font-size:13px; color:#0E2240; margin-bottom:6px; line-height:1.5; }
+        .gap-answer { font-size:12px; color:#475569; margin-bottom:6px; line-height:1.5; }
         .gap-rec { font-size:12px; color:#444; background:rgba(11,155,138,.08); padding:8px 10px; border-radius:8px; line-height:1.5; }
+        .gap-rec-list { margin:8px 0 0; padding-left:18px; }
+        .gap-rec-list li { color:#475569; font-size:12px; line-height:1.5; margin:6px 0; }
+        .gap-details { margin-top:10px; }
+        .gap-details summary { color:#0B9B8A; cursor:pointer; font-size:12px; font-weight:700; }
+        .gap-question-row { border-top:1px solid rgba(15,23,42,.08); margin-top:8px; padding-top:8px; }
 
         /* Assessment Timeline */
         .timeline-container { margin:20px 0 24px; }
@@ -205,6 +220,7 @@
     <div class="sidebar">
         <h3>Inclusion Intelligence System</h3>
         <div class="sidebar-top">
+            <button id="homeBtn" onclick="window.location.href='{{ url_for('home') }}'">Home</button>
             <button id="dashboardBtn" onclick="showPage('dashboard')">Inclusion Maturity Dashboard</button>
             <button id="diagnosticBtn" onclick="openDiagnostic()">Inclusion Diagnostic Engine</button>
             <div id="diagnosticSubNav">

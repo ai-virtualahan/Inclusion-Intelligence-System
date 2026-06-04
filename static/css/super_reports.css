@@ -1,3 +1,5 @@
+@import url("typography.css");
+
 .report-workspace {
   display: grid;
   grid-template-columns: 320px minmax(0, 1fr);

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gap Recommendations | Super Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/super_dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/super_settings.css') }}">
+</head>
+<body>
+<div class="top-navbar">
+  <div class="brand">Inclusion Intelligence</div>
+
+  <div class="top-links">
+    <a href="{{ url_for('home') }}">Home</a>
+    <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('super_admin.users') }}">Users</a>
+    <a href="{{ url_for('super_admin.reports') }}">Reports</a>
+    <a href="{{ url_for('login.logout') }}">Logout</a>
+  </div>
+</div>
+
+<div class="admin-layout">
+  <aside class="sidebar">
+    <h3>Super Admin</h3>
+    <a href="{{ url_for('super_admin.super_dashboard') }}" class="side-link">Dashboard Overview</a>
+    <a href="{{ url_for('super_admin.organizations') }}" class="side-link">Organizations</a>
+    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">Questionnaires</a>
+    <a href="{{ url_for('super_admin.gap_recommendations') }}" class="side-link active">Gap Recommendations</a>
+    <a href="{{ url_for('super_admin.users') }}" class="side-link">Users</a>
+    <a href="{{ url_for('super_admin.reports') }}" class="side-link">Reports</a>
+    <a href="{{ url_for('super_admin.email_logs') }}" class="side-link">Email Logs</a>
+    <a href="{{ url_for('super_admin.system_settings') }}" class="side-link">System Settings</a>
+  </aside>
+
+  <main class="main-content">
+    <section class="page-header">
+      <h1>Gap Recommendations</h1>
+      <p>Edit the severity and recommendation shown for each low-scoring answer choice.</p>
+    </section>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <section class="settings-card">
+      <form method="GET" action="{{ url_for('super_admin.gap_recommendations') }}" class="settings-fields two-columns">
+        <label>
+          <span>Dimension</span>
+          <select name="dimension_id" onchange="this.form.submit()">
+            {% for dimension in dimensions %}
+              <option value="{{ dimension.id }}" {% if selected_dimension == dimension.id %}selected{% endif %}>
+                {{ dimension.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </label>
+      </form>
+    </section>
+
+    <form method="POST" action="{{ url_for('super_admin.gap_recommendations') }}" class="settings-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="dimension_id" value="{{ selected_dimension }}">
+
+      <section class="recommendation-editor-list">
+        {% for row in rows %}
+          <article class="recommendation-editor-card">
+            <div class="recommendation-editor-head">
+              <div>
+                <strong>{{ row.question_text }}</strong>
+                <span>
+                  Choice {{ row.choice_letter }} | Score {{ row.choice_score }} |
+                  {{ row.choice_text }}
+                </span>
+              </div>
+
+              <select name="severity_{{ row.choice_id }}">
+                <option value="optional" {% if row.severity == 'optional' %}selected{% endif %}>Optional</option>
+                <option value="moderate" {% if row.severity == 'moderate' %}selected{% endif %}>Moderate</option>
+                <option value="critical" {% if row.severity == 'critical' %}selected{% endif %}>Critical</option>
+                <option value="none" {% if row.severity == 'none' %}selected{% endif %}>None</option>
+              </select>
+            </div>
+
+            <textarea name="recommendation_{{ row.choice_id }}" rows="3">{{ row.recommendation_text or '' }}</textarea>
+          </article>
+        {% else %}
+          <div class="empty-report-state">No low-scoring answer choices found for this dimension.</div>
+        {% endfor %}
+      </section>
+
+      <div class="settings-actions">
+        <button type="submit" class="action-btn edit-btn">Save Recommendations</button>
+      </div>
+    </form>
+  </main>
+</div>
+</body>
+</html>

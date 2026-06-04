@@ -105,6 +105,113 @@
     .result-actions a.secondary {
       background: #0b2a66;
     }
+
+    .gap-section {
+      border-top: 1px solid #e5edf7;
+      margin-top: 26px;
+      padding-top: 24px;
+    }
+
+    .gap-section h2 {
+      color: #072653;
+      font-size: 22px;
+      margin: 0 0 14px;
+    }
+
+    .gap-group-list {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .gap-group-card {
+      background: #f8fbff;
+      border-left: 5px solid #f59e0b;
+      border-radius: 8px;
+      padding: 16px 18px;
+    }
+
+    .gap-group-card.critical {
+      border-left-color: #dc2626;
+    }
+
+    .gap-group-card.moderate {
+      border-left-color: #f59e0b;
+    }
+
+    .gap-group-head {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .gap-group-head strong {
+      color: #0b2a66;
+      font-size: 18px;
+    }
+
+    .gap-counts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .gap-pill {
+      background: #fff7ed;
+      border-radius: 999px;
+      color: #9a3412;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 5px 10px;
+      text-transform: uppercase;
+    }
+
+    .gap-pill.critical {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .gap-pill.moderate {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .recommendation-list {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .recommendation-list li {
+      color: #475569;
+      line-height: 1.55;
+      margin: 8px 0;
+    }
+
+    .gap-details {
+      margin-top: 12px;
+    }
+
+    .gap-details summary {
+      color: #0b9b8a;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .gap-question {
+      color: #0e2240;
+      font-weight: 700;
+      margin: 12px 0 6px;
+    }
+
+    .gap-answer {
+      color: #475569;
+      line-height: 1.55;
+      margin: 0;
+    }
   </style>
 </head>
 <body>
@@ -133,7 +240,52 @@
       {% endfor %}
     </section>
 
+    {% if gap_groups %}
+      <section class="gap-section">
+        <h2>Priority Recommendations by Dimension</h2>
+        <div class="gap-group-list">
+          {% for group in gap_groups %}
+            <article class="gap-group-card {{ 'critical' if group.critical_count else 'moderate' }}">
+              <div class="gap-group-head">
+                <strong>{{ group.dimension }}</strong>
+                <div class="gap-counts">
+                  {% if group.critical_count %}
+                    <span class="gap-pill critical">{{ group.critical_count }} critical</span>
+                  {% endif %}
+                  {% if group.moderate_count %}
+                    <span class="gap-pill moderate">{{ group.moderate_count }} moderate</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              {% if group.recommendations %}
+                <ul class="recommendation-list">
+                  {% for recommendation in group.recommendations[:3] %}
+                    <li>{{ recommendation }}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+
+              <details class="gap-details">
+                <summary>View answered gaps</summary>
+                {% for gap in group.gaps %}
+                  <p class="gap-question">{{ gap.question_text }}</p>
+                  <p class="gap-answer">
+                    Selected answer:
+                    {% if gap.choice_letter %}{{ gap.choice_letter }}. {% endif %}
+                    {{ gap.choice_text or 'Answer details unavailable' }}
+                    {% if gap.score_value is not none %}(Score: {{ gap.score_value }}){% endif %}
+                  </p>
+                {% endfor %}
+              </details>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
     <div class="result-actions">
+      <a href="{{ url_for('home') }}">Home</a>
       <a href="{{ url_for('assessment') }}">Back to Dashboard</a>
       <a class="secondary" href="{{ url_for('login.logout') }}">Logout</a>
     </div>

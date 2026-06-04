@@ -6,7 +6,7 @@ import secrets
 from flask_mail import Message
 from extensions import mail
 from config import MAIL_USERNAME
-from settings_utils import get_int_setting
+from settings_utils import get_int_setting, get_role_access
 
 
 login_bp = Blueprint('login', __name__)
@@ -41,6 +41,8 @@ def login():
             """, (email,))
             access_request = cursor.fetchone()
 
+        access_role = get_role_access(cursor, user['role']) if user else None
+
         cursor.close()
         conn.close()
 
@@ -73,18 +75,23 @@ def login():
             return redirect(url_for('login.login'))
 
         # ✅ SESSION
+        if not access_role:
+            flash("Your role is inactive. Please contact the administrator.", "warning")
+            return redirect(url_for('login.login'))
+
         session['user_id'] = user['id']
         session['contact_person'] = user['contact_person']
-        session['role'] = user['role']
+        session['role'] = access_role
+        session['display_role'] = user['role']
 
         # 🔀 ROLE-BASED REDIRECT
-        if user['role'] == 'org_admin':
+        if access_role == 'org_admin':
             return redirect(url_for('assessment'))
 
-        elif user['role'] == 'vhan_admin':
+        elif access_role == 'vhan_admin':
             return redirect(url_for('vhan.vhan_dashboard'))
 
-        elif user['role'] == 'super_admin':
+        elif access_role == 'super_admin':
             return redirect(url_for('super_admin.super_dashboard'))
 
     return render_template('login.html')
