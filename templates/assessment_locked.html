@@ -43,13 +43,13 @@
 <body style="background:#0E2240; min-height:100vh;">
   <div class="lock-card">
     <div class="lock-icon">🔒</div>
-    <h2>Reassessment Not Yet Available</h2>
+    <h2>{{ lock_title or 'Reassessment Not Yet Available' }}</h2>
     <p>
-      Your organization has already completed an assessment.
-      Reassessments are available every <strong>6 months</strong> to allow time for
-      meaningful progress and change.
+      {{ lock_message or 'Your organization has already completed an assessment. Reassessments are available every 6 months to allow time for meaningful progress and change.' }}
     </p>
-    <div class="lock-date">Next eligible: {{ next_eligible }}</div>
+    {% if next_eligible %}
+      <div class="lock-date">Next eligible: {{ next_eligible }}</div>
+    {% endif %}
     <br>
     <a href="{{ url_for('home') }}" class="back-btn">Home</a>
     <a href="{{ url_for('assessment') }}" class="back-btn">Back to Dashboard</a>

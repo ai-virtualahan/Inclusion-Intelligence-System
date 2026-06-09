@@ -52,6 +52,13 @@
       text-align: center;
     }
 
+    .result-header-actions {
+      align-items: flex-end;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     .score-card strong {
       display: block;
       font-size: 36px;
@@ -89,21 +96,42 @@
 
     .result-actions {
       display: flex;
+      flex-wrap: wrap;
       gap: 12px;
       justify-content: flex-end;
     }
 
-    .result-actions a {
+    .result-actions a,
+    .result-actions button {
       background: #0b9b8a;
+      border: 0;
       border-radius: 8px;
       color: #ffffff;
+      cursor: pointer;
+      font: inherit;
       font-weight: 700;
       padding: 12px 16px;
       text-decoration: none;
     }
 
-    .result-actions a.secondary {
+    .result-actions a.secondary,
+    .result-actions button.secondary {
       background: #0b2a66;
+    }
+
+    .result-actions button.print-result-btn {
+      background: #14b8a6;
+    }
+
+    .header-print-btn {
+      background: #14b8a6;
+      border: 0;
+      border-radius: 8px;
+      color: #ffffff;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 800;
+      padding: 11px 16px;
     }
 
     .gap-section {
@@ -212,6 +240,94 @@
       line-height: 1.55;
       margin: 0;
     }
+
+    @media print {
+      @page {
+        margin: 12mm;
+      }
+
+      body {
+        background: #ffffff;
+        color: #0f172a;
+        font-size: 10pt;
+        padding: 0;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .result-shell {
+        box-shadow: none;
+        border-radius: 0;
+        max-width: none;
+        padding: 0;
+      }
+
+      .result-header {
+        break-inside: avoid;
+        padding-bottom: 8mm;
+      }
+
+      .result-header h1 {
+        font-size: 22pt;
+      }
+
+      .result-header-actions {
+        align-items: flex-start;
+      }
+
+      .score-card {
+        background: none !important;
+        border-left: 5px solid #14b8a6;
+        color: #0f172a;
+        min-width: 120px;
+        padding: 0 0 0 6mm;
+      }
+
+      .dimension-list {
+        gap: 4mm;
+        margin: 8mm 0;
+      }
+
+      .dimension-row,
+      .gap-group-card {
+        background: none !important;
+        border-radius: 0;
+        break-inside: avoid;
+      }
+
+      .dimension-row {
+        border-bottom: 1px solid #e5e7eb;
+        padding: 3mm 0;
+      }
+
+      .gap-section {
+        margin-top: 8mm;
+        padding-top: 6mm;
+      }
+
+      .gap-section h2 {
+        font-size: 16pt;
+      }
+
+      .gap-group-list {
+        gap: 5mm;
+      }
+
+      .gap-group-card {
+        padding: 0 0 0 4mm;
+      }
+
+      .gap-details summary {
+        display: none;
+      }
+
+      .recommendation-list li,
+      .gap-answer {
+        line-height: 1.35;
+      }
+    }
   </style>
 </head>
 <body>
@@ -222,9 +338,12 @@
         <p>Your inclusion maturity assessment has been scored successfully.</p>
       </div>
 
-      <div class="score-card">
-        <strong>{{ assessment.overall_score or 0 }}</strong>
-        <span>{{ assessment.maturity_level or 'Pending' }}</span>
+      <div class="result-header-actions">
+        <div class="score-card">
+          <strong>{{ assessment.overall_score or 0 }}</strong>
+          <span>{{ assessment.maturity_level or 'Pending' }}</span>
+        </div>
+        <button type="button" class="header-print-btn no-print" onclick="printAssessmentResult()">Print Result</button>
       </div>
     </section>
 
@@ -284,11 +403,29 @@
       </section>
     {% endif %}
 
-    <div class="result-actions">
+    <div class="result-actions no-print">
+      <button type="button" class="print-result-btn" onclick="printAssessmentResult()">Print Result</button>
       <a href="{{ url_for('home') }}">Home</a>
       <a href="{{ url_for('assessment') }}">Back to Dashboard</a>
       <a class="secondary" href="{{ url_for('login.logout') }}">Logout</a>
     </div>
   </main>
+
+  <script>
+    function printAssessmentResult() {
+      const detailElements = Array.from(document.querySelectorAll(".gap-details"));
+      const originallyOpen = new Set(detailElements.filter(detail => detail.open));
+
+      detailElements.forEach(detail => {
+        detail.open = true;
+      });
+
+      window.print();
+
+      detailElements.forEach(detail => {
+        detail.open = originallyOpen.has(detail);
+      });
+    }
+  </script>
 </body>
 </html>

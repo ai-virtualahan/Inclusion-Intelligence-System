@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, session, redirect, url_for, jsonify
 from db import get_db_connection
 from assessment_scoring import maturity_level
+from settings_utils import get_bool_setting, get_int_setting
 from datetime import datetime, timedelta
 
 org_dashboard_bp = Blueprint('org_dashboard', __name__)
@@ -38,6 +39,20 @@ def dashboard_data():
     cursor = conn.cursor(dictionary=True)
 
     # ── Latest completed assessment ──────────────────────────────────────
+    cursor.execute("SELECT status FROM organizations WHERE id = %s", (org_id,))
+    organization = cursor.fetchone()
+    if (
+        organization
+        and organization.get("status") == "suspended"
+        and get_bool_setting(cursor, "suspend_lock_assessments", True)
+    ):
+        cursor.close()
+        conn.close()
+        return jsonify({
+            "error": "organization_suspended",
+            "message": "Assessment access is locked while your organization is suspended."
+        }), 403
+
     cursor.execute("""
         SELECT id, overall_score, maturity_level, submitted_at, cycle_number, assessment_type
         FROM assessments
@@ -55,7 +70,8 @@ def dashboard_data():
         last_date = latest['submitted_at']
         if isinstance(last_date, str):
             last_date = datetime.fromisoformat(last_date)
-        unlock_date = last_date + timedelta(days=182)  # ~6 months
+        lock_days = get_int_setting(cursor, "reassessment_lock_days", 182)
+        unlock_date = last_date + timedelta(days=lock_days)
         if datetime.now() < unlock_date:
             can_reassess = False
             next_eligible = unlock_date.strftime("%B %d, %Y")
@@ -168,6 +184,7 @@ def dashboard_data():
         "can_reassess": can_reassess,
         "next_eligible": next_eligible,
         "latest": {
+            "id": latest['id'],
             "overall": float(latest['overall_score']) if latest['overall_score'] else 0,
             "maturity": latest['maturity_level'],
             "date": latest['submitted_at'].strftime("%B %d, %Y") if hasattr(latest['submitted_at'], 'strftime') else str(latest['submitted_at']),
