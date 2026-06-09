@@ -1,12 +1,12 @@
 import hmac
 import secrets
 
-from flask import Flask, abort, render_template, request, redirect, session, url_for, jsonify
+from flask import Flask, abort, flash, render_template, request, redirect, session, url_for, jsonify
 from collections import OrderedDict
 from db import get_db_connection
 from assessment_scoring import compute_assessment_scores
 from datetime import datetime, timedelta
-from settings_utils import get_int_setting
+from settings_utils import get_bool_setting, get_int_setting
 
 from routes.login import login_bp
 from routes.super_dashboard import super_admin_bp
@@ -45,6 +45,47 @@ def inject_csrf_token():
 
 
 @app.before_request
+def enforce_session_timeout():
+    if request.endpoint in {None, "static", "login.logout"}:
+        return None
+
+    if not session.get("user_id"):
+        return None
+
+    now = datetime.now()
+    timeout_minutes = app.config["PERMANENT_SESSION_LIFETIME"].seconds // 60
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        timeout_minutes = get_int_setting(cursor, "session_timeout_minutes", timeout_minutes)
+    except Exception:
+        pass
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+    last_activity = session.get("_last_activity_at")
+    if last_activity:
+        try:
+            last_activity_at = datetime.fromisoformat(last_activity)
+            if now - last_activity_at > timedelta(minutes=timeout_minutes):
+                session.clear()
+                flash("Your session expired. Please log in again.", "warning")
+                return redirect(url_for("login.login"))
+        except ValueError:
+            session.pop("_last_activity_at", None)
+
+    session.permanent = True
+    session["_last_activity_at"] = now.isoformat()
+    return None
+
+
+@app.before_request
 def protect_post_requests():
     if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
         return None
@@ -59,6 +100,24 @@ def protect_post_requests():
         abort(400, description="Invalid or missing CSRF token.")
 
     return None
+
+
+def current_user_org_status(cursor, user_id):
+    cursor.execute("""
+        SELECT u.organization_id, o.status AS organization_status
+        FROM users u
+        LEFT JOIN organizations o
+            ON u.organization_id = o.id
+        WHERE u.id = %s
+    """, (user_id,))
+    return cursor.fetchone()
+
+
+def assessment_is_locked_for_org(cursor, organization_status):
+    return (
+        organization_status == "suspended"
+        and get_bool_setting(cursor, "suspend_lock_assessments", True)
+    )
 
 
 @app.route('/')
@@ -87,11 +146,30 @@ def assessment():
     profile = {k: '' for k in ['full_name','position','work_email','contact_number',
                                 'company_name','company_size','industry','company_number']}
     active_exams = OrderedDict()
+    assessment_lock = {
+        "locked": False,
+        "reason": "",
+        "next_eligible": None,
+    }
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
     if user_id:
+        org_status = current_user_org_status(cursor, user_id)
+        if org_status and assessment_is_locked_for_org(cursor, org_status.get("organization_status")):
+            cursor.close()
+            conn.close()
+            return render_template(
+                'assessment_locked.html',
+                lock_title="Assessment Access Locked",
+                lock_message=(
+                    "Your organization is currently suspended. Assessment access is locked "
+                    "until the organization is reactivated by an administrator."
+                ),
+                next_eligible=None
+            ), 403
+
         cursor.execute("""
             SELECT u.contact_person AS full_name, u.position_title AS position,
                    u.work_email, u.contact_number,
@@ -103,6 +181,26 @@ def assessment():
         result = cursor.fetchone()
         if result:
             profile = {k: (v or '') for k, v in result.items()}
+
+        if org_status and org_status.get("organization_id"):
+            cursor.execute("""
+                SELECT submitted_at FROM assessments
+                WHERE organization_id = %s AND status = 'completed'
+                ORDER BY submitted_at DESC LIMIT 1
+            """, (org_status["organization_id"],))
+            last = cursor.fetchone()
+            if last and last['submitted_at']:
+                last_date = last['submitted_at']
+                if isinstance(last_date, str):
+                    last_date = datetime.fromisoformat(last_date)
+                lock_days = get_int_setting(cursor, "reassessment_lock_days", 182)
+                unlock_date = last_date + timedelta(days=lock_days)
+                if datetime.now() < unlock_date:
+                    assessment_lock = {
+                        "locked": True,
+                        "reason": "reassessment",
+                        "next_eligible": unlock_date.strftime("%B %d, %Y"),
+                    }
 
     cursor.execute("""
         SELECT
@@ -155,7 +253,12 @@ def assessment():
             "score": float(row['choice_score'])
         })
 
-    return render_template('assessment.html', profile=profile, active_exams=active_exams)
+    return render_template(
+        'assessment.html',
+        profile=profile,
+        active_exams=active_exams,
+        assessment_lock=assessment_lock
+    )
 
 
 @app.route('/submit_assessment', methods=['POST'])
@@ -176,6 +279,21 @@ def submit_assessment():
         return "Error: No organization linked to your account.", 400
 
     organization_id = user_row['organization_id']
+
+    cursor.execute("SELECT status FROM organizations WHERE id = %s", (organization_id,))
+    organization = cursor.fetchone()
+    if organization and assessment_is_locked_for_org(cursor, organization.get("status")):
+        cursor.close()
+        conn.close()
+        return render_template(
+            'assessment_locked.html',
+            lock_title="Assessment Access Locked",
+            lock_message=(
+                "Your organization is currently suspended. Assessment submissions are locked "
+                "until the organization is reactivated by an administrator."
+            ),
+            next_eligible=None
+        ), 403
 
     # ── 6-month reassessment lock ─────────────────────────────────────────
     cursor.execute("""

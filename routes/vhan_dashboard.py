@@ -393,6 +393,9 @@ def reports():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     report_settings = load_system_settings(cursor)
+    hide_suspended_reports = report_settings.get("suspend_hide_reports") == "on"
+    report_org_statuses = ("approved",) if hide_suspended_reports else ("approved", "suspended")
+    report_org_status_placeholders = ", ".join(["%s"] * len(report_org_statuses))
 
     cursor.execute("""
         SELECT COUNT(*) AS total
@@ -414,7 +417,7 @@ def reports():
     """)
     approved_organizations = cursor.fetchone()['total']
 
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT
             o.id,
             o.company_name,
@@ -431,9 +434,9 @@ def reports():
         LEFT JOIN users admin
             ON o.id = admin.organization_id
             AND admin.role = 'org_admin'
-        WHERE o.status = 'approved'
+        WHERE o.status IN ({report_org_status_placeholders})
         ORDER BY o.company_name ASC
-    """)
+    """, report_org_statuses)
     organizations = cursor.fetchall()
 
     if not selected_org_id and organizations:
@@ -447,7 +450,11 @@ def reports():
 
     if selected_org_id:
         selected_org = next((org for org in organizations if org['id'] == selected_org_id), None)
+        if not selected_org:
+            selected_org_id = organizations[0]['id'] if organizations else None
+            selected_org = organizations[0] if organizations else None
 
+    if selected_org_id and selected_org:
         cursor.execute("""
             SELECT id, assessment_type, status, cycle_number, overall_score,
                    maturity_level, started_at, submitted_at

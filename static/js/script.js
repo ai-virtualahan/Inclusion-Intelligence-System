@@ -161,6 +161,23 @@ let questionIndex = 0;
 let diagnosticOpen = false;
 let subNavVisible = false;
 let isLoggedIn = false;
+let assessmentLock = window.IIS_ASSESSMENT_LOCK || {
+    locked: false,
+    reason: "",
+    next_eligible: null
+};
+
+function isAssessmentLocked() {
+    return Boolean(assessmentLock && assessmentLock.locked);
+}
+
+function getAssessmentLockMessage() {
+    if (!isAssessmentLocked()) return "";
+    if (assessmentLock.reason === "reassessment" && assessmentLock.next_eligible) {
+        return `Reassessment locked until ${assessmentLock.next_eligible}.`;
+    }
+    return "Assessment access is currently locked.";
+}
 
 /* == INIT == */
 window.onload = function() {
@@ -337,6 +354,18 @@ function showPage(id) {
 
 /* == DIAGNOSTIC == */
 function openDiagnostic() {
+    if (isAssessmentLocked()) {
+        diagnosticOpen = true;
+        hideSubNav();
+        setActiveSubBtn(null);
+        document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+        document.getElementById("diagnostic").classList.add("active");
+        clearSidebarActive();
+        document.getElementById("diagnosticBtn").classList.add("active-sidebar");
+        renderDiagnosticLockedState();
+        return;
+    }
+
     if (diagnosticOpen) {
         if (subNavVisible) hideSubNav(); else showSubNav();
         return;
@@ -352,6 +381,11 @@ function openDiagnostic() {
 }
 
 function resetDiagnosticState() {
+    if (isAssessmentLocked()) {
+        renderDiagnosticLockedState();
+        return;
+    }
+
     document.getElementById("examMenuWrapper").style.display = "flex";
     document.getElementById("diagnosticSubtitle").textContent = "Please select an assessment type.";
     document.getElementById("questionBox").innerHTML = "";
@@ -362,10 +396,35 @@ function resetDiagnosticState() {
     renderSubmitButton();
 }
 
+function renderDiagnosticLockedState() {
+    document.getElementById("examMenuWrapper").style.display = "none";
+    document.getElementById("diagnosticSubtitle").textContent = "Assessment is currently locked.";
+    document.getElementById("questionBox").innerHTML = `
+        <div class="lock-notice">
+            ${escapeHtml(getAssessmentLockMessage())}
+        </div>
+        <div class="no-data">
+            <div class="big-icon">Locked</div>
+            <p>Your organization can view the dashboard, but a new diagnostic assessment is not available yet.</p>
+            ${assessmentLock.next_eligible ? `<p style="font-size:13px;">Next eligible date: <strong>${escapeHtml(assessmentLock.next_eligible)}</strong></p>` : ''}
+        </div>`;
+    document.getElementById("submitSection").innerHTML = "";
+    currentExam = "";
+    questionIndex = 0;
+}
+
 /* == EXAM TILES (shows PROGRESS %) == */
 function renderExamMenu() {
     const grid = document.getElementById("examGrid");
     if (!grid) return;
+
+    if (isAssessmentLocked()) {
+        grid.innerHTML = `
+            <div class="lock-notice" style="grid-column:1 / -1;">
+                ${escapeHtml(getAssessmentLockMessage())}
+            </div>`;
+        return;
+    }
 
     grid.innerHTML = DIMENSION_ORDER.map(dim => {
         const prog = getProgress(dim);
@@ -386,6 +445,11 @@ function renderExamMenu() {
 
 function renderSubmitButton() {
     const section = document.getElementById("submitSection");
+    if (isAssessmentLocked()) {
+        section.innerHTML = "";
+        return;
+    }
+
     const scores = computeLocalScores();
 
     if (scores.isComplete) {
@@ -406,6 +470,11 @@ function renderSubmitButton() {
 
 /* == START EXAM == */
 function startExam(dim) {
+    if (isAssessmentLocked()) {
+        renderDiagnosticLockedState();
+        return;
+    }
+
     document.getElementById("examMenuWrapper").style.display = "none";
     document.getElementById("submitSection").innerHTML = "";
     document.getElementById("diagnosticSubtitle").textContent = EXAM_INSTRUCTION;
@@ -418,6 +487,11 @@ function startExam(dim) {
 }
 
 function startExamFromSidebar(dim) {
+    if (isAssessmentLocked()) {
+        openDiagnostic();
+        return;
+    }
+
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
     document.getElementById("diagnostic").classList.add("active");
     clearSidebarActive();
@@ -512,6 +586,12 @@ function finishExam() {
 
 /* == SUBMIT TO BACKEND == */
 function submitAssessment() {
+    if (isAssessmentLocked()) {
+        alert(getAssessmentLockMessage());
+        renderDiagnosticLockedState();
+        return;
+    }
+
     const scores = computeLocalScores();
     if (!scores.isComplete) {
         alert("Please complete all 5 dimensions first.");
@@ -621,6 +701,12 @@ function loadDashboard() {
         })
         .then(data => {
             isLoggedIn = true;
+            assessmentLock = {
+                locked: data.can_reassess === false,
+                reason: data.can_reassess === false ? "reassessment" : "",
+                next_eligible: data.next_eligible || null
+            };
+            if (isAssessmentLocked()) hideSubNav();
             if (data.has_data) {
                 renderDashboardFromAPI(data);
             } else {
@@ -655,7 +741,12 @@ function renderDashboardFromAPI(data) {
                 <h3>Overall Inclusion Score</h3>
                 <p>Cycle ${latest.cycle} - ${latest.type} - ${latest.date}</p>
             </div>
-            <div class="imd-badge">${latest.maturity}</div>
+            <div class="imd-actions">
+                <div class="imd-badge">${latest.maturity}</div>
+                <button type="button" class="imd-print-btn" onclick="window.location.href='/assessment_result/${latest.id}'">
+                    Print Result
+                </button>
+            </div>
         </div>`;
 
     // Timeline

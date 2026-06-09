@@ -104,9 +104,32 @@
         .imd-overall-text h3 { margin:0 0 4px; font-size:20px; font-weight:700; }
         .imd-overall-text p { margin:0; font-size:13px; opacity:.9; }
         .imd-badge {
-            margin-left:auto; background:rgba(255,255,255,.25);
+            background:rgba(255,255,255,.25);
             padding:8px 18px; border-radius:20px;
             font-size:14px; font-weight:700; white-space:nowrap;
+        }
+        .imd-actions {
+            margin-left:auto;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            flex-wrap:wrap;
+            justify-content:flex-end;
+        }
+        .imd-print-btn {
+            border:1px solid rgba(255,255,255,.55);
+            background:rgba(255,255,255,.16);
+            color:white;
+            border-radius:10px;
+            padding:10px 14px;
+            font-size:13px;
+            font-weight:800;
+            cursor:pointer;
+            transition:background .18s ease, transform .18s ease;
+        }
+        .imd-print-btn:hover {
+            background:rgba(255,255,255,.26);
+            transform:translateY(-1px);
         }
 
         .imd-section-title {
@@ -214,6 +237,18 @@
 </head>
 
 <body>
+<div class="top-navbar">
+    <div class="brand">Inclusion Intelligence</div>
+
+    <div class="top-links">
+        <button type="button" onclick="window.location.href='{{ url_for('home') }}'">Home</button>
+        <button type="button" onclick="showPage('dashboard')">Dashboard</button>
+        <button type="button" onclick="showPage('profile')">Company Profile</button>
+        <button type="button" onclick="showPage('contact')">Contact</button>
+        <button type="button" onclick="openLogoutModal()">Logout</button>
+    </div>
+</div>
+
 <div class="app">
 
     <!-- SIDEBAR -->
@@ -309,6 +344,7 @@ background:rgba(0,0,0,.55);justify-content:center;align-items:center;z-index:999
 
 <script>
     window.IIS_ACTIVE_EXAMS = {{ active_exams|tojson }};
+    window.IIS_ASSESSMENT_LOCK = {{ assessment_lock|tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
