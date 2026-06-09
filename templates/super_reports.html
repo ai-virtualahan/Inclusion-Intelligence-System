@@ -178,7 +178,7 @@
             {% if dimension_gap_analysis %}
               <div class="gap-analysis-list">
                 {% for item in dimension_gap_analysis %}
-                  <div class="gap-analysis-card {{ 'critical' if item.critical_count else 'moderate' if item.moderate_count else 'none' }}">
+                  <div class="gap-analysis-card {{ 'critical' if item.critical_count else 'moderate' if item.moderate_count else 'low' if item.low_count else 'none' }}">
                     <div class="gap-analysis-head">
                       <div>
                         <strong>{{ item.dimension }}</strong>
@@ -192,6 +192,7 @@
                     <div class="gap-counts">
                       <span>{{ item.critical_count }} critical</span>
                       <span>{{ item.moderate_count }} moderate</span>
+                      <span>{{ item.low_count }} low</span>
                     </div>
                   </div>
                 {% endfor %}

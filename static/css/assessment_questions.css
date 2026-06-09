@@ -124,8 +124,21 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
 
   margin-bottom: 10px;
+}
+
+.question-edit-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.question-edit-actions[hidden] {
+  display: none;
 }
 
 .version-note {
@@ -274,15 +287,60 @@
   box-shadow: inset 4px 0 0 #38bdf8;
 }
 
+.questionnaire-toolbar {
+  align-items: center;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.questionnaire-toolbar h1 {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.questionnaire-toolbar .org-controls {
+  margin-left: auto;
+  min-width: 0;
+}
+
 .org-controls form {
   align-items: center;
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-wrap: nowrap;
+  gap: 20px;
 }
 
-.org-controls select {
-  min-width: 180px;
+.question-filter-field {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  min-width: 0;
+}
+
+.question-filter-field label {
+  color: #0b2345;
+  flex: 0 0 auto;
+  font-size: 14px;
+  font-weight: 800;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+.question-filter-field select {
+  min-height: 42px;
+  min-width: 0;
+  padding: 8px 34px 8px 10px;
+}
+
+.dimension-filter select {
+  width: 210px;
+}
+
+.status-filter select {
+  width: 185px;
 }
 
 .question-actions {
@@ -291,6 +349,35 @@
   flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
+}
+
+@media (max-width: 1100px) {
+  .questionnaire-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .questionnaire-toolbar .org-controls {
+    margin-left: 0;
+  }
+
+  .org-controls form {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 760px) {
+  .question-filter-field {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .question-filter-field select {
+    width: 100%;
+  }
 }
 
 

@@ -2,6 +2,8 @@ let currentQuestionId = null;
 let currentQuestionNumber = null;
 let currentChoices = [];
 let choicesEditMode = false;
+let questionEditMode = null;
+let originalQuestionText = "";
 
 function csrfToken() {
   const tokenMeta = document.querySelector('meta[name="csrf-token"]');
@@ -42,12 +44,11 @@ function openChoicesModal(questionId, questionText, meta = {}) {
   currentQuestionNumber = meta.questionNumber || currentQuestionNumber;
 
   const questionTextarea = document.getElementById("modalQuestionText");
-  const editQuestionBtn = document.getElementById("editQuestionBtn");
   const versionContext = document.getElementById("modalVersionContext");
 
   questionTextarea.value = questionText || "";
-  questionTextarea.setAttribute("readonly", true);
-  editQuestionBtn.textContent = "Create New Version";
+  originalQuestionText = questionTextarea.value;
+  resetQuestionEditor();
   choicesEditMode = false;
   updateChoicesButton();
 
@@ -84,7 +85,9 @@ function renderChoicesTable() {
 
   currentChoices.forEach(choice => {
     const scoreValue = Number(choice.choice_score);
-    const recommendationSeverity = choice.recommendation_severity || severityFromScore(scoreValue);
+    const recommendationSeverity = choice.recommendation_severity === "optional"
+      ? "low"
+      : choice.recommendation_severity || severityFromScore(scoreValue);
     const recommendationText = choice.recommendation_text || "";
     tbody.innerHTML += choicesEditMode
       ? `
@@ -121,14 +124,14 @@ function renderChoicesTable() {
 function severityFromScore(scoreValue) {
   if (scoreValue <= 1) return "critical";
   if (scoreValue <= 2) return "moderate";
-  if (scoreValue <= 3) return "optional";
+  if (scoreValue <= 3) return "low";
   return "none";
 }
 
 function formatSeverityLabel(severity) {
   const labels = {
     none: "None",
-    optional: "Optional",
+    low: "Low",
     moderate: "Moderate",
     critical: "Critical"
   };
@@ -136,7 +139,7 @@ function formatSeverityLabel(severity) {
 }
 
 function renderSeverityOptions(selectedSeverity) {
-  return ["none", "optional", "moderate", "critical"].map(severity => `
+  return ["none", "low", "moderate", "critical"].map(severity => `
     <option value="${severity}" ${severity === selectedSeverity ? "selected" : ""}>
       ${formatSeverityLabel(severity)}
     </option>
@@ -187,65 +190,98 @@ function toggleChoicesEdit() {
     });
 }
 
-function toggleQuestionEdit() {
+function resetQuestionEditor() {
   const textarea = document.getElementById("modalQuestionText");
-  const button = document.getElementById("editQuestionBtn");
+  const viewActions = document.getElementById("questionViewActions");
+  const editActions = document.getElementById("questionEditActions");
+  const versionNote = document.getElementById("versionNote");
 
-  if (textarea.hasAttribute("readonly")) {
-    textarea.removeAttribute("readonly");
-    textarea.focus();
-    button.textContent = "Save as New Version";
+  questionEditMode = null;
+  textarea.setAttribute("readonly", true);
+  viewActions.hidden = false;
+  editActions.hidden = true;
+  versionNote.textContent = "Edit this version directly or create a new version while keeping the previous version for reference.";
+}
+
+function startQuestionEdit(editMode) {
+  const textarea = document.getElementById("modalQuestionText");
+  const viewActions = document.getElementById("questionViewActions");
+  const editActions = document.getElementById("questionEditActions");
+  const saveButton = document.getElementById("saveQuestionBtn");
+  const versionNote = document.getElementById("versionNote");
+
+  questionEditMode = editMode;
+  originalQuestionText = textarea.value;
+  textarea.removeAttribute("readonly");
+  textarea.focus();
+  viewActions.hidden = true;
+  editActions.hidden = false;
+
+  if (editMode === "same_version") {
+    saveButton.textContent = "Save Same Version";
+    versionNote.textContent = "This updates the current question without changing its version number.";
   } else {
-    const formData = new FormData();
-    formData.append("question_text", textarea.value);
-    formData.append("csrf_token", csrfToken());
-
-    fetch(`/super-admin/question/${currentQuestionId}/edit`, {
-      method: "POST",
-      body: formData
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          currentQuestionId = data.question_id;
-          textarea.setAttribute("readonly", true);
-          button.textContent = "Create New Version";
-
-          textarea.value = data.question_text;
-
-          const rowButton = document.querySelector(`[data-question-id="${data.old_question_id}"]`);
-          if (rowButton) {
-            rowButton.dataset.questionId = data.question_id;
-            rowButton.dataset.questionVersion = data.version;
-            rowButton.dataset.questionText = JSON.stringify(data.question_text);
-            const row = rowButton.closest("tr");
-            const questionCell = row.children[2];
-            const versionCell = row.querySelector(".version-cell");
-            const statusCell = row.querySelector(".status-cell");
-
-            questionCell.textContent = data.question_text;
-            row.classList.add("new-version-row");
-            if (versionCell) {
-              versionCell.innerHTML = `
-                <span class="version-badge version-badge-new">
-                  Version ${data.version}
-                </span>
-              `;
-            }
-            if (statusCell) {
-              statusCell.innerHTML = `
-                <span class="record-status status-approved">
-                  Active
-                </span>
-              `;
-            }
-          }
-
-          openChoicesModal(data.question_id, data.question_text, {
-            questionNumber: currentQuestionNumber,
-            version: data.version
-          });
-        }
-      });
+    saveButton.textContent = "Save as New Version";
+    versionNote.textContent = "This creates the next version and keeps the previous version inactive for reference.";
   }
 }
+
+function cancelQuestionEdit() {
+  const textarea = document.getElementById("modalQuestionText");
+  textarea.value = originalQuestionText;
+  resetQuestionEditor();
+}
+
+function saveQuestionEdit() {
+  const textarea = document.getElementById("modalQuestionText");
+  const questionText = textarea.value.trim();
+
+  if (!questionText) {
+    alert("Question text is required.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("question_text", questionText);
+  formData.append("edit_mode", questionEditMode);
+  formData.append("csrf_token", csrfToken());
+
+  fetch(`/super-admin/question/${currentQuestionId}/edit`, {
+    method: "POST",
+    body: formData
+  })
+    .then(async response => {
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to save question.");
+      return data;
+    })
+    .then(data => {
+      if (data.created_new_version) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("open_question_id", data.question_id);
+        window.location.href = url.toString();
+        return;
+      }
+
+      textarea.value = data.question_text;
+      originalQuestionText = data.question_text;
+      resetQuestionEditor();
+
+      const rowButton = document.querySelector(`[data-question-id="${data.question_id}"]`);
+      if (rowButton) {
+        rowButton.dataset.questionText = JSON.stringify(data.question_text);
+        rowButton.closest("tr").children[2].textContent = data.question_text;
+      }
+    })
+    .catch(error => {
+      alert(error.message || "Unable to save question.");
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const openQuestionId = document.getElementById("openQuestionId")?.value;
+  if (!openQuestionId) return;
+
+  const questionButton = document.querySelector(`[data-question-id="${openQuestionId}"]`);
+  if (questionButton) openChoicesModalFromButton(questionButton);
+});

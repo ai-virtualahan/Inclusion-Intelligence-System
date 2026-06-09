@@ -6,13 +6,18 @@ from datetime import datetime
 from db import get_db_connection
 from flask_mail import Message
 from extensions import mail
-from routes.access_request_utils import approve_access_request, find_existing_registration
+from routes.access_request_utils import (
+    approve_access_request,
+    find_existing_registration,
+    send_account_rejection_email,
+)
 from settings_utils import (
     can_role_approve_access_requests,
     get_bool_setting,
     get_int_setting,
     load_user_roles,
     load_system_settings,
+    render_email_template,
     save_system_settings,
 )
 
@@ -35,7 +40,7 @@ def recommendation_severity_from_score(score):
     if score <= 2:
         return "moderate"
     if score <= 3:
-        return "optional"
+        return "low"
     return "none"
 
 
@@ -50,6 +55,7 @@ def build_dimension_gap_analysis(dimension_scores, gap_flags):
         dimension_gaps = gaps_by_dimension.get(dimension_name, [])
         critical_count = sum(1 for gap in dimension_gaps if gap['severity'] == 'critical')
         moderate_count = sum(1 for gap in dimension_gaps if gap['severity'] == 'moderate')
+        low_count = sum(1 for gap in dimension_gaps if gap['severity'] == 'low')
         recommendations = []
 
         for gap in dimension_gaps:
@@ -61,7 +67,7 @@ def build_dimension_gap_analysis(dimension_scores, gap_flags):
             priority = "Critical priority"
             summary = (
                 f"{dimension_name} needs immediate attention. "
-                f"{critical_count} critical and {moderate_count} moderate gap(s) suggest that key practices are missing "
+                f"{critical_count} critical, {moderate_count} moderate, and {low_count} low gap(s) suggest that key practices are missing "
                 "or not yet consistently implemented."
             )
         elif moderate_count:
@@ -69,6 +75,12 @@ def build_dimension_gap_analysis(dimension_scores, gap_flags):
             summary = (
                 f"{dimension_name} has practices in progress, but {moderate_count} moderate gap(s) show areas "
                 "that need clearer ownership, timelines, and follow-through."
+            )
+        elif low_count:
+            priority = "Low priority"
+            summary = (
+                f"{dimension_name} has {low_count} low-priority improvement area(s). "
+                "Strengthen and document these practices to move toward full implementation."
             )
         else:
             priority = "On track"
@@ -84,6 +96,7 @@ def build_dimension_gap_analysis(dimension_scores, gap_flags):
             "priority": priority,
             "critical_count": critical_count,
             "moderate_count": moderate_count,
+            "low_count": low_count,
             "summary": summary,
             "recommendations": recommendations[:3]
         })
@@ -321,7 +334,7 @@ def reject_pending_request(req_id):
             return redirect(url_for('super_admin.pending_approvals'))
 
         cursor.execute("""
-            SELECT id, status
+            SELECT id, status, contact_person, company_name, work_email
             FROM access_requests
             WHERE id = %s
         """, (req_id,))
@@ -332,6 +345,7 @@ def reject_pending_request(req_id):
         elif req['status'] != 'pending':
             flash("Only pending requests can be rejected.", "warning")
         else:
+            saved_reason = rejection_reason or 'Rejected by Super Admin.'
             cursor.execute("""
                 UPDATE access_requests
                 SET status = 'rejected',
@@ -341,11 +355,24 @@ def reject_pending_request(req_id):
                 WHERE id = %s
             """, (
                 session.get('user_id'),
-                rejection_reason or 'Rejected by Super Admin.',
+                saved_reason,
                 req_id
             ))
+            email_sent = None
+            if get_bool_setting(cursor, "auto_send_rejection_email", False):
+                email_sent = send_account_rejection_email(
+                    cursor,
+                    req,
+                    saved_reason,
+                    session.get('user_id')
+                )
             conn.commit()
-            flash("Access request rejected successfully.", "success")
+            if email_sent is False:
+                flash("Access request rejected, but the rejection email failed. Check email logs.", "warning")
+            elif email_sent:
+                flash("Access request rejected and notification email sent.", "success")
+            else:
+                flash("Access request rejected successfully.", "success")
     except Exception as e:
         conn.rollback()
         flash(f"Unable to reject access request: {e}", "danger")
@@ -629,6 +656,11 @@ def edit_choice(choice_id):
     question_id = request.form['question_id']
     recommendation_text = (request.form.get('recommendation_text') or '').strip()
     recommendation_severity = request.form.get('recommendation_severity') or recommendation_severity_from_score(choice_score)
+    if recommendation_severity == "optional":
+        recommendation_severity = "low"
+
+    if recommendation_severity not in ("none", "low", "moderate", "critical"):
+        return {"error": "Recommendation severity is invalid."}, 400
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -727,6 +759,8 @@ def edit_question_choices(question_id):
                 choice.get('recommendation_severity')
                 or recommendation_severity_from_score(choice_score)
             )
+            if recommendation_severity == "optional":
+                recommendation_severity = "low"
 
             if not choice_id or not choice_text:
                 return {"error": "Each choice must include text."}, 400
@@ -736,7 +770,7 @@ def edit_question_choices(question_id):
             except (TypeError, ValueError):
                 return {"error": "Each choice score must be a number."}, 400
 
-            if recommendation_severity not in ("none", "optional", "moderate", "critical"):
+            if recommendation_severity not in ("none", "low", "moderate", "critical"):
                 return {"error": "Recommendation severity is invalid."}, 400
 
             cursor.execute("""
@@ -804,6 +838,15 @@ def gap_recommendations():
         return redirect(url_for('login.login'))
 
     selected_dimension = request.values.get('dimension_id', type=int)
+    selected_question_status = request.values.get('question_status', 'active')
+    if selected_question_status not in {"all", "active", "inactive"}:
+        selected_question_status = "active"
+
+    status_filter = ""
+    if selected_question_status == "active":
+        status_filter = "AND qb.is_active = 1"
+    elif selected_question_status == "inactive":
+        status_filter = "AND qb.is_active = 0"
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -827,7 +870,8 @@ def gap_recommendations():
                     ON qc.question_id = qb.id
                 WHERE qb.dimension_id = %s
                   AND qc.choice_score <= 3
-            """, (selected_dimension,))
+                  {status_filter}
+            """.format(status_filter=status_filter), (selected_dimension,))
             editable_choices = cursor.fetchall()
 
             for choice in editable_choices:
@@ -837,8 +881,10 @@ def gap_recommendations():
                     request.form.get(f"severity_{choice_id}")
                     or recommendation_severity_from_score(choice['choice_score'])
                 )
+                if severity == "optional":
+                    severity = "low"
 
-                if severity not in ("none", "optional", "moderate", "critical"):
+                if severity not in ("none", "low", "moderate", "critical"):
                     raise ValueError("Recommendation severity is invalid.")
 
                 cursor.execute("""
@@ -866,7 +912,8 @@ def gap_recommendations():
             flash("Gap recommendations saved successfully.", "success")
             return redirect(url_for(
                 'super_admin.gap_recommendations',
-                dimension_id=selected_dimension
+                dimension_id=selected_dimension,
+                question_status=selected_question_status
             ))
 
         cursor.execute("""
@@ -874,6 +921,15 @@ def gap_recommendations():
                 ad.name AS dimension_name,
                 qb.id AS question_id,
                 qb.question_text,
+                qb.version,
+                qb.is_active,
+                (
+                    SELECT COUNT(DISTINCT COALESCE(qb2.version_group_id, qb2.id))
+                    FROM question_bank qb2
+                    WHERE qb2.dimension_id = qb.dimension_id
+                      AND COALESCE(qb2.version_group_id, qb2.id)
+                          <= COALESCE(qb.version_group_id, qb.id)
+                ) AS question_number,
                 qc.id AS choice_id,
                 qc.choice_letter,
                 qc.choice_text,
@@ -895,18 +951,41 @@ def gap_recommendations():
                 )
             WHERE qb.dimension_id = %s
               AND qc.choice_score <= 3
+              {status_filter}
             ORDER BY
                 COALESCE(qb.version_group_id, qb.id) ASC,
                 qb.id ASC,
                 qc.choice_score ASC,
                 qc.choice_letter ASC
-        """, (selected_dimension,))
+        """.format(status_filter=status_filter), (selected_dimension,))
         rows = cursor.fetchall()
+
+        question_groups_by_id = {}
+        for row in rows:
+            question_id = row['question_id']
+            if question_id not in question_groups_by_id:
+                question_groups_by_id[question_id] = {
+                    "question_id": question_id,
+                    "question_number": row['question_number'],
+                    "question_text": row['question_text'],
+                    "version": row['version'],
+                    "is_active": row['is_active'],
+                    "choices": [],
+                }
+
+            row["severity"] = (
+                row.get("severity")
+                or recommendation_severity_from_score(row.get("choice_score"))
+            )
+            question_groups_by_id[question_id]["choices"].append(row)
+
+        question_groups = list(question_groups_by_id.values())
     except Exception as e:
         conn.rollback()
         flash(f"Unable to load gap recommendations: {e}", "danger")
         dimensions = []
         rows = []
+        question_groups = []
     finally:
         cursor.close()
         conn.close()
@@ -915,7 +994,8 @@ def gap_recommendations():
         'super_gap_recommendations.html',
         dimensions=dimensions,
         selected_dimension=selected_dimension,
-        rows=rows
+        selected_question_status=selected_question_status,
+        question_groups=question_groups
     )
 
 
@@ -997,9 +1077,12 @@ def edit_question(question_id):
         return {"error": "Unauthorized"}, 403
 
     question_text = (request.form.get('question_text') or '').strip()
+    edit_mode = request.form.get('edit_mode') or 'new_version'
 
     if not question_text:
         return {"error": "Question text is required."}, 400
+    if edit_mode not in {'same_version', 'new_version'}:
+        return {"error": "Question edit mode is invalid."}, 400
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -1015,14 +1098,38 @@ def edit_question(question_id):
         if not current_question:
             return {"error": "Question not found."}, 404
 
-        new_version = (current_question['version'] or 1) + 1
+        if edit_mode == 'same_version':
+            cursor.execute("""
+                UPDATE question_bank
+                SET question_text = %s
+                WHERE id = %s
+            """, (question_text, question_id))
+            conn.commit()
+
+            return {
+                "success": True,
+                "question_id": question_id,
+                "old_question_id": question_id,
+                "question_text": question_text,
+                "version": current_question['version'] or 1,
+                "is_active": current_question['is_active'],
+                "created_new_version": False
+            }
+
         version_group_id = current_question['version_group_id'] or current_question['id']
+
+        cursor.execute("""
+            SELECT COALESCE(MAX(version), 0) + 1 AS next_version
+            FROM question_bank
+            WHERE COALESCE(version_group_id, id) = %s
+        """, (version_group_id,))
+        new_version = cursor.fetchone()['next_version']
 
         cursor.execute("""
             UPDATE question_bank
             SET is_active = 0
-            WHERE id = %s
-        """, (question_id,))
+            WHERE COALESCE(version_group_id, id) = %s
+        """, (version_group_id,))
 
         cursor.execute("""
             INSERT INTO question_bank (
@@ -1087,7 +1194,8 @@ def edit_question(question_id):
             "old_question_id": question_id,
             "question_text": question_text,
             "version": new_version,
-            "is_active": 1
+            "is_active": 1,
+            "created_new_version": True
         }
     except Exception as e:
         conn.rollback()
@@ -1375,8 +1483,21 @@ def email_logs():
 
     if request.method == 'POST':
         recipient_email = request.form.get('recipient_email')
-        message_body = request.form.get('message_body')
-        subject = "Registration Invitation - Inclusion Intelligence"
+        company_name = (request.form.get('company_name') or '').strip()
+        settings = load_system_settings(cursor)
+        template_values = {
+            **settings,
+            "company_name": company_name,
+            "registration_url": url_for('register.register', _external=True),
+        }
+        subject = render_email_template(
+            request.form.get('subject') or settings["email_invitation_subject"],
+            **template_values
+        )
+        message_body = render_email_template(
+            request.form.get('message_body') or settings["email_invitation_body"],
+            **template_values
+        )
         existing_registration = find_existing_registration(cursor, recipient_email)
         if existing_registration:
             cursor.close()
@@ -1450,13 +1571,15 @@ def email_logs():
 
     cursor.execute(query)
     email_logs = cursor.fetchall()
+    settings = load_system_settings(cursor)
 
     cursor.close()
     conn.close()
 
     return render_template(
         'email_logs.html',
-        email_logs=email_logs
+        email_logs=email_logs,
+        settings=settings
     )
 
 
@@ -1566,7 +1689,7 @@ def reports():
                 JOIN assessment_dimensions ad ON gf.dimension_id = ad.id
                 LEFT JOIN question_choices qc ON gf.selected_choice_id = qc.id
                 WHERE gf.assessment_id = %s
-                ORDER BY FIELD(gf.severity, 'critical', 'moderate'), ad.id
+                ORDER BY FIELD(gf.severity, 'critical', 'moderate', 'low'), ad.id
             """, (latest_assessment['id'],))
             gap_flags = cursor.fetchall()
 

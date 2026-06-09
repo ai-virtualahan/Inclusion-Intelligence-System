@@ -1,7 +1,12 @@
+from flask import url_for
 from flask_mail import Message
 
 from extensions import mail
-from settings_utils import get_bool_setting
+from settings_utils import (
+    get_bool_setting,
+    load_system_settings,
+    render_email_template,
+)
 
 
 def find_existing_registration(cursor, email):
@@ -32,16 +37,16 @@ def find_existing_registration(cursor, email):
 
 
 def send_account_approval_email(cursor, req, user_id, organization_id, reviewer_id):
-    subject = "Account Approved - Inclusion Intelligence System"
-    message_body = f"""Hello {req['contact_person']},
-
-Your organization, {req['company_name']}, has been approved for the Inclusion Intelligence System.
-
-You may now log in using your registered work email:
-{req['work_email']}
-
-Thank you,
-Inclusion Intelligence System Team"""
+    settings = load_system_settings(cursor)
+    template_values = {
+        **settings,
+        "contact_person": req["contact_person"],
+        "company_name": req["company_name"],
+        "work_email": req["work_email"],
+        "login_url": url_for("login.login", _external=True),
+    }
+    subject = render_email_template(settings["email_approval_subject"], **template_values)
+    message_body = render_email_template(settings["email_approval_body"], **template_values)
 
     try:
         msg = Message(
@@ -97,6 +102,64 @@ Inclusion Intelligence System Team"""
                 reviewer_id
         ))
         return False
+
+
+def send_account_rejection_email(cursor, req, rejection_reason, reviewer_id):
+    settings = load_system_settings(cursor)
+    template_values = {
+        **settings,
+        "contact_person": req["contact_person"],
+        "company_name": req["company_name"],
+        "work_email": req["work_email"],
+        "rejection_reason": rejection_reason,
+    }
+    subject = render_email_template(settings["email_rejection_subject"], **template_values)
+    message_body = render_email_template(settings["email_rejection_body"], **template_values)
+
+    try:
+        msg = Message(
+            subject=subject,
+            recipients=[req["work_email"]],
+            body=message_body
+        )
+        mail.send(msg)
+        send_status = "sent"
+        error_message = None
+    except Exception as e:
+        send_status = "failed"
+        error_message = str(e)
+
+    cursor.execute("""
+        INSERT INTO email_notifications (
+            recipient_email,
+            notification_type,
+            subject,
+            message_body,
+            send_status,
+            sent_at,
+            error_message,
+            triggered_by
+        )
+        VALUES (
+            %s,
+            'account_rejection',
+            %s,
+            %s,
+            %s,
+            CASE WHEN %s = 'sent' THEN NOW() ELSE NULL END,
+            %s,
+            %s
+        )
+    """, (
+        req["work_email"],
+        subject,
+        message_body,
+        send_status,
+        send_status,
+        error_message,
+        reviewer_id
+    ))
+    return send_status == "sent"
 
 
 def approve_access_request(cursor, req_id, reviewer_id):

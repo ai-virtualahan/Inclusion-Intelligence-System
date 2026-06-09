@@ -267,6 +267,10 @@ def compute_assessment_scores(cursor, assessment_id):
         critical_score_max,
         setting_number(settings, "gap_moderate_score_max", 2)
     )
+    low_score_max = max(
+        moderate_score_max,
+        setting_number(settings, "gap_low_score_max", 3)
+    )
 
     cursor.execute("DELETE FROM dimension_scores WHERE assessment_id = %s", (assessment_id,))
     cursor.execute("DELETE FROM gap_flags WHERE assessment_id = %s", (assessment_id,))
@@ -362,6 +366,8 @@ def compute_assessment_scores(cursor, assessment_id):
             severity = "critical"
         elif score_value <= moderate_score_max:
             severity = "moderate"
+        elif score_value <= low_score_max:
+            severity = "low"
         else:
             continue
 

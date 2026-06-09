@@ -13,7 +13,7 @@ from flask import Blueprint
 from config import APP_BASE_URL
 from db import get_db_connection
 from extensions import mail
-from settings_utils import get_int_setting
+from settings_utils import get_int_setting, load_system_settings, render_email_template
 
 register_bp = Blueprint('register', __name__)
 
@@ -48,18 +48,15 @@ def build_verification_link(token):
 
 def send_verification_email(cursor, recipient_email, contact_person, token):
     verification_link = build_verification_link(token)
-    subject = "Verify Your Email - Inclusion Intelligence System"
-    message_body = f"""Hello {contact_person},
-
-Please verify your email address to continue your Inclusion Intelligence System registration.
-
-Verification link:
-{verification_link}
-
-This link will expire in 24 hours. Once verified, your access request will be sent to the administrator for approval.
-
-Thank you,
-Inclusion Intelligence System Team"""
+    settings = load_system_settings(cursor)
+    template_values = {
+        **settings,
+        "contact_person": contact_person,
+        "work_email": recipient_email,
+        "verification_url": verification_link,
+    }
+    subject = render_email_template(settings["email_verification_subject"], **template_values)
+    message_body = render_email_template(settings["email_verification_body"], **template_values)
 
     try:
         msg = Message(

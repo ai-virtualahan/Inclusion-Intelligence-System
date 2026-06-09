@@ -48,8 +48,8 @@
       {% endif %}
     {% endwith %}
 
-    <section class="settings-card">
-      <form method="GET" action="{{ url_for('super_admin.gap_recommendations') }}" class="settings-fields two-columns">
+    <section class="settings-card gap-filter-card">
+      <form method="GET" action="{{ url_for('super_admin.gap_recommendations') }}" class="gap-filter-row">
         <label>
           <span>Dimension</span>
           <select name="dimension_id" onchange="this.form.submit()">
@@ -60,34 +60,61 @@
             {% endfor %}
           </select>
         </label>
+        <label>
+          <span>Question Status</span>
+          <select name="question_status" onchange="this.form.submit()">
+            <option value="active" {% if selected_question_status == 'active' %}selected{% endif %}>Active</option>
+            <option value="inactive" {% if selected_question_status == 'inactive' %}selected{% endif %}>Inactive</option>
+            <option value="all" {% if selected_question_status == 'all' %}selected{% endif %}>All Statuses</option>
+          </select>
+        </label>
       </form>
     </section>
 
     <form method="POST" action="{{ url_for('super_admin.gap_recommendations') }}" class="settings-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="dimension_id" value="{{ selected_dimension }}">
+      <input type="hidden" name="question_status" value="{{ selected_question_status }}">
 
       <section class="recommendation-editor-list">
-        {% for row in rows %}
-          <article class="recommendation-editor-card">
-            <div class="recommendation-editor-head">
+        {% for question in question_groups %}
+          <article class="recommendation-question-card">
+            <header class="recommendation-question-head">
+              <div class="question-number-badge">Question {{ question.question_number }}</div>
               <div>
-                <strong>{{ row.question_text }}</strong>
-                <span>
-                  Choice {{ row.choice_letter }} | Score {{ row.choice_score }} |
-                  {{ row.choice_text }}
-                </span>
+                <h2>{{ question.question_text }}</h2>
+                <p>
+                  Version {{ question.version }}
+                  <span class="question-status {{ 'active' if question.is_active else 'inactive' }}">
+                    {{ 'Active' if question.is_active else 'Inactive' }}
+                  </span>
+                </p>
               </div>
+            </header>
 
-              <select name="severity_{{ row.choice_id }}">
-                <option value="optional" {% if row.severity == 'optional' %}selected{% endif %}>Optional</option>
-                <option value="moderate" {% if row.severity == 'moderate' %}selected{% endif %}>Moderate</option>
-                <option value="critical" {% if row.severity == 'critical' %}selected{% endif %}>Critical</option>
-                <option value="none" {% if row.severity == 'none' %}selected{% endif %}>None</option>
-              </select>
+            <div class="recommendation-choice-list">
+              {% for choice in question.choices %}
+                <section class="recommendation-choice-row">
+                  <div class="recommendation-choice-head">
+                    <div class="choice-identity">
+                      <span class="choice-letter">Choice {{ choice.choice_letter }}</span>
+                      <span class="choice-score">Score {{ choice.choice_score }}</span>
+                    </div>
+                    <select name="severity_{{ choice.choice_id }}" aria-label="Severity for Choice {{ choice.choice_letter }}">
+                      <option value="low" {% if choice.severity in ('low', 'optional') %}selected{% endif %}>Low</option>
+                      <option value="moderate" {% if choice.severity == 'moderate' %}selected{% endif %}>Moderate</option>
+                      <option value="critical" {% if choice.severity == 'critical' %}selected{% endif %}>Critical</option>
+                      <option value="none" {% if choice.severity == 'none' %}selected{% endif %}>None</option>
+                    </select>
+                  </div>
+
+                  <p class="choice-text">{{ choice.choice_text }}</p>
+
+                  <label for="recommendation_{{ choice.choice_id }}">Recommendation</label>
+                  <textarea id="recommendation_{{ choice.choice_id }}" name="recommendation_{{ choice.choice_id }}" rows="3">{{ choice.recommendation_text or '' }}</textarea>
+                </section>
+              {% endfor %}
             </div>
-
-            <textarea name="recommendation_{{ row.choice_id }}" rows="3">{{ row.recommendation_text or '' }}</textarea>
           </article>
         {% else %}
           <div class="empty-report-state">No low-scoring answer choices found for this dimension.</div>

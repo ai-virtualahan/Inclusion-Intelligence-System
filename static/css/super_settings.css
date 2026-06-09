@@ -54,6 +54,10 @@
   grid-column: 1 / -1;
 }
 
+.email-template-card {
+  grid-column: 1 / -1;
+}
+
 .recommendation-library-card {
   align-items: center;
   display: flex;
@@ -118,9 +122,82 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.settings-fields.gap-rule-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .settings-fields.compact-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.maturity-range-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.maturity-range-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.maturity-range-field > span {
+  color: #0b2345;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.maturity-range-control {
+  align-items: center;
+  background: #f8fbff;
+  border: 1px solid #d6dce5;
+  border-radius: 8px;
+  display: grid;
+  gap: 7px;
+  grid-template-columns: minmax(24px, auto) auto minmax(48px, 1fr);
+  min-height: 48px;
+  padding: 6px 10px;
+}
+
+.maturity-range-control .range-start,
+.maturity-range-control .range-separator,
+.maturity-range-control strong {
+  color: #334155;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.maturity-range-control input {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #0f172a;
+  font-size: 14px;
+  min-height: 34px;
+  min-width: 0;
+  padding: 6px 8px;
+  text-align: center;
+  width: 100%;
+}
+
+.maturity-range-control input:focus {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
+  outline: none;
+}
+
+.maturity-range-readonly .maturity-range-control {
+  background: #f0fdfa;
+  border-color: #99f6e4;
+}
+
+.maturity-range-readonly .maturity-range-control strong {
+  color: #0f766e;
 }
 
 .settings-fields label {
@@ -139,7 +216,8 @@
 .settings-fields input[type="text"],
 .settings-fields input[type="email"],
 .settings-fields input[type="number"],
-.settings-fields select {
+.settings-fields select,
+.settings-fields textarea {
   background: #f8fbff;
   border: 1px solid #d6dce5;
   border-radius: 8px;
@@ -151,11 +229,52 @@
 }
 
 .settings-fields input:focus,
-.settings-fields select:focus {
+.settings-fields select:focus,
+.settings-fields textarea:focus {
   background: #ffffff;
   border-color: #14b8a6;
   box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
   outline: none;
+}
+
+.settings-fields textarea {
+  line-height: 1.5;
+  min-height: 130px;
+  resize: vertical;
+}
+
+.email-template-list {
+  display: grid;
+  gap: 10px;
+}
+
+.email-template-list details {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 0 10px;
+}
+
+.email-template-list details:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.email-template-list summary {
+  color: #0b2345;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 10px 0;
+}
+
+.email-template-list .settings-fields {
+  padding: 4px 0 8px;
+}
+
+.template-fields {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .full-width {
@@ -318,43 +437,178 @@
   gap: 14px;
 }
 
-.recommendation-editor-card {
+.gap-filter-card {
+  padding: 16px 20px;
+}
+
+.gap-filter-row {
+  align-items: center;
+  display: grid;
+  gap: 18px 28px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gap-filter-row label {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto minmax(180px, 1fr);
+}
+
+.gap-filter-row label > span {
+  color: #0b2345;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.gap-filter-row select {
+  background: #f8fbff;
+  border: 1px solid #d6dce5;
+  border-radius: 8px;
+  color: #0f172a;
+  font-size: 14px;
+  min-height: 42px;
+  padding: 9px 12px;
+  width: 100%;
+}
+
+.gap-filter-row select:focus {
+  background: #ffffff;
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
+  outline: none;
+}
+
+.recommendation-question-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-left: 5px solid #14b8a6;
   border-radius: 8px;
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
-  padding: 16px;
+  overflow: hidden;
 }
 
-.recommendation-editor-head {
-  align-items: flex-start;
+.recommendation-question-head {
+  align-items: center;
+  background: #f8fbff;
+  border-bottom: 1px solid #dbe5f0;
   display: grid;
-  gap: 14px;
-  grid-template-columns: minmax(0, 1fr) 150px;
-  margin-bottom: 12px;
+  gap: 16px;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 18px 20px;
 }
 
-.recommendation-editor-head strong,
-.recommendation-editor-head span {
-  display: block;
-}
-
-.recommendation-editor-head strong {
-  color: #0b2345;
-  font-size: 15px;
-  line-height: 1.45;
-}
-
-.recommendation-editor-head span {
-  color: #64748b;
+.question-number-badge {
+  align-items: center;
+  background: #072653;
+  border-radius: 8px;
+  color: #ffffff;
+  display: inline-flex;
   font-size: 13px;
-  line-height: 1.45;
-  margin-top: 5px;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 40px;
+  min-width: 104px;
+  padding: 9px 12px;
+  white-space: nowrap;
 }
 
-.recommendation-editor-head select,
-.recommendation-editor-card textarea {
+.recommendation-question-head h2 {
+  color: #0b2345;
+  font-size: 17px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.recommendation-question-head p {
+  align-items: center;
+  color: #64748b;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 12px;
+  gap: 8px;
+  margin: 6px 0 0;
+}
+
+.question-status {
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 8px;
+}
+
+.question-status.active {
+  background: #ccfbf1;
+  color: #0f766e;
+}
+
+.question-status.inactive {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.recommendation-choice-list {
+  display: grid;
+}
+
+.recommendation-choice-row {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 18px 20px;
+}
+
+.recommendation-choice-row:last-child {
+  border-bottom: 0;
+}
+
+.recommendation-choice-head {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.choice-identity {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.choice-letter,
+.choice-score {
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 9px;
+}
+
+.choice-letter {
+  background: #ccfbf1;
+  color: #0f766e;
+}
+
+.choice-score {
+  background: #e8eef8;
+  color: #0b2a66;
+}
+
+.choice-text {
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 10px 0 14px;
+}
+
+.recommendation-choice-row label {
+  color: #0b2345;
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 7px;
+}
+
+.recommendation-choice-head select,
+.recommendation-choice-row textarea {
   background: #f8fbff;
   border: 1px solid #d6dce5;
   border-radius: 8px;
@@ -364,13 +618,18 @@
   width: 100%;
 }
 
-.recommendation-editor-card textarea {
+.recommendation-choice-head select {
+  flex: 0 0 160px;
+  width: 160px;
+}
+
+.recommendation-choice-row textarea {
   min-height: 92px;
   resize: vertical;
 }
 
-.recommendation-editor-head select:focus,
-.recommendation-editor-card textarea:focus {
+.recommendation-choice-head select:focus,
+.recommendation-choice-row textarea:focus {
   background: #ffffff;
   border-color: #14b8a6;
   box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
@@ -388,7 +647,15 @@
     grid-template-columns: 1fr;
   }
 
+  .settings-fields.gap-rule-grid {
+    grid-template-columns: 1fr;
+  }
+
   .settings-fields.compact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .maturity-range-grid {
     grid-template-columns: 1fr;
   }
 
@@ -404,5 +671,34 @@
   .recommendation-library-card .settings-link-btn {
     min-width: 0;
     width: 100%;
+  }
+
+  .recommendation-question-head {
+    align-items: flex-start;
+    grid-template-columns: 1fr;
+  }
+
+  .question-number-badge {
+    min-width: 0;
+  }
+
+  .recommendation-choice-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .recommendation-choice-head select {
+    flex-basis: auto;
+    width: 100%;
+  }
+
+  .gap-filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .gap-filter-row label {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+    gap: 7px;
   }
 }

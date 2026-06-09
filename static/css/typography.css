@@ -164,6 +164,34 @@ td,
   -webkit-overflow-scrolling: touch;
 }
 
+.floating-table-scrollbar {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  bottom: 8px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+  display: none;
+  height: 18px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  position: fixed;
+  z-index: 1000;
+}
+
+.floating-table-scrollbar.is-visible {
+  display: block;
+}
+
+.floating-table-scrollbar-content {
+  height: 1px;
+}
+
+@media print {
+  .floating-table-scrollbar {
+    display: none !important;
+  }
+}
+
 .table-wrapper table,
 .questions-table-wrapper table,
 .choices-table-wrapper table,

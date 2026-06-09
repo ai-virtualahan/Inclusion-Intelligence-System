@@ -136,29 +136,53 @@
 
           <div class="settings-subsection">
             <h3>Maturity Thresholds</h3>
-            <div class="settings-fields compact-grid">
-              <label>
-                <span>Emerging Max</span>
-                <input type="number" min="0" max="100" name="score_emerging_max" value="{{ settings.score_emerging_max }}" required>
+            <div class="maturity-range-grid">
+              <label class="maturity-range-field">
+                <span>Emerging</span>
+                <div class="maturity-range-control">
+                  <span class="range-start">0</span>
+                  <span class="range-separator">-</span>
+                  <input id="scoreEmerging" type="number" min="0" max="96" step="1" name="score_emerging_max" value="{{ settings.score_emerging_max }}" aria-label="Emerging range end" required>
+                </div>
               </label>
-              <label>
-                <span>Developing Max</span>
-                <input type="number" min="0" max="100" name="score_developing_max" value="{{ settings.score_developing_max }}" required>
+              <label class="maturity-range-field">
+                <span>Developing</span>
+                <div class="maturity-range-control">
+                  <span class="range-start" id="developingStart">26</span>
+                  <span class="range-separator">-</span>
+                  <input id="scoreDeveloping" type="number" min="1" max="97" step="1" name="score_developing_max" value="{{ settings.score_developing_max }}" aria-label="Developing range end" required>
+                </div>
               </label>
-              <label>
-                <span>Advancing Max</span>
-                <input type="number" min="0" max="100" name="score_advancing_max" value="{{ settings.score_advancing_max }}" required>
+              <label class="maturity-range-field">
+                <span>Advancing</span>
+                <div class="maturity-range-control">
+                  <span class="range-start" id="advancingStart">51</span>
+                  <span class="range-separator">-</span>
+                  <input id="scoreAdvancing" type="number" min="2" max="98" step="1" name="score_advancing_max" value="{{ settings.score_advancing_max }}" aria-label="Advancing range end" required>
+                </div>
               </label>
-              <label>
-                <span>Leading Max</span>
-                <input type="number" min="0" max="100" name="score_leading_max" value="{{ settings.score_leading_max }}" required>
+              <label class="maturity-range-field">
+                <span>Leading</span>
+                <div class="maturity-range-control">
+                  <span class="range-start" id="leadingStart">76</span>
+                  <span class="range-separator">-</span>
+                  <input id="scoreLeading" type="number" min="3" max="99" step="1" name="score_leading_max" value="{{ settings.score_leading_max }}" aria-label="Leading range end" required>
+                </div>
               </label>
+              <div class="maturity-range-field maturity-range-readonly">
+                <span>Exemplar</span>
+                <div class="maturity-range-control">
+                  <span class="range-start" id="exemplarStart">91</span>
+                  <span class="range-separator">-</span>
+                  <strong>100</strong>
+                </div>
+              </div>
             </div>
           </div>
 
           <div class="settings-subsection">
             <h3>Gap Flag Rules</h3>
-            <div class="settings-fields two-columns">
+            <div class="settings-fields gap-rule-grid">
               <label>
                 <span>Critical If Answer Score Is Up To</span>
                 <input type="number" min="1" max="4" step="0.1" name="gap_critical_score_max" value="{{ settings.gap_critical_score_max }}" required>
@@ -166,6 +190,10 @@
               <label>
                 <span>Moderate If Answer Score Is Up To</span>
                 <input type="number" min="1" max="4" step="0.1" name="gap_moderate_score_max" value="{{ settings.gap_moderate_score_max }}" required>
+              </label>
+              <label>
+                <span>Low If Answer Score Is Up To</span>
+                <input type="number" min="1" max="4" step="0.1" name="gap_low_score_max" value="{{ settings.gap_low_score_max }}" required>
               </label>
             </div>
           </div>
@@ -245,9 +273,96 @@
           </div>
         </div>
 
-        <div class="settings-card">
+        <div class="settings-card email-template-card">
           <div class="settings-card-header">
             <span class="settings-icon">06</span>
+            <div>
+              <h2>Email Templates</h2>
+              <p>Customize the subject and message used for automatic and invitation emails.</p>
+            </div>
+          </div>
+
+          <div class="email-template-list">
+            <details open>
+              <summary>Registration Invitation</summary>
+              <div class="settings-fields">
+                <label>
+                  <span>Subject</span>
+                  <input type="text" name="email_invitation_subject" value="{{ settings.email_invitation_subject }}" required>
+                </label>
+                <label>
+                  <span>Message</span>
+                  <textarea name="email_invitation_body" rows="9" required>{{ settings.email_invitation_body }}</textarea>
+                </label>
+                <p class="template-fields">Fields: {system_name}, {primary_contact}, {support_email}, {company_name}, {registration_url}</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>Email Verification</summary>
+              <div class="settings-fields">
+                <label>
+                  <span>Subject</span>
+                  <input type="text" name="email_verification_subject" value="{{ settings.email_verification_subject }}" required>
+                </label>
+                <label>
+                  <span>Message</span>
+                  <textarea name="email_verification_body" rows="10" required>{{ settings.email_verification_body }}</textarea>
+                </label>
+                <p class="template-fields">Fields: {system_name}, {primary_contact}, {support_email}, {contact_person}, {work_email}, {verification_url}</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>Account Approval</summary>
+              <div class="settings-fields">
+                <label>
+                  <span>Subject</span>
+                  <input type="text" name="email_approval_subject" value="{{ settings.email_approval_subject }}" required>
+                </label>
+                <label>
+                  <span>Message</span>
+                  <textarea name="email_approval_body" rows="11" required>{{ settings.email_approval_body }}</textarea>
+                </label>
+                <p class="template-fields">Fields: {system_name}, {primary_contact}, {support_email}, {contact_person}, {company_name}, {work_email}, {login_url}</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>Access Rejection</summary>
+              <div class="settings-fields">
+                <label>
+                  <span>Subject</span>
+                  <input type="text" name="email_rejection_subject" value="{{ settings.email_rejection_subject }}" required>
+                </label>
+                <label>
+                  <span>Message</span>
+                  <textarea name="email_rejection_body" rows="11" required>{{ settings.email_rejection_body }}</textarea>
+                </label>
+                <p class="template-fields">Fields: {system_name}, {primary_contact}, {support_email}, {contact_person}, {company_name}, {work_email}, {rejection_reason}</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>Password Reset</summary>
+              <div class="settings-fields">
+                <label>
+                  <span>Subject</span>
+                  <input type="text" name="email_password_reset_subject" value="{{ settings.email_password_reset_subject }}" required>
+                </label>
+                <label>
+                  <span>Message</span>
+                  <textarea name="email_password_reset_body" rows="12" required>{{ settings.email_password_reset_body }}</textarea>
+                </label>
+                <p class="template-fields">Fields: {system_name}, {primary_contact}, {support_email}, {contact_person}, {work_email}, {reset_url}</p>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <span class="settings-icon">07</span>
             <div>
               <h2>Report Settings</h2>
               <p>Make generated reports client-ready and easy to tailor.</p>
@@ -276,7 +391,7 @@
 
         <div class="settings-card">
           <div class="settings-card-header">
-            <span class="settings-icon">07</span>
+            <span class="settings-icon">08</span>
             <div>
               <h2>User & Security</h2>
               <p>Basic account controls for safer administration.</p>
@@ -297,7 +412,7 @@
 
         <div class="settings-card">
           <div class="settings-card-header">
-            <span class="settings-icon">08</span>
+            <span class="settings-icon">09</span>
             <div>
               <h2>Organization Status Rules</h2>
               <p>Define what suspension means across users, assessments, and reports.</p>
@@ -326,7 +441,7 @@
     <section class="settings-grid settings-secondary-grid">
       <div class="settings-card">
         <div class="settings-card-header">
-          <span class="settings-icon">09</span>
+          <span class="settings-icon">10</span>
           <div>
             <h2>User Roles</h2>
             <p>Add assignable roles and map each one to a built-in access level.</p>
@@ -378,5 +493,40 @@
     </div>
   </main>
 </div>
+
+<script>
+  function updateMaturityRanges() {
+    const emerging = document.getElementById("scoreEmerging");
+    const developing = document.getElementById("scoreDeveloping");
+    const advancing = document.getElementById("scoreAdvancing");
+    const leading = document.getElementById("scoreLeading");
+
+    const values = [
+      Number(emerging.value),
+      Number(developing.value),
+      Number(advancing.value),
+      Number(leading.value)
+    ];
+
+    document.getElementById("developingStart").textContent = Number.isFinite(values[0]) ? values[0] + 1 : "-";
+    document.getElementById("advancingStart").textContent = Number.isFinite(values[1]) ? values[1] + 1 : "-";
+    document.getElementById("leadingStart").textContent = Number.isFinite(values[2]) ? values[2] + 1 : "-";
+    document.getElementById("exemplarStart").textContent = Number.isFinite(values[3]) ? values[3] + 1 : "-";
+
+    [emerging, developing, advancing, leading].forEach(input => input.setCustomValidity(""));
+
+    if (values.some(value => !Number.isInteger(value))) {
+      leading.setCustomValidity("Maturity range boundaries must be whole numbers.");
+    } else if (!(values[0] < values[1] && values[1] < values[2] && values[2] < values[3] && values[3] < 100)) {
+      leading.setCustomValidity("Maturity ranges must increase continuously and Exemplar must end at 100.");
+    }
+  }
+
+  ["scoreEmerging", "scoreDeveloping", "scoreAdvancing", "scoreLeading"].forEach(id => {
+    document.getElementById(id).addEventListener("input", updateMaturityRanges);
+  });
+
+  updateMaturityRanges();
+</script>
 </body>
 </html>
