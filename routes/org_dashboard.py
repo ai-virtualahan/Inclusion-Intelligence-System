@@ -125,7 +125,7 @@ def dashboard_data():
         JOIN question_bank qb ON gf.question_id = qb.id
         LEFT JOIN question_choices qc ON gf.selected_choice_id = qc.id
         WHERE gf.assessment_id = %s
-        ORDER BY gf.severity DESC, ad.id
+        ORDER BY FIELD(gf.severity, 'critical', 'moderate', 'low'), ad.id
     """, (assessment_id,))
     gap_rows = cursor.fetchall()
 

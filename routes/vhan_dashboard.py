@@ -4,8 +4,17 @@ from flask import Blueprint, render_template, session, redirect, url_for, reques
 from db import get_db_connection
 from flask_mail import Message
 from extensions import mail
-from routes.access_request_utils import approve_access_request, find_existing_registration
-from settings_utils import can_role_approve_access_requests, get_bool_setting, load_system_settings
+from routes.access_request_utils import (
+    approve_access_request,
+    find_existing_registration,
+    send_account_rejection_email,
+)
+from settings_utils import (
+    can_role_approve_access_requests,
+    get_bool_setting,
+    load_system_settings,
+    render_email_template,
+)
 
 vhan_bp = Blueprint('vhan', __name__)
 
@@ -21,6 +30,7 @@ def build_dimension_gap_analysis(dimension_scores, gap_flags):
         dimension_gaps = gaps_by_dimension.get(dimension_name, [])
         critical_count = sum(1 for gap in dimension_gaps if gap['severity'] == 'critical')
         moderate_count = sum(1 for gap in dimension_gaps if gap['severity'] == 'moderate')
+        low_count = sum(1 for gap in dimension_gaps if gap['severity'] == 'low')
         recommendations = []
 
         for gap in dimension_gaps:
@@ -32,7 +42,7 @@ def build_dimension_gap_analysis(dimension_scores, gap_flags):
             priority = "Critical priority"
             summary = (
                 f"{dimension_name} needs immediate attention. "
-                f"{critical_count} critical and {moderate_count} moderate gap(s) suggest that key practices are missing "
+                f"{critical_count} critical, {moderate_count} moderate, and {low_count} low gap(s) suggest that key practices are missing "
                 "or not yet consistently implemented."
             )
         elif moderate_count:
@@ -40,6 +50,12 @@ def build_dimension_gap_analysis(dimension_scores, gap_flags):
             summary = (
                 f"{dimension_name} has practices in progress, but {moderate_count} moderate gap(s) show areas "
                 "that need clearer ownership, timelines, and follow-through."
+            )
+        elif low_count:
+            priority = "Low priority"
+            summary = (
+                f"{dimension_name} has {low_count} low-priority improvement area(s). "
+                "Strengthen and document these practices to move toward full implementation."
             )
         else:
             priority = "On track"
@@ -55,6 +71,7 @@ def build_dimension_gap_analysis(dimension_scores, gap_flags):
             "priority": priority,
             "critical_count": critical_count,
             "moderate_count": moderate_count,
+            "low_count": low_count,
             "summary": summary,
             "recommendations": recommendations[:3]
         })
@@ -164,7 +181,7 @@ def reject_request(req_id):
         return redirect(url_for('vhan.pending_approvals'))
 
     cursor.execute("""
-        SELECT id, status
+        SELECT id, status, contact_person, company_name, work_email
         FROM access_requests
         WHERE id = %s
     """, (req_id,))
@@ -182,6 +199,7 @@ def reject_request(req_id):
         flash("Only pending requests can be rejected.", "warning")
         return redirect(url_for('vhan.pending_approvals'))
 
+    saved_reason = rejection_reason or 'Rejected by VHAN admin.'
     cursor.execute("""
         UPDATE access_requests
         SET status = 'rejected',
@@ -191,15 +209,29 @@ def reject_request(req_id):
         WHERE id = %s
     """, (
         session.get('user_id'),
-        rejection_reason or 'Rejected by VHAN admin.',
+        saved_reason,
         req_id
     ))
+
+    email_sent = None
+    if get_bool_setting(cursor, "auto_send_rejection_email", False):
+        email_sent = send_account_rejection_email(
+            cursor,
+            req,
+            saved_reason,
+            session.get('user_id')
+        )
 
     conn.commit()
     cursor.close()
     conn.close()
 
-    flash("Access request rejected successfully.", "success")
+    if email_sent is False:
+        flash("Access request rejected, but the rejection email failed. Check email logs.", "warning")
+    elif email_sent:
+        flash("Access request rejected and notification email sent.", "success")
+    else:
+        flash("Access request rejected successfully.", "success")
     return redirect(url_for('vhan.pending_approvals'))
 
 
@@ -489,7 +521,7 @@ def reports():
                 JOIN assessment_dimensions ad ON gf.dimension_id = ad.id
                 LEFT JOIN question_choices qc ON gf.selected_choice_id = qc.id
                 WHERE gf.assessment_id = %s
-                ORDER BY FIELD(gf.severity, 'critical', 'moderate'), ad.id
+                ORDER BY FIELD(gf.severity, 'critical', 'moderate', 'low'), ad.id
             """, (latest_assessment['id'],))
             gap_flags = cursor.fetchall()
 
@@ -529,9 +561,20 @@ def email_logs():
     if request.method == 'POST':
         company_name = request.form.get('company_name')
         recipient_email = request.form.get('recipient_email')
-        message_body = request.form.get('message_body')
-
-        subject = "Registration Invitation - Inclusion Intelligence"
+        settings = load_system_settings(cursor)
+        template_values = {
+            **settings,
+            "company_name": company_name,
+            "registration_url": url_for('register.register', _external=True),
+        }
+        subject = render_email_template(
+            request.form.get('subject') or settings["email_invitation_subject"],
+            **template_values
+        )
+        message_body = render_email_template(
+            request.form.get('message_body') or settings["email_invitation_body"],
+            **template_values
+        )
         existing_registration = find_existing_registration(cursor, recipient_email)
         if existing_registration:
             flash("Invitation not sent. This email is already registered or has an access request.", "warning")
@@ -615,11 +658,13 @@ def email_logs():
     """)
 
     email_logs = cursor.fetchall()
+    settings = load_system_settings(cursor)
 
     cursor.close()
     conn.close()
 
     return render_template(
         'vhan_email.html',
-        email_logs=email_logs
+        email_logs=email_logs,
+        settings=settings
     )

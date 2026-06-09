@@ -161,15 +161,13 @@
       </div>
 
       <div class="form-group">
+        <label>Email Subject</label>
+        <input type="text" name="subject" value="{{ settings.email_invitation_subject }}" required>
+      </div>
+
+      <div class="form-group">
         <label>Invitation Message</label>
-        <textarea name="message_body" rows="6">Hello,
-
-You are invited to register in the Inclusion Intelligence System.
-
-Please complete your organization registration using the provided link.
-
-Thank you,
-Inclusion Intelligence Team</textarea>
+        <textarea name="message_body" rows="9" required>{{ settings.email_invitation_body }}</textarea>
       </div>
 
       <button type="submit" class="send-invite-btn">
@@ -234,5 +232,6 @@ Inclusion Intelligence Team</textarea>
 </div>
 
 <script src="{{ url_for('static', filename='js/email_logs.js') }}"></script>
+<script src="{{ url_for('static', filename='js/floating_table_scroll.js') }}"></script>
 </body>
 </html>

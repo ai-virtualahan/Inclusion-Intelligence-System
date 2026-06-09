@@ -5,8 +5,13 @@ from datetime import datetime, timedelta
 import secrets
 from flask_mail import Message
 from extensions import mail
-from config import MAIL_USERNAME
-from settings_utils import get_int_setting, get_role_access
+from config import APP_BASE_URL, MAIL_USERNAME
+from settings_utils import (
+    get_int_setting,
+    get_role_access,
+    load_system_settings,
+    render_email_template,
+)
 
 
 login_bp = Blueprint('login', __name__)
@@ -129,32 +134,33 @@ def forgot_password():
 
         conn.commit()
 
-        BASE_URL = "https://cylinder-cinch-unnerve.ngrok-free.dev"
-        reset_link = f"{BASE_URL}/reset-password/{token}"
+        reset_path = url_for('login.reset_password', token=token)
+        reset_link = (
+            f"{APP_BASE_URL.rstrip('/')}{reset_path}"
+            if APP_BASE_URL
+            else url_for('login.reset_password', token=token, _external=True)
+        )
+        settings = load_system_settings(cursor)
+        template_values = {
+            **settings,
+            "contact_person": user.get('contact_person', ''),
+            "work_email": email,
+            "reset_url": reset_link,
+        }
 
         msg = Message(
-            subject="Reset Your Password - Inclusion Intelligence System",
+            subject=render_email_template(
+                settings["email_password_reset_subject"],
+                **template_values
+            ),
             sender=("Inclusion Intelligence System", MAIL_USERNAME),
             recipients=[email]
         )
 
-        msg.body = f"""
-Hello {user.get('contact_person', '')},
-
-We received a request to reset the password associated with your Inclusion Intelligence System account.
-
-Please click the link below to create a new password:
-
-{reset_link}
-
-For security purposes, this link will expire in 15 minutes.
-
-If you did not request a password reset, you may safely ignore this email.
-
-Thank you,
-Inclusion Intelligence System Support Team
-Empowering Inclusion. Enriching Lives.
-"""
+        msg.body = render_email_template(
+            settings["email_password_reset_body"],
+            **template_values
+        )
 
         print("ABOUT TO SEND EMAIL TO:", email)
 

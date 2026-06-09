@@ -443,7 +443,7 @@ def assessment_result(assessment_id):
         LEFT JOIN question_choices qc
             ON gf.selected_choice_id = qc.id
         WHERE gf.assessment_id = %s
-        ORDER BY FIELD(gf.severity, 'critical', 'moderate'), ad.id, gf.id
+        ORDER BY FIELD(gf.severity, 'critical', 'moderate', 'low'), ad.id, gf.id
     """, (assessment_id,))
     gaps = cursor.fetchall()
 
@@ -455,6 +455,7 @@ def assessment_result(assessment_id):
                 "dimension": dimension,
                 "critical_count": 0,
                 "moderate_count": 0,
+                "low_count": 0,
                 "recommendations": [],
                 "gaps": []
             }
@@ -464,6 +465,8 @@ def assessment_result(assessment_id):
             group["critical_count"] += 1
         elif gap['severity'] == 'moderate':
             group["moderate_count"] += 1
+        elif gap['severity'] == 'low':
+            group["low_count"] += 1
 
         recommendation = gap.get('recommendation_text')
         if recommendation and recommendation not in group["recommendations"]:

@@ -34,6 +34,7 @@ function groupGapsByDimension(gaps = []) {
                 dimension,
                 criticalCount: 0,
                 moderateCount: 0,
+                lowCount: 0,
                 recommendations: [],
                 gaps: []
             };
@@ -46,6 +47,8 @@ function groupGapsByDimension(gaps = []) {
             group.criticalCount += 1;
         } else if (gap.severity === "moderate") {
             group.moderateCount += 1;
+        } else if (gap.severity === "low") {
+            group.lowCount += 1;
         }
 
         if (gap.recommendation && !group.recommendations.includes(gap.recommendation)) {
@@ -771,7 +774,7 @@ function renderDashboardFromAPI(data) {
         const groupedGaps = groupGapsByDimension(gaps);
         html += `<div class="imd-section-title">Priority Recommendations by Dimension</div><div class="gap-group-list">`;
         groupedGaps.forEach(group => {
-            const priorityClass = group.criticalCount ? "critical" : "moderate";
+            const priorityClass = group.criticalCount ? "critical" : group.moderateCount ? "moderate" : "low";
             const recommendations = group.recommendations.slice(0, 3).map(recommendation => `
                 <li>${escapeHtml(recommendation)}</li>
             `).join("");
@@ -793,6 +796,7 @@ function renderDashboardFromAPI(data) {
                         <div class="gap-counts">
                             ${group.criticalCount ? `<span class="gap-badge critical">${group.criticalCount} critical</span>` : ''}
                             ${group.moderateCount ? `<span class="gap-badge moderate">${group.moderateCount} moderate</span>` : ''}
+                            ${group.lowCount ? `<span class="gap-badge low">${group.lowCount} low</span>` : ''}
                         </div>
                     </div>
                     ${recommendations ? `<ul class="gap-rec-list">${recommendations}</ul>` : ''}

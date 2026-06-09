@@ -1,3 +1,5 @@
+import re
+
 from db import get_db_connection
 
 
@@ -36,6 +38,7 @@ DEFAULT_SYSTEM_SETTINGS = {
     "score_leading_max": "90",
     "gap_critical_score_max": "1",
     "gap_moderate_score_max": "2",
+    "gap_low_score_max": "3",
     "weight_hiring": "20",
     "weight_onboarding": "20",
     "weight_accommodation": "20",
@@ -45,6 +48,67 @@ DEFAULT_SYSTEM_SETTINGS = {
     "require_rejection_reason": "on",
     "auto_send_approval_email": "on",
     "auto_send_rejection_email": "",
+    "email_invitation_subject": "Registration Invitation - Inclusion Intelligence",
+    "email_invitation_body": """Hello,
+
+You are invited to register in the {system_name}.
+
+Please complete your organization registration using this link:
+{registration_url}
+
+Thank you,
+{primary_contact}""",
+    "email_verification_subject": "Verify Your Email - {system_name}",
+    "email_verification_body": """Hello {contact_person},
+
+Please verify your email address to continue your {system_name} registration.
+
+Verification link:
+{verification_url}
+
+This link will expire in 24 hours. Once verified, your access request will be sent to the administrator for approval.
+
+Thank you,
+{primary_contact}""",
+    "email_approval_subject": "Account Approved - {system_name}",
+    "email_approval_body": """Hello {contact_person},
+
+Your organization, {company_name}, has been approved for the {system_name}.
+
+You may now log in using your registered work email:
+{work_email}
+
+Login page:
+{login_url}
+
+Thank you,
+{primary_contact}""",
+    "email_rejection_subject": "Access Request Update - {system_name}",
+    "email_rejection_body": """Hello {contact_person},
+
+Your access request for {company_name} was not approved.
+
+Reason:
+{rejection_reason}
+
+For questions, please contact {support_email}.
+
+Thank you,
+{primary_contact}""",
+    "email_password_reset_subject": "Reset Your Password - {system_name}",
+    "email_password_reset_body": """Hello {contact_person},
+
+We received a request to reset the password associated with your {system_name} account.
+
+Please use the link below to create a new password:
+{reset_url}
+
+For security purposes, this link will expire in 15 minutes.
+
+If you did not request a password reset, you may safely ignore this email.
+
+Thank you,
+{primary_contact}""",
     "report_footer_text": "Prepared by Inclusion Intelligence System",
     "report_show_gap_analysis": "on",
     "report_show_recommendations": "on",
@@ -55,6 +119,8 @@ DEFAULT_SYSTEM_SETTINGS = {
     "suspend_lock_assessments": "on",
     "suspend_hide_reports": "on",
 }
+
+EMAIL_TEMPLATE_PATTERN = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
 
 CHECKBOX_SETTINGS = {
     "require_rejection_reason",
@@ -167,13 +233,17 @@ def validate_system_settings(settings):
     advancing = number_from_settings(settings, "score_advancing_max", 0, 100)
     leading = number_from_settings(settings, "score_leading_max", 0, 100)
 
+    if any(not value.is_integer() for value in (emerging, developing, advancing, leading)):
+        raise ValueError("Maturity range boundaries must be whole numbers.")
+
     if not (emerging < developing < advancing < leading < 100):
-        raise ValueError("Scoring thresholds must increase and Leading Max must be below 100.")
+        raise ValueError("Maturity ranges must increase continuously and Exemplar must end at 100.")
 
     critical_gap = number_from_settings(settings, "gap_critical_score_max", 1, 4)
     moderate_gap = number_from_settings(settings, "gap_moderate_score_max", 1, 4)
-    if critical_gap > moderate_gap:
-        raise ValueError("Critical gap score must be lower than or equal to moderate gap score.")
+    low_gap = number_from_settings(settings, "gap_low_score_max", 1, 4)
+    if not (critical_gap <= moderate_gap <= low_gap):
+        raise ValueError("Gap score ranges must increase from Critical to Moderate to Low.")
 
     weights = [
         number_from_settings(settings, "weight_hiring", 0, 100),
@@ -234,6 +304,14 @@ def save_system_settings(cursor, form_data, updated_by):
 
 def setting_is_enabled(settings, key):
     return settings.get(key) == "on"
+
+
+def render_email_template(template, **values):
+    def replace_placeholder(match):
+        key = match.group(1)
+        return str(values[key]) if key in values and values[key] is not None else match.group(0)
+
+    return EMAIL_TEMPLATE_PATTERN.sub(replace_placeholder, template or "")
 
 
 def get_bool_setting(cursor, key, default=False):

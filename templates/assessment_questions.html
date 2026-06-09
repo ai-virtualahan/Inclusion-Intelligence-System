@@ -78,33 +78,35 @@
 
     <section class="dashboard-panel">
 
-        <div class="org-header">
+        <div class="questionnaire-toolbar">
           <h1>Questionnaires</h1>
 
           <div class="org-controls">
             <form method="GET" action="{{ url_for('super_admin.assessment_questions') }}">
-              <label for="dimension_id"><strong>Filter by Dimension:</strong></label>
+              <div class="question-filter-field dimension-filter">
+                <label for="dimension_id">Filter by Dimension:</label>
+                <select name="dimension_id" id="dimension_id" onchange="this.form.submit()">
+                  <option value="">All Dimensions</option>
 
-              <select name="dimension_id" id="dimension_id" onchange="this.form.submit()">
-                <option value="">All Dimensions</option>
+                  {% for dim in dimensions %}
+                    <option value="{{ dim.id }}"
+                      {% if selected_dimension == dim.id|string %}selected{% endif %}>
+                      {{ dim.name }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
 
-                {% for dim in dimensions %}
-                  <option value="{{ dim.id }}"
-                    {% if selected_dimension == dim.id|string %}selected{% endif %}>
-                    {{ dim.name }}
-                  </option>
-                {% endfor %}
-              </select>
-
-              <label for="question_status"><strong>Status:</strong></label>
-
-              <select name="question_status" id="question_status" onchange="this.form.submit()">
-                <option value="all" {% if selected_question_status == 'all' %}selected{% endif %}>All Versions</option>
-                <option value="active" {% if selected_question_status == 'active' %}selected{% endif %}>Active</option>
-                <option value="inactive" {% if selected_question_status == 'inactive' %}selected{% endif %}>Inactive</option>
-                <option value="version_1" {% if selected_question_status == 'version_1' %}selected{% endif %}>Version 1</option>
-                <option value="version_2" {% if selected_question_status == 'version_2' %}selected{% endif %}>Version 2</option>
-              </select>
+              <div class="question-filter-field status-filter">
+                <label for="question_status">Status:</label>
+                <select name="question_status" id="question_status" onchange="this.form.submit()">
+                  <option value="all" {% if selected_question_status == 'all' %}selected{% endif %}>All Versions</option>
+                  <option value="active" {% if selected_question_status == 'active' %}selected{% endif %}>Active</option>
+                  <option value="inactive" {% if selected_question_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                  <option value="version_1" {% if selected_question_status == 'version_1' %}selected{% endif %}>Version 1</option>
+                  <option value="version_2" {% if selected_question_status == 'version_2' %}selected{% endif %}>Version 2</option>
+                </select>
+              </div>
             </form>
           </div>  
         
@@ -200,17 +202,37 @@
 
       <label><strong>Question</strong></label>
 
-      <button type="button"
-              id="editQuestionBtn"
-              class="action-btn edit-btn"
-              onclick="toggleQuestionEdit()">
-        Create New Version
-      </button>
+      <div id="questionViewActions" class="question-edit-actions">
+        <button type="button"
+                class="action-btn secondary-btn"
+                onclick="startQuestionEdit('same_version')">
+          Edit Same Version
+        </button>
+        <button type="button"
+                class="action-btn edit-btn"
+                onclick="startQuestionEdit('new_version')">
+          Create New Version
+        </button>
+      </div>
+
+      <div id="questionEditActions" class="question-edit-actions" hidden>
+        <button type="button"
+                id="saveQuestionBtn"
+                class="action-btn edit-btn"
+                onclick="saveQuestionEdit()">
+          Save Question
+        </button>
+        <button type="button"
+                class="action-btn secondary-btn"
+                onclick="cancelQuestionEdit()">
+          Cancel
+        </button>
+      </div>
 
     </div>
 
-    <p class="version-note">
-      Saving creates the next version number and keeps the previous version inactive for reference.
+    <p id="versionNote" class="version-note">
+      Edit this version directly or create a new version while keeping the previous version for reference.
     </p>
 
     <div id="modalVersionContext" class="version-context"></div>
@@ -252,5 +274,6 @@
 
 <input type="hidden" id="openQuestionId" value="{{ request.args.get('open_question_id', '') }}">
 <script src="{{ url_for('static', filename='js/assessment_questions.js') }}"></script>
+<script src="{{ url_for('static', filename='js/floating_table_scroll.js') }}"></script>
 </body>
 </html>

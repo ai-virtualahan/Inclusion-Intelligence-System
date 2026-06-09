@@ -167,6 +167,10 @@
       border-left-color: #f59e0b;
     }
 
+    .gap-group-card.low {
+      border-left-color: #14b8a6;
+    }
+
     .gap-group-head {
       align-items: center;
       display: flex;
@@ -205,6 +209,11 @@
     .gap-pill.moderate {
       background: #fef3c7;
       color: #92400e;
+    }
+
+    .gap-pill.low {
+      background: #ccfbf1;
+      color: #0f766e;
     }
 
     .recommendation-list {
@@ -364,7 +373,7 @@
         <h2>Priority Recommendations by Dimension</h2>
         <div class="gap-group-list">
           {% for group in gap_groups %}
-            <article class="gap-group-card {{ 'critical' if group.critical_count else 'moderate' }}">
+            <article class="gap-group-card {{ 'critical' if group.critical_count else 'moderate' if group.moderate_count else 'low' }}">
               <div class="gap-group-head">
                 <strong>{{ group.dimension }}</strong>
                 <div class="gap-counts">
@@ -373,6 +382,9 @@
                   {% endif %}
                   {% if group.moderate_count %}
                     <span class="gap-pill moderate">{{ group.moderate_count }} moderate</span>
+                  {% endif %}
+                  {% if group.low_count %}
+                    <span class="gap-pill low">{{ group.low_count }} low</span>
                   {% endif %}
                 </div>
               </div>

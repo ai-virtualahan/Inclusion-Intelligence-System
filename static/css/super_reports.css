@@ -221,6 +221,11 @@
   border-color: #ef4444;
 }
 
+.gap-analysis-card.low {
+  background: #f0fdfa;
+  border-color: #14b8a6;
+}
+
 .gap-analysis-card.none {
   background: #f0fdfa;
   border-color: #14b8a6;
@@ -259,6 +264,11 @@
 .gap-analysis-card.critical .priority-pill {
   background: #fee2e2;
   color: #b91c1c;
+}
+
+.gap-analysis-card.low .priority-pill {
+  background: #ccfbf1;
+  color: #0f766e;
 }
 
 .gap-analysis-card.none .priority-pill {
