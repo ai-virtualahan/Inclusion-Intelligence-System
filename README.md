@@ -37,10 +37,23 @@ across key dimensions such as hiring, onboarding, accommodation, retention and c
           SESSION_COOKIE_SECURE=1 when HTTPS is enabled
           SECRET_KEY must be a long random secret
 
-    2. Apply database migrations before deployment
-          Run sql/migrations/001_system_settings.sql on the target database.
-          Run sql/migrations/002_email_verification.sql on the target database.
-          Run the remaining numbered migrations in order through sql/migrations/007_email_templates.sql.
+    2. Prepare the production database
+          Fresh database:
+          Import sql/iis_db.sql only. It already contains migrations 001 through 007.
+
+          Existing database:
+          Do not re-import sql/iis_db.sql because the dump drops and recreates tables.
+          Apply only the migrations that have not yet been applied, in numeric order.
+
+          Existing test database that may be completely replaced:
+          Back up the GreenGeeks database first, then import sql/iis_db.sql in phpMyAdmin.
+          This replaces the old database with the current schema and clean seed data.
+          The dump contains no users, organizations, access requests, or assessment records.
+          Do not use this option when production users or assessment data must be preserved.
+
+          GreenGeeks database created from the older dump:
+          Run sql/migrations/003_choice_recommendations.sql through
+          sql/migrations/007_email_templates.sql in numeric order.
 
     3. Use a production WSGI server
           Do not run the app with Flask debug mode in production.
@@ -74,8 +87,9 @@ across key dimensions such as hiring, onboarding, accommodation, retention and c
 # Project Structure
 
         project-folder/
-        |___database/
+        |___sql/
         |   |___iis_db.sql
+        |   |___migrations/
         |___templates/
         |___static/
         |___app.py
