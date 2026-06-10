@@ -1648,12 +1648,25 @@ def reports():
     """)
     total_reports = cursor.fetchone()['total']
 
-    cursor.execute("""
-        SELECT COUNT(*) AS total
-        FROM assessments
-        WHERE status IN ('submitted', 'completed')
-    """)
-    completed_assessments = cursor.fetchone()['total']
+    cursor.execute(f"""
+        SELECT COUNT(DISTINCT a.organization_id) AS total
+        FROM assessments a
+        JOIN organizations o
+            ON o.id = a.organization_id
+        WHERE o.status IN ({report_org_status_placeholders})
+          AND a.status IN ('submitted', 'completed')
+          AND a.overall_score IS NOT NULL
+          AND a.maturity_level IS NOT NULL
+          AND (
+              SELECT COUNT(DISTINCT ds.dimension_id)
+              FROM dimension_scores ds
+              WHERE ds.assessment_id = a.id
+          ) >= (
+              SELECT COUNT(*)
+              FROM assessment_dimensions
+          )
+    """, report_org_statuses)
+    organizations_with_results = cursor.fetchone()['total']
 
     cursor.execute("""
         SELECT COUNT(*) AS total
@@ -1705,6 +1718,17 @@ def reports():
                    maturity_level, started_at, submitted_at
             FROM assessments
             WHERE organization_id = %s
+              AND status IN ('submitted', 'completed')
+              AND overall_score IS NOT NULL
+              AND maturity_level IS NOT NULL
+              AND (
+                  SELECT COUNT(DISTINCT ds.dimension_id)
+                  FROM dimension_scores ds
+                  WHERE ds.assessment_id = assessments.id
+              ) >= (
+                  SELECT COUNT(*)
+                  FROM assessment_dimensions
+              )
             ORDER BY COALESCE(submitted_at, started_at) DESC, id DESC
             LIMIT 1
         """, (selected_org_id,))
@@ -1749,7 +1773,7 @@ def reports():
     return render_template(
         'super_reports.html',
         total_reports=total_reports,
-        completed_assessments=completed_assessments,
+        organizations_with_results=organizations_with_results,
         approved_organizations=approved_organizations,
         organizations=organizations,
         selected_org_id=selected_org_id,
