@@ -53,7 +53,13 @@ across key dimensions such as hiring, onboarding, accommodation, retention and c
 
           GreenGeeks database created from the older dump:
           Run sql/migrations/003_choice_recommendations.sql through
-          sql/migrations/007_email_templates.sql in numeric order.
+          the latest numbered migration in numeric order.
+
+          Database changes added after deployment:
+          Run only the new migration files that have not yet been applied.
+          For the Contact Us feature, run sql/migrations/008_contact_inquiries.sql.
+          To restore scored historical assessments that still have a submitted status,
+          run sql/migrations/009_backfill_completed_assessments.sql.
 
     3. Use a production WSGI server
           Do not run the app with Flask debug mode in production.

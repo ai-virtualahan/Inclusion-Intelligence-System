@@ -133,6 +133,38 @@ CREATE TABLE `benchmark_snapshots` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `contact_inquiries`
+--
+
+DROP TABLE IF EXISTS `contact_inquiries`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `contact_inquiries` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `source` enum('public','organization') NOT NULL,
+  `user_id` int DEFAULT NULL,
+  `organization_id` int DEFAULT NULL,
+  `contact_name` varchar(150) NOT NULL,
+  `contact_email` varchar(150) NOT NULL,
+  `inquiry_type` varchar(50) NOT NULL,
+  `subject` varchar(200) NOT NULL,
+  `message` text NOT NULL,
+  `status` enum('new','in_progress','resolved') NOT NULL DEFAULT 'new',
+  `email_status` enum('pending','sent','failed') NOT NULL DEFAULT 'pending',
+  `email_error` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_contact_inquiries_source` (`source`),
+  KEY `idx_contact_inquiries_status` (`status`),
+  KEY `idx_contact_inquiries_user` (`user_id`),
+  KEY `idx_contact_inquiries_organization` (`organization_id`),
+  CONSTRAINT `fk_contact_inquiries_organization` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_contact_inquiries_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `dimension_scores`
 --
 
@@ -447,7 +479,7 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-06-10 13:13:17
+-- Dump completed on 2026-06-10 15:10:52
 
 -- MySQL dump 10.13  Distrib 8.0.46, for Win64 (x86_64)
 --
@@ -535,4 +567,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-06-10 13:13:17
+-- Dump completed on 2026-06-10 15:10:53

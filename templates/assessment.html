@@ -278,6 +278,16 @@
     <!-- CONTENT -->
     <div class="content">
 
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="contact-flash-container" aria-live="polite">
+                    {% for category, message in messages %}
+                        <div class="contact-flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
         <!-- INCLUSION MATURITY DASHBOARD -->
         <div id="dashboard" class="page active">
             <div class="card">
@@ -325,7 +335,56 @@
         <div id="contact" class="page">
             <div class="card">
                 <h2>Contact Us</h2>
-                <p>Get in touch with the Inclusion Intelligence System team.</p>
+                <p>Send an issue or support request directly to the Virtualahan team.</p>
+
+                <form method="POST"
+                      action="{{ url_for('contact.organization_inquiry') }}"
+                      class="organization-contact-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="organization-contact-summary">
+                        <div>
+                            <span>Organization</span>
+                            <strong>{{ profile.company_name if profile and profile.company_name else 'Not provided' }}</strong>
+                        </div>
+                        <div>
+                            <span>Contact Person</span>
+                            <strong>{{ profile.full_name if profile and profile.full_name else 'Not provided' }}</strong>
+                        </div>
+                        <div>
+                            <span>Reply Email</span>
+                            <strong>{{ profile.work_email if profile and profile.work_email else 'Not provided' }}</strong>
+                        </div>
+                    </div>
+
+                    <label for="organizationIssueType">Issue Type</label>
+                    <select id="organizationIssueType" name="inquiry_type" required>
+                        <option value="" selected disabled>Select an issue type</option>
+                        <option value="account_access">Account Access</option>
+                        <option value="assessment_scoring">Assessment or Scoring</option>
+                        <option value="technical_issue">Technical Issue</option>
+                        <option value="reports">Reports</option>
+                        <option value="others">Others</option>
+                    </select>
+
+                    <label for="organizationIssueSubject">Subject</label>
+                    <input id="organizationIssueSubject"
+                           type="text"
+                           name="subject"
+                           maxlength="200"
+                           placeholder="Briefly describe the issue"
+                           required>
+
+                    <label for="organizationIssueMessage">Message</label>
+                    <textarea id="organizationIssueMessage"
+                              name="message"
+                              rows="8"
+                              maxlength="5000"
+                              placeholder="Please include the details needed for the Virtualahan team to assist you."
+                              required></textarea>
+
+                    <button type="submit" class="organization-contact-submit">Send Support Request</button>
+                </form>
             </div>
         </div>
 
