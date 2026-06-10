@@ -29,6 +29,16 @@
     </div>
   </header>
 
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="home-flash-container" aria-live="polite">
+        {% for category, message in messages %}
+          <div class="home-flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
   <main>
     <section class="hero-shell" id="home">
       <div class="hero-copy">
@@ -48,7 +58,7 @@
       </div>
 
       <div class="hero-visual">
-        <img src="{{ url_for('static', filename='images/right-hero.jpg') }}" alt="Digital assessment dashboard preview">
+        <img src="{{ url_for('static', filename='images/hero-right.png') }}" alt="Digital assessment dashboard preview">
       </div>
     </section>
 
@@ -258,9 +268,57 @@
         </article>
       </div>
     </section>
+
+    <section class="contact-section" id="contact">
+      <div class="contact-details">
+        <p class="contact-eyebrow">Contact Us</p>
+        <h2>Virtualahan Inc.</h2>
+        <p>
+          #74 Aurora Quezon St. corner E. Jacinto and M. Roxas Ave.<br>
+          Brgy. 32-D, Davao City, 8000 Davao del Sur, Philippines
+        </p>
+        <div class="contact-email-card">
+          <span>Official Email</span>
+          <a href="mailto:{{ support_email }}">{{ support_email }}</a>
+        </div>
+      </div>
+
+      <div class="contact-form-panel">
+        <h2>Send an Inquiry</h2>
+        <p>For registration, fellowship, partnership, and other questions.</p>
+
+        <form method="POST" action="{{ url_for('contact.public_inquiry') }}" class="contact-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="contact-honeypot" aria-hidden="true">
+            <label for="website">Website</label>
+            <input id="website" type="text" name="website" tabindex="-1" autocomplete="off">
+          </div>
+
+          <label for="contactName">Your Name</label>
+          <input id="contactName" type="text" name="contact_name" maxlength="150" required>
+
+          <label for="contactEmail">Your Email</label>
+          <input id="contactEmail" type="email" name="contact_email" maxlength="150" required>
+
+          <label for="inquiryType">Type of Inquiry</label>
+          <select id="inquiryType" name="inquiry_type" required>
+            <option value="" selected disabled>Select an inquiry type</option>
+            <option value="registration">Registration</option>
+            <option value="fellowship">Fellowship</option>
+            <option value="partnership">Partnership</option>
+            <option value="others">Others</option>
+          </select>
+
+          <label for="contactMessage">Your Message</label>
+          <textarea id="contactMessage" name="message" rows="7" maxlength="5000" required></textarea>
+
+          <button type="submit">Send Inquiry</button>
+        </form>
+      </div>
+    </section>
   </main>
 
-  <footer class="site-footer" id="contact">
+  <footer class="site-footer">
     <p>&copy; 2026 Inclusion Intelligence. All rights reserved.</p>
     <div id="help">
       <a href="#">Privacy Policy</a>

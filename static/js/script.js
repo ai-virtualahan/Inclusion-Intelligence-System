@@ -355,6 +355,11 @@ function showPage(id) {
     if (id === "dashboard") loadDashboard();
 }
 
+const requestedPage = new URLSearchParams(window.location.search).get("page");
+if (["dashboard", "profile", "contact"].includes(requestedPage)) {
+    window.addEventListener("load", () => showPage(requestedPage));
+}
+
 /* == DIAGNOSTIC == */
 function openDiagnostic() {
     if (isAssessmentLocked()) {

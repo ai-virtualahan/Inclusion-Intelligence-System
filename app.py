@@ -6,13 +6,14 @@ from collections import OrderedDict
 from db import get_db_connection
 from assessment_scoring import compute_assessment_scores
 from datetime import datetime, timedelta
-from settings_utils import get_bool_setting, get_int_setting
+from settings_utils import get_bool_setting, get_int_setting, load_system_settings
 
 from routes.login import login_bp
 from routes.super_dashboard import super_admin_bp
 from routes.vhan_dashboard import vhan_bp
 from routes.register import register_bp
 from routes.org_dashboard import org_dashboard_bp
+from routes.contact import contact_bp
 
 from extensions import mail
 
@@ -29,6 +30,7 @@ app.register_blueprint(super_admin_bp)
 app.register_blueprint(vhan_bp)
 app.register_blueprint(register_bp)
 app.register_blueprint(org_dashboard_bp)
+app.register_blueprint(contact_bp)
 
 
 def csrf_token():
@@ -135,9 +137,16 @@ def home():
     cursor.execute("SELECT COUNT(*) AS progress_tracked FROM assessments")
     progress_tracked = cursor.fetchone()['progress_tracked']
 
+    settings = load_system_settings(cursor)
+
     cursor.close()
     conn.close()
-    return render_template('home.html', users_assessed=users_assessed, progress_tracked=progress_tracked)
+    return render_template(
+        'home.html',
+        users_assessed=users_assessed,
+        progress_tracked=progress_tracked,
+        support_email=settings["support_email"],
+    )
 
 
 @app.route('/assessment')

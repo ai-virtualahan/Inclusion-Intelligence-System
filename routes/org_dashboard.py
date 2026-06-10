@@ -54,11 +54,18 @@ def dashboard_data():
         }), 403
 
     cursor.execute("""
-        SELECT id, overall_score, maturity_level, submitted_at, cycle_number, assessment_type
+        SELECT
+            id,
+            overall_score,
+            maturity_level,
+            COALESCE(submitted_at, started_at) AS submitted_at,
+            cycle_number,
+            assessment_type
         FROM assessments
         WHERE organization_id = %s
-          AND status = 'completed'
-        ORDER BY submitted_at DESC
+          AND status IN ('submitted', 'completed')
+          AND overall_score IS NOT NULL
+        ORDER BY COALESCE(submitted_at, started_at) DESC
         LIMIT 1
     """, (org_id,))
     latest = cursor.fetchone()
@@ -143,11 +150,18 @@ def dashboard_data():
 
     # ── Score history (timeline) ─────────────────────────────────────────
     cursor.execute("""
-        SELECT id, overall_score, maturity_level, submitted_at, cycle_number, assessment_type
+        SELECT
+            id,
+            overall_score,
+            maturity_level,
+            COALESCE(submitted_at, started_at) AS submitted_at,
+            cycle_number,
+            assessment_type
         FROM assessments
         WHERE organization_id = %s
-          AND status = 'completed'
-        ORDER BY submitted_at ASC
+          AND status IN ('submitted', 'completed')
+          AND overall_score IS NOT NULL
+        ORDER BY COALESCE(submitted_at, started_at) ASC
     """, (org_id,))
     history_rows = cursor.fetchall()
 
