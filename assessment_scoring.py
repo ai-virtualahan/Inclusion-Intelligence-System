@@ -138,8 +138,8 @@ def recommendation_for_question(cursor, dimension_name, question_id):
     return recommendations[question_index] if question_index < len(recommendations) else ""
 
 
-def choice_recommendation_for_answer(cursor, choice_id, severity=None):
-    """Return the recommendation attached to the selected answer choice."""
+def choice_guidance_for_answer(cursor, choice_id, severity=None):
+    """Return the gap definition and recommendation for an answer choice."""
     params = [choice_id]
     severity_filter = ""
     if severity:
@@ -147,19 +147,20 @@ def choice_recommendation_for_answer(cursor, choice_id, severity=None):
         params.append(severity)
 
     cursor.execute(f"""
-        SELECT recommendation_text
+        SELECT gap_definition, recommendation_text
         FROM question_choice_recommendations
         WHERE choice_id = %s
           {severity_filter}
-          AND recommendation_text IS NOT NULL
-          AND TRIM(recommendation_text) <> ''
         ORDER BY id ASC
         LIMIT 1
     """, tuple(params))
     row = cursor.fetchone()
     if not row:
-        return ""
-    return row_value(row, "recommendation_text", 0) or ""
+        return "", ""
+    return (
+        row_value(row, "gap_definition", 0) or "",
+        row_value(row, "recommendation_text", 1) or ""
+    )
 
 
 def compute_assessment_scores_legacy(cursor, assessment_id):
@@ -371,7 +372,11 @@ def compute_assessment_scores(cursor, assessment_id):
         else:
             continue
 
-        recommendation = choice_recommendation_for_answer(cursor, selected_choice_id, severity)
+        gap_definition, recommendation = choice_guidance_for_answer(
+            cursor,
+            selected_choice_id,
+            severity
+        )
         if not recommendation:
             recommendation = recommendation_for_question(cursor, dimension_name, question_id)
 
@@ -384,9 +389,10 @@ def compute_assessment_scores(cursor, assessment_id):
                 score_value,
                 severity,
                 description,
+                gap_definition,
                 recommendation_text
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             assessment_id,
             dimension_id,
@@ -395,6 +401,7 @@ def compute_assessment_scores(cursor, assessment_id):
             score_value,
             severity,
             question_text,
+            gap_definition,
             recommendation
         ))
 

@@ -443,6 +443,7 @@ def assessment_result(assessment_id):
             gf.severity,
             gf.description AS question_text,
             gf.score_value,
+            gf.gap_definition,
             gf.recommendation_text,
             qc.choice_letter,
             qc.choice_text
@@ -465,6 +466,7 @@ def assessment_result(assessment_id):
                 "critical_count": 0,
                 "moderate_count": 0,
                 "low_count": 0,
+                "gap_definitions": [],
                 "recommendations": [],
                 "gaps": []
             }
@@ -476,6 +478,10 @@ def assessment_result(assessment_id):
             group["moderate_count"] += 1
         elif gap['severity'] == 'low':
             group["low_count"] += 1
+
+        gap_definition = gap.get('gap_definition')
+        if gap_definition and gap_definition not in group["gap_definitions"]:
+            group["gap_definitions"].append(gap_definition)
 
         recommendation = gap.get('recommendation_text')
         if recommendation and recommendation not in group["recommendations"]:

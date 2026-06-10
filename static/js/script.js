@@ -13,6 +13,8 @@ const CHOICES = [
 ];
 
 const EXAM_INSTRUCTION = "For each question, select ONE answer that best describes your organization's current state.";
+const dashboardSeverityFilters = {};
+let latestDashboardData = null;
 
 function escapeHtml(value) {
     return String(value ?? "")
@@ -59,6 +61,64 @@ function groupGapsByDimension(gaps = []) {
     });
 
     return groups;
+}
+
+function uniqueTextValues(values) {
+    return [...new Set(values.map(value => String(value || "").trim()).filter(Boolean))];
+}
+
+function renderDashboardGapGroups(gaps) {
+    const groupedGaps = groupGapsByDimension(gaps);
+
+    return groupedGaps.map(group => {
+        const activeSeverity = dashboardSeverityFilters[group.dimension] || "all";
+        const visibleGaps = activeSeverity === "all"
+            ? group.gaps
+            : group.gaps.filter(gap => gap.severity === activeSeverity);
+        const gapDefinitions = uniqueTextValues(
+            visibleGaps.map(gap => gap.gap_definition)
+        );
+        const recommendations = uniqueTextValues(visibleGaps.map(gap => gap.recommendation));
+
+        const severityButton = (severity, count) => {
+            if (!count) return "";
+            const isActive = activeSeverity === severity;
+            return `
+                <button
+                    type="button"
+                    class="gap-filter-button ${severity} ${isActive ? "active" : ""}"
+                    data-dimension="${escapeHtml(group.dimension)}"
+                    data-severity="${severity}"
+                    aria-pressed="${isActive}"
+                >
+                    ${count} ${severity}
+                </button>`;
+        };
+
+        return `
+            <article class="gap-dashboard-card">
+                <div class="gap-dashboard-head">
+                    <h3>${escapeHtml(group.dimension)}</h3>
+                    <div class="gap-counts">
+                        ${severityButton("critical", group.criticalCount)}
+                        ${severityButton("moderate", group.moderateCount)}
+                        ${severityButton("low", group.lowCount)}
+                    </div>
+                </div>
+                <section class="gap-content-panel definitions">
+                    <h4>Gap</h4>
+                    ${gapDefinitions.length
+                        ? `<ul>${gapDefinitions.map(definition => `<li>${escapeHtml(definition)}</li>`).join("")}</ul>`
+                        : `<p class="gap-empty-message">No gap analysis has been added for this filter.</p>`}
+                </section>
+                <section class="gap-content-panel recommendations">
+                    <h4>Recommendations</h4>
+                    ${recommendations.length
+                        ? `<ul>${recommendations.map(recommendation => `<li>${escapeHtml(recommendation)}</li>`).join("")}</ul>`
+                        : `<p class="gap-empty-message">No recommendations have been added for this filter.</p>`}
+                </section>
+            </article>`;
+    }).join("");
 }
 
 // Questions must match database question_bank (IDs 1-50)
@@ -730,6 +790,7 @@ function loadDashboard() {
 function renderDashboardFromAPI(data) {
     const container = document.getElementById("imdContent");
     const { latest, dimensions, gaps, history, can_reassess, next_eligible } = data;
+    latestDashboardData = data;
 
     let html = "";
 
@@ -776,45 +837,23 @@ function renderDashboardFromAPI(data) {
 
     // Gaps
     if (gaps && gaps.length > 0) {
-        const groupedGaps = groupGapsByDimension(gaps);
-        html += `<div class="imd-section-title">Priority Recommendations by Dimension</div><div class="gap-group-list">`;
-        groupedGaps.forEach(group => {
-            const priorityClass = group.criticalCount ? "critical" : group.moderateCount ? "moderate" : "low";
-            const recommendations = group.recommendations.slice(0, 3).map(recommendation => `
-                <li>${escapeHtml(recommendation)}</li>
-            `).join("");
-            const answeredGaps = group.gaps.map(g => `
-                <div class="gap-question-row">
-                    <div class="gap-question">${escapeHtml(g.question)}</div>
-                    ${g.selected_answer ? `
-                        <div class="gap-answer">
-                            Selected answer: ${g.selected_choice ? `${escapeHtml(g.selected_choice)}. ` : ''}${escapeHtml(g.selected_answer)}
-                            ${g.score !== null && g.score !== undefined ? `(Score: ${escapeHtml(g.score)})` : ''}
-                        </div>
-                    ` : ''}
-                </div>
-            `).join("");
-            html += `
-                <div class="gap-group-card ${priorityClass}">
-                    <div class="gap-group-head">
-                        <strong>${escapeHtml(group.dimension)}</strong>
-                        <div class="gap-counts">
-                            ${group.criticalCount ? `<span class="gap-badge critical">${group.criticalCount} critical</span>` : ''}
-                            ${group.moderateCount ? `<span class="gap-badge moderate">${group.moderateCount} moderate</span>` : ''}
-                            ${group.lowCount ? `<span class="gap-badge low">${group.lowCount} low</span>` : ''}
-                        </div>
-                    </div>
-                    ${recommendations ? `<ul class="gap-rec-list">${recommendations}</ul>` : ''}
-                    <details class="gap-details">
-                        <summary>View answered gaps</summary>
-                        ${answeredGaps}
-                    </details>
-                </div>`;
-        });
-        html += `</div>`;
+        html += `
+            <div class="imd-section-title">Gaps and Recommendations by Dimension</div>
+            <div class="gap-dashboard-list">
+                ${renderDashboardGapGroups(gaps)}
+            </div>`;
     }
 
     container.innerHTML = html;
+    container.querySelectorAll(".gap-filter-button").forEach(button => {
+        button.addEventListener("click", () => {
+            const dimension = button.dataset.dimension;
+            const severity = button.dataset.severity;
+            dashboardSeverityFilters[dimension] =
+                dashboardSeverityFilters[dimension] === severity ? "all" : severity;
+            renderDashboardFromAPI(latestDashboardData);
+        });
+    });
 }
 
 function renderDashboardLocal() {

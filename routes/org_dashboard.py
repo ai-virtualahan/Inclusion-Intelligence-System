@@ -121,6 +121,7 @@ def dashboard_data():
             gf.severity,
             gf.description        AS question_text,
             gf.score_value,
+            gf.gap_definition,
             gf.recommendation_text,
             ad.name               AS dimension,
             gf.question_id,
@@ -145,6 +146,7 @@ def dashboard_data():
             "selected_answer": row['choice_text'],
             "selected_choice": row['choice_letter'],
             "score": float(row['score_value']) if row['score_value'] is not None else None,
+            "gap_definition": row['gap_definition'] or "",
             "recommendation": row['recommendation_text'] or ""
         })
 

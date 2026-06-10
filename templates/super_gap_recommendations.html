@@ -35,7 +35,7 @@
   <main class="main-content">
     <section class="page-header">
       <h1>Gap Recommendations</h1>
-      <p>Edit the severity and recommendation shown for each low-scoring answer choice.</p>
+      <p>Edit the gap analysis, severity, and recommendation shown for each low-scoring answer choice.</p>
     </section>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -110,8 +110,16 @@
 
                   <p class="choice-text">{{ choice.choice_text }}</p>
 
-                  <label for="recommendation_{{ choice.choice_id }}">Recommendation</label>
-                  <textarea id="recommendation_{{ choice.choice_id }}" name="recommendation_{{ choice.choice_id }}" rows="3">{{ choice.recommendation_text or '' }}</textarea>
+                  <div class="recommendation-text-fields">
+                    <div>
+                      <label for="gap_definition_{{ choice.choice_id }}">Gap Analysis</label>
+                      <textarea id="gap_definition_{{ choice.choice_id }}" name="gap_definition_{{ choice.choice_id }}" rows="3" placeholder="Enter the gap analysis based on this answer.">{{ choice.gap_definition or '' }}</textarea>
+                    </div>
+                    <div>
+                      <label for="recommendation_{{ choice.choice_id }}">Recommendation</label>
+                      <textarea id="recommendation_{{ choice.choice_id }}" name="recommendation_{{ choice.choice_id }}" rows="3" placeholder="Describe the recommended action.">{{ choice.recommendation_text or '' }}</textarea>
+                    </div>
+                  </div>
                 </section>
               {% endfor %}
             </div>

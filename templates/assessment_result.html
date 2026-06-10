@@ -227,17 +227,6 @@
       margin: 8px 0;
     }
 
-    .gap-details {
-      margin-top: 12px;
-    }
-
-    .gap-details summary {
-      color: #0b9b8a;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 800;
-    }
-
     .gap-question {
       color: #0e2240;
       font-weight: 700;
@@ -248,6 +237,30 @@
       color: #475569;
       line-height: 1.55;
       margin: 0;
+    }
+
+    .result-gap-panel {
+      border-left: 5px solid;
+      border-radius: 10px;
+      margin-top: 14px;
+      padding: 18px 22px;
+    }
+
+    .result-gap-panel.definitions {
+      background: #fff1f2;
+      border-color: #f97316;
+    }
+
+    .result-gap-panel.recommendations {
+      background: #f1f7ed;
+      border-color: #84cc16;
+    }
+
+    .result-gap-panel h3 {
+      color: #111827;
+      font-size: 19px;
+      margin: 0 0 12px;
+      text-transform: uppercase;
     }
 
     @media print {
@@ -328,10 +341,6 @@
         padding: 0 0 0 4mm;
       }
 
-      .gap-details summary {
-        display: none;
-      }
-
       .recommendation-list li,
       .gap-answer {
         line-height: 1.35;
@@ -389,26 +398,31 @@
                 </div>
               </div>
 
-              {% if group.recommendations %}
-                <ul class="recommendation-list">
-                  {% for recommendation in group.recommendations[:3] %}
-                    <li>{{ recommendation }}</li>
-                  {% endfor %}
-                </ul>
-              {% endif %}
+              <section class="result-gap-panel definitions">
+                <h3>Gap</h3>
+                {% if group.gap_definitions %}
+                  <ul class="recommendation-list">
+                    {% for definition in group.gap_definitions %}
+                      <li>{{ definition }}</li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <p class="gap-answer">No gap analysis has been added yet.</p>
+                {% endif %}
+              </section>
 
-              <details class="gap-details">
-                <summary>View answered gaps</summary>
-                {% for gap in group.gaps %}
-                  <p class="gap-question">{{ gap.question_text }}</p>
-                  <p class="gap-answer">
-                    Selected answer:
-                    {% if gap.choice_letter %}{{ gap.choice_letter }}. {% endif %}
-                    {{ gap.choice_text or 'Answer details unavailable' }}
-                    {% if gap.score_value is not none %}(Score: {{ gap.score_value }}){% endif %}
-                  </p>
-                {% endfor %}
-              </details>
+              <section class="result-gap-panel recommendations">
+                <h3>Recommendations</h3>
+                {% if group.recommendations %}
+                  <ul class="recommendation-list">
+                    {% for recommendation in group.recommendations %}
+                      <li>{{ recommendation }}</li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <p class="gap-answer">No recommendations have been added yet.</p>
+                {% endif %}
+              </section>
             </article>
           {% endfor %}
         </div>
@@ -425,18 +439,7 @@
 
   <script>
     function printAssessmentResult() {
-      const detailElements = Array.from(document.querySelectorAll(".gap-details"));
-      const originallyOpen = new Set(detailElements.filter(detail => detail.open));
-
-      detailElements.forEach(detail => {
-        detail.open = true;
-      });
-
       window.print();
-
-      detailElements.forEach(detail => {
-        detail.open = originallyOpen.has(detail);
-      });
     }
   </script>
 </body>
