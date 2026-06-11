@@ -621,6 +621,7 @@ def question_choices(question_id):
             qc.choice_text,
             qc.choice_score,
             qcr.severity AS recommendation_severity,
+            qcr.gap_definition,
             qcr.recommendation_text
         FROM question_choices qc
         LEFT JOIN question_choice_recommendations qcr
@@ -673,19 +674,35 @@ def edit_choice(choice_id):
     """, (choice_text, choice_score, choice_id))
 
     cursor.execute("""
+        SELECT gap_definition
+        FROM question_choice_recommendations
+        WHERE choice_id = %s
+        ORDER BY id ASC
+        LIMIT 1
+    """, (choice_id,))
+    existing_guidance = cursor.fetchone() or {}
+    gap_definition = existing_guidance.get("gap_definition")
+
+    cursor.execute("""
         DELETE FROM question_choice_recommendations
         WHERE choice_id = %s
     """, (choice_id,))
 
-    if recommendation_text:
+    if gap_definition or recommendation_text:
         cursor.execute("""
             INSERT INTO question_choice_recommendations (
                 choice_id,
                 severity,
+                gap_definition,
                 recommendation_text
             )
-            VALUES (%s, %s, %s)
-        """, (choice_id, recommendation_severity, recommendation_text))
+            VALUES (%s, %s, %s, %s)
+        """, (
+            choice_id,
+            recommendation_severity,
+            gap_definition,
+            recommendation_text
+        ))
 
     conn.commit()
     cursor.close()
@@ -709,6 +726,7 @@ def question_choices_data(question_id):
             qc.choice_text,
             qc.choice_score,
             qcr.severity AS recommendation_severity,
+            qcr.gap_definition,
             qcr.recommendation_text
         FROM question_choices qc
         LEFT JOIN question_choice_recommendations qcr
@@ -782,19 +800,35 @@ def edit_question_choices(question_id):
             """, (choice_text, choice_score, choice_id, question_id))
 
             cursor.execute("""
+                SELECT gap_definition
+                FROM question_choice_recommendations
+                WHERE choice_id = %s
+                ORDER BY id ASC
+                LIMIT 1
+            """, (choice_id,))
+            existing_guidance = cursor.fetchone() or {}
+            gap_definition = existing_guidance.get("gap_definition")
+
+            cursor.execute("""
                 DELETE FROM question_choice_recommendations
                 WHERE choice_id = %s
             """, (choice_id,))
 
-            if recommendation_text:
+            if gap_definition or recommendation_text:
                 cursor.execute("""
                     INSERT INTO question_choice_recommendations (
                         choice_id,
                         severity,
+                        gap_definition,
                         recommendation_text
                     )
-                    VALUES (%s, %s, %s)
-                """, (choice_id, recommendation_severity, recommendation_text))
+                    VALUES (%s, %s, %s, %s)
+                """, (
+                    choice_id,
+                    recommendation_severity,
+                    gap_definition,
+                    recommendation_text
+                ))
 
         conn.commit()
 
@@ -805,6 +839,7 @@ def edit_question_choices(question_id):
                 qc.choice_text,
                 qc.choice_score,
                 qcr.severity AS recommendation_severity,
+                qcr.gap_definition,
                 qcr.recommendation_text
             FROM question_choices qc
             LEFT JOIN question_choice_recommendations qcr
@@ -876,6 +911,7 @@ def gap_recommendations():
 
             for choice in editable_choices:
                 choice_id = choice['id']
+                gap_definition = (request.form.get(f"gap_definition_{choice_id}") or "").strip()
                 recommendation_text = (request.form.get(f"recommendation_{choice_id}") or "").strip()
                 severity = (
                     request.form.get(f"severity_{choice_id}")
@@ -892,21 +928,27 @@ def gap_recommendations():
                     WHERE choice_id = %s
                 """, (choice_id,))
 
-                if recommendation_text:
+                if gap_definition or recommendation_text:
                     cursor.execute("""
                         INSERT INTO question_choice_recommendations (
                             choice_id,
                             severity,
+                            gap_definition,
                             recommendation_text
                         )
-                        VALUES (%s, %s, %s)
-                    """, (choice_id, severity, recommendation_text))
+                        VALUES (%s, %s, %s, %s)
+                    """, (choice_id, severity, gap_definition or None, recommendation_text))
 
                 cursor.execute("""
                     UPDATE gap_flags
-                    SET recommendation_text = %s
+                    SET gap_definition = %s,
+                        recommendation_text = %s
                     WHERE selected_choice_id = %s
-                """, (recommendation_text or None, choice_id))
+                """, (
+                    gap_definition or None,
+                    recommendation_text or None,
+                    choice_id
+                ))
 
             conn.commit()
             flash("Gap recommendations saved successfully.", "success")
@@ -935,6 +977,7 @@ def gap_recommendations():
                 qc.choice_text,
                 qc.choice_score,
                 qcr.severity,
+                qcr.gap_definition,
                 qcr.recommendation_text
             FROM question_choices qc
             JOIN question_bank qb
@@ -1171,11 +1214,13 @@ def edit_question(question_id):
             INSERT INTO question_choice_recommendations (
                 choice_id,
                 severity,
+                gap_definition,
                 recommendation_text
             )
             SELECT
                 new_choice.id,
                 qcr.severity,
+                qcr.gap_definition,
                 qcr.recommendation_text
             FROM question_choices old_choice
             JOIN question_choices new_choice
@@ -1603,12 +1648,25 @@ def reports():
     """)
     total_reports = cursor.fetchone()['total']
 
-    cursor.execute("""
-        SELECT COUNT(*) AS total
-        FROM assessments
-        WHERE status IN ('submitted', 'completed')
-    """)
-    completed_assessments = cursor.fetchone()['total']
+    cursor.execute(f"""
+        SELECT COUNT(DISTINCT a.organization_id) AS total
+        FROM assessments a
+        JOIN organizations o
+            ON o.id = a.organization_id
+        WHERE o.status IN ({report_org_status_placeholders})
+          AND a.status IN ('submitted', 'completed')
+          AND a.overall_score IS NOT NULL
+          AND a.maturity_level IS NOT NULL
+          AND (
+              SELECT COUNT(DISTINCT ds.dimension_id)
+              FROM dimension_scores ds
+              WHERE ds.assessment_id = a.id
+          ) >= (
+              SELECT COUNT(*)
+              FROM assessment_dimensions
+          )
+    """, report_org_statuses)
+    organizations_with_results = cursor.fetchone()['total']
 
     cursor.execute("""
         SELECT COUNT(*) AS total
@@ -1660,6 +1718,17 @@ def reports():
                    maturity_level, started_at, submitted_at
             FROM assessments
             WHERE organization_id = %s
+              AND status IN ('submitted', 'completed')
+              AND overall_score IS NOT NULL
+              AND maturity_level IS NOT NULL
+              AND (
+                  SELECT COUNT(DISTINCT ds.dimension_id)
+                  FROM dimension_scores ds
+                  WHERE ds.assessment_id = assessments.id
+              ) >= (
+                  SELECT COUNT(*)
+                  FROM assessment_dimensions
+              )
             ORDER BY COALESCE(submitted_at, started_at) DESC, id DESC
             LIMIT 1
         """, (selected_org_id,))
@@ -1704,7 +1773,7 @@ def reports():
     return render_template(
         'super_reports.html',
         total_reports=total_reports,
-        completed_assessments=completed_assessments,
+        organizations_with_results=organizations_with_results,
         approved_organizations=approved_organizations,
         organizations=organizations,
         selected_org_id=selected_org_id,
