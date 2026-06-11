@@ -1,0 +1,29 @@
+name: Sync to mirror (dev branch)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history, needed for accurate sync
+
+      - name: Set up SSH for mirror repo
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.MIRROR_DEPLOY_KEY }}
+
+      - name: Add mirror remote
+        run: |
+          git remote add mirror git@github.com:ai-virtualahan/Inclusion-Intelligence-System.git
+
+      - name: Push to dev branch on mirror
+        run: |
+          git push mirror HEAD:refs/heads/dev --force
