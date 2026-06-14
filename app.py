@@ -122,6 +122,16 @@ def assessment_is_locked_for_org(cursor, organization_status):
     )
 
 
+def dashboard_url_for_role(role):
+    dashboard_endpoints = {
+        "org_admin": "assessment",
+        "vhan_admin": "vhan.vhan_dashboard",
+        "super_admin": "super_admin.super_dashboard",
+    }
+    endpoint = dashboard_endpoints.get(role)
+    return url_for(endpoint) if endpoint else url_for("login.login")
+
+
 @app.route('/')
 def home():
     conn = get_db_connection()
@@ -141,11 +151,16 @@ def home():
 
     cursor.close()
     conn.close()
+    is_logged_in = bool(session.get("user_id"))
+    dashboard_url = dashboard_url_for_role(session.get("role")) if is_logged_in else None
+
     return render_template(
         'home.html',
         users_assessed=users_assessed,
         progress_tracked=progress_tracked,
         support_email=settings["support_email"],
+        is_logged_in=is_logged_in,
+        dashboard_url=dashboard_url,
     )
 
 
