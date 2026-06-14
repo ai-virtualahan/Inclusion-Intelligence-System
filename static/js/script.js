@@ -79,6 +79,13 @@ function renderDashboardGapGroups(gaps) {
             visibleGaps.map(gap => gap.gap_definition)
         );
         const recommendations = uniqueTextValues(visibleGaps.map(gap => gap.recommendation));
+        const cardSeverity = activeSeverity !== "all"
+            ? activeSeverity
+            : group.criticalCount
+                ? "critical"
+                : group.moderateCount
+                    ? "moderate"
+                    : "low";
 
         const severityButton = (severity, count) => {
             if (!count) return "";
@@ -96,7 +103,7 @@ function renderDashboardGapGroups(gaps) {
         };
 
         return `
-            <article class="gap-dashboard-card">
+            <article class="gap-dashboard-card ${cardSeverity}">
                 <div class="gap-dashboard-head">
                     <h3>${escapeHtml(group.dimension)}</h3>
                     <div class="gap-counts">

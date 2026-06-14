@@ -163,11 +163,21 @@ Inclusion Intelligence Team</textarea>
               <td>{{ log.triggered_by_company or 'System' }}</td>
 
               <td>
-                  <button class="view-btn">
-                      View
-                  </button>
+                <button type="button"
+                        class="view-email-btn"
+                        data-recipient='{{ log.recipient_email|tojson }}'
+                        data-type='{{ log.notification_type|tojson }}'
+                        data-subject='{{ log.subject|tojson }}'
+                        data-message='{{ (log.message_body or "")|tojson }}'
+                        data-status='{{ log.send_status|tojson }}'
+                        data-sent-at='{{ (log.sent_at|string if log.sent_at else "-")|tojson }}'
+                        data-triggered-by='{{ (log.triggered_by_company or "System")|tojson }}'
+                        data-error='{{ (log.error_message or "")|tojson }}'
+                        onclick="openEmailLogModalFromButton(this)">
+                  View
+                </button>
               </td>
-          </tr>
+            </tr>
             {% else %}
             <tr>
               <td colspan="7" class="empty-state">No email activity yet.</td>
@@ -215,6 +225,60 @@ Inclusion Intelligence Team</textarea>
         Send Invitation
       </button>
     </form>
+  </div>
+</div>
+
+<div id="emailLogModal" class="modal">
+  <div class="modal-content contact-modal">
+    <span class="close" onclick="closeEmailLogModal()">&times;</span>
+
+    <h2>Email Log Details</h2>
+
+    <div class="email-preview">
+      <div class="email-meta">
+        <div class="meta-row">
+          <span class="meta-label">Recipient</span>
+          <span id="modalRecipient"></span>
+        </div>
+
+        <div class="meta-row">
+          <span class="meta-label">Subject</span>
+          <span id="modalSubject"></span>
+        </div>
+
+        <div class="meta-row">
+          <span class="meta-label">Email Type</span>
+          <span id="modalType"></span>
+        </div>
+
+        <div class="meta-row">
+          <span class="meta-label">Status</span>
+          <span id="modalStatus"></span>
+        </div>
+
+        <div class="meta-row">
+          <span class="meta-label">Sent At</span>
+          <span id="modalSentAt"></span>
+        </div>
+
+        <div class="meta-row">
+          <span class="meta-label">Triggered By</span>
+          <span id="modalTriggeredBy"></span>
+        </div>
+      </div>
+
+      <div class="error-card" id="modalErrorCard">
+        <div class="error-header">Error Message</div>
+        <div class="error-content" id="modalError"></div>
+      </div>
+
+      <div class="email-body-card">
+        <div class="email-body-header">Message</div>
+        <div class="email-body-content">
+          <pre id="modalMessage"></pre>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
