@@ -1288,6 +1288,8 @@ def users():
     if selected_role == 'inactive':
         selected_status = 'inactive'
         selected_role = ''
+    elif selected_role == 'organization':
+        selected_role = 'org_admin'
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -1311,8 +1313,6 @@ def users():
 
     if selected_role == 'internal':
         filters.append("COALESCE(ur.access_role, u.role) IN ('super_admin', 'vhan_admin')")
-    elif selected_role == 'organization':
-        filters.append("COALESCE(ur.access_role, u.role) = 'org_admin'")
     elif selected_role:
         filters.append("u.role = %s")
         params.append(selected_role)

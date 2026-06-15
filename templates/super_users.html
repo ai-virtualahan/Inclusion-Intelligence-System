@@ -84,7 +84,6 @@
                 <select name="role" id="role" onchange="this.form.submit()">
                 <option value="">All Roles</option>
                 <option value="internal" {% if selected_role == 'internal' %}selected{% endif %}>Internal Admins</option>
-                <option value="organization" {% if selected_role == 'organization' %}selected{% endif %}>Organization Users</option>
                 {% for role in user_roles %}
                   <option value="{{ role.role_key }}" {% if selected_role == role.role_key %}selected{% endif %}>{{ role.role_label }}</option>
                 {% endfor %}
