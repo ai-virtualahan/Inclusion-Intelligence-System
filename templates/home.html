@@ -23,8 +23,10 @@
     </nav>
 
     <div class="header-actions">
-      <button class="login-btn" type="button" onclick="handleAuth()">
-        <span>Login</span>
+      <button class="login-btn"
+              type="button"
+              data-target-url="{{ dashboard_url if is_logged_in else url_for('login.login') }}">
+        <span>{{ 'Dashboard' if is_logged_in else 'Login' }}</span>
       </button>
     </div>
   </header>
@@ -52,8 +54,10 @@
           track growth, and build a more inclusive future one step at a time.
         </p>
 
-        <button class="primary-action" id="startBtn">
-          Login to Start Assessment
+        <button class="primary-action"
+                id="startBtn"
+                data-target-url="{{ dashboard_url if is_logged_in else url_for('login.login') }}">
+          {{ 'Go Back to Dashboard' if is_logged_in else 'Login to Start Assessment' }}
         </button>
       </div>
 

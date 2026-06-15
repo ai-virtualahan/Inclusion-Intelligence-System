@@ -212,7 +212,7 @@
 }
 
 .gap-analysis-card {
-  background: #fff7ed;
+  background: rgba(249, 115, 22, 0.10);
   border-left: 5px solid #f59e0b;
 }
 
@@ -222,8 +222,8 @@
 }
 
 .gap-analysis-card.low {
-  background: #f0fdfa;
-  border-color: #14b8a6;
+  background: rgba(250, 204, 21, 0.14);
+  border-color: #eab308;
 }
 
 .gap-analysis-card.none {
@@ -251,8 +251,8 @@
 }
 
 .priority-pill {
-  background: #fef3c7;
-  color: #92400e;
+  background: rgba(249, 115, 22, 0.16);
+  color: #c2410c;
   border-radius: 999px;
   flex-shrink: 0;
   font-size: 11px;
@@ -267,8 +267,8 @@
 }
 
 .gap-analysis-card.low .priority-pill {
-  background: #ccfbf1;
-  color: #0f766e;
+  background: rgba(250, 204, 21, 0.22);
+  color: #854d0e;
 }
 
 .gap-analysis-card.none .priority-pill {
