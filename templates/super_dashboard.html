@@ -51,6 +51,10 @@
       Reports
     </a>
 
+    <a href="{{ url_for('super_admin.support_inquiries') }}" class="side-link">
+      Support Inquiries
+    </a>
+
     <a href="{{ url_for('super_admin.email_logs') }}" class="side-link">
       Email Logs
     </a>
@@ -108,6 +112,12 @@
         <h2>{{ failed_emails }}</h2>
         <p>Failed Emails</p>
         <span>Check logs</span>
+      </a>
+
+      <a class="card stat-card" href="{{ url_for('super_admin.support_inquiries') }}">
+        <h2>{{ open_inquiries }}</h2>
+        <p>Open Inquiries</p>
+        <span>Review support requests</span>
       </a>
 
       <a class="card stat-card" href="{{ url_for('super_admin.reports') }}">

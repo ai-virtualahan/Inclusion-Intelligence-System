@@ -11,6 +11,15 @@ from routes.access_request_utils import (
     find_existing_registration,
     send_account_rejection_email,
 )
+from routes.inquiry_utils import (
+    apply_inquiry_profile_correction,
+    correct_registration_email,
+    count_contact_inquiries_by_status,
+    list_contact_inquiries,
+    send_inquiry_response,
+    set_contact_inquiry_status,
+    update_inquiry_resolution,
+)
 from settings_utils import (
     can_role_approve_access_requests,
     get_bool_setting,
@@ -171,6 +180,13 @@ def super_dashboard():
     """)
     generated_reports = cursor.fetchone()['total']
 
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM contact_inquiries
+        WHERE status IN ('new', 'in_progress')
+    """)
+    open_inquiries = cursor.fetchone()['total']
+
     cursor.close()
     conn.close()
 
@@ -183,7 +199,8 @@ def super_dashboard():
         inactive_users=inactive_users,
         suspended_organizations=suspended_organizations,
         failed_emails=failed_emails,
-        generated_reports=generated_reports
+        generated_reports=generated_reports,
+        open_inquiries=open_inquiries
     )
 
 @super_admin_bp.route('/super-admin/organizations')
@@ -251,6 +268,184 @@ def organizations():
 
     return render_template('super_organizations.html',organizations=organizations,
     selected_status=selected_status)
+
+
+@super_admin_bp.route('/super-admin/inquiries')
+def support_inquiries():
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    selected_status = request.args.get('status', '')
+    selected_source = request.args.get('source', '')
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    inquiries = list_contact_inquiries(cursor, selected_status, selected_source)
+    status_counts = count_contact_inquiries_by_status(cursor)
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        'support_inquiries.html',
+        admin_type='super',
+        admin_title='Super Admin',
+        inquiries=inquiries,
+        status_counts=status_counts,
+        selected_status=selected_status,
+        selected_source=selected_source
+    )
+
+
+@super_admin_bp.route('/super-admin/inquiries/<int:inquiry_id>/status', methods=['POST'])
+def update_inquiry_status(inquiry_id):
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    status = request.form.get('status')
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        _, message, category = set_contact_inquiry_status(cursor, inquiry_id, status)
+        conn.commit()
+        flash(message, category)
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to update inquiry: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for(
+        'super_admin.support_inquiries',
+        status=request.form.get('selected_status', ''),
+        source=request.form.get('selected_source', '')
+    ))
+
+
+@super_admin_bp.route('/super-admin/inquiries/<int:inquiry_id>/details', methods=['POST'])
+def update_inquiry_details(inquiry_id):
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        _, message, category = update_inquiry_resolution(
+            cursor,
+            inquiry_id,
+            request.form.get('category'),
+            request.form.get('admin_notes'),
+            request.form.get('resolution_message'),
+            request.form.get('status'),
+            session.get('user_id')
+        )
+        conn.commit()
+        flash(message, category)
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to save inquiry details: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for(
+        'super_admin.support_inquiries',
+        status=request.form.get('selected_status', ''),
+        source=request.form.get('selected_source', '')
+    ))
+
+
+@super_admin_bp.route('/super-admin/inquiries/<int:inquiry_id>/correct-profile', methods=['POST'])
+def correct_inquiry_profile(inquiry_id):
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        _, message, category = apply_inquiry_profile_correction(cursor, inquiry_id, request.form)
+        conn.commit()
+        flash(message, category)
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to correct profile details: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for(
+        'super_admin.support_inquiries',
+        status=request.form.get('selected_status', ''),
+        source=request.form.get('selected_source', '')
+    ))
+
+
+@super_admin_bp.route('/super-admin/inquiries/<int:inquiry_id>/send-response', methods=['POST'])
+def send_inquiry_response_email(inquiry_id):
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        _, message, category = send_inquiry_response(
+            cursor,
+            inquiry_id,
+            request.form.get('response_message'),
+            session.get('user_id')
+        )
+        conn.commit()
+        flash(message, category)
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to send response: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for(
+        'super_admin.support_inquiries',
+        status=request.form.get('selected_status', ''),
+        source=request.form.get('selected_source', '')
+    ))
+
+
+@super_admin_bp.route('/super-admin/inquiries/<int:inquiry_id>/correct-registration-email', methods=['POST'])
+def correct_inquiry_registration_email(inquiry_id):
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        _, message, category = correct_registration_email(
+            cursor,
+            inquiry_id,
+            request.form.get('current_email'),
+            request.form.get('corrected_email')
+        )
+        conn.commit()
+        flash(message, category)
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to correct registration email: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for(
+        'super_admin.support_inquiries',
+        status=request.form.get('selected_status', ''),
+        source=request.form.get('selected_source', '')
+    ))
 
 
 @super_admin_bp.route('/super-admin/pending-approvals')
