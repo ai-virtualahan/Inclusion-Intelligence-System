@@ -458,15 +458,30 @@ def assessment_result(assessment_id):
             gf.severity,
             gf.description AS question_text,
             gf.score_value,
-            gf.gap_definition,
-            gf.recommendation_text,
+            COALESCE(gf.gap_definition, qcr.gap_definition, latest_qcr.gap_definition) AS gap_definition,
+            COALESCE(gf.recommendation_text, qcr.recommendation_text, latest_qcr.recommendation_text) AS recommendation_text,
             qc.choice_letter,
             qc.choice_text
         FROM gap_flags gf
         JOIN assessment_dimensions ad
             ON gf.dimension_id = ad.id
+        JOIN question_bank gf_question
+            ON gf.question_id = gf_question.id
         LEFT JOIN question_choices qc
             ON gf.selected_choice_id = qc.id
+        LEFT JOIN question_choice_recommendations qcr
+            ON qcr.choice_id = gf.selected_choice_id
+            AND qcr.severity = gf.severity
+        LEFT JOIN question_bank latest_qb
+            ON latest_qb.dimension_id = ad.id
+            AND COALESCE(latest_qb.version_group_id, latest_qb.id) = COALESCE(gf_question.version_group_id, gf_question.id)
+            AND latest_qb.is_active = 1
+        LEFT JOIN question_choices latest_qc
+            ON latest_qc.question_id = latest_qb.id
+            AND latest_qc.choice_score = gf.score_value
+        LEFT JOIN question_choice_recommendations latest_qcr
+            ON latest_qcr.choice_id = latest_qc.id
+            AND latest_qcr.severity = gf.severity
         WHERE gf.assessment_id = %s
         ORDER BY FIELD(gf.severity, 'critical', 'moderate', 'low'), ad.id, gf.id
     """, (assessment_id,))

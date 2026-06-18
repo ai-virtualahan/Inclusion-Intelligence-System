@@ -121,8 +121,8 @@ def dashboard_data():
             gf.severity,
             gf.description        AS question_text,
             gf.score_value,
-            gf.gap_definition,
-            gf.recommendation_text,
+            COALESCE(gf.gap_definition, qcr.gap_definition, latest_qcr.gap_definition) AS gap_definition,
+            COALESCE(gf.recommendation_text, qcr.recommendation_text, latest_qcr.recommendation_text) AS recommendation_text,
             ad.name               AS dimension,
             gf.question_id,
             qb.dimension_id,
@@ -132,6 +132,19 @@ def dashboard_data():
         JOIN assessment_dimensions ad ON gf.dimension_id = ad.id
         JOIN question_bank qb ON gf.question_id = qb.id
         LEFT JOIN question_choices qc ON gf.selected_choice_id = qc.id
+        LEFT JOIN question_choice_recommendations qcr
+            ON qcr.choice_id = gf.selected_choice_id
+            AND qcr.severity = gf.severity
+        LEFT JOIN question_bank latest_qb
+            ON latest_qb.dimension_id = qb.dimension_id
+            AND COALESCE(latest_qb.version_group_id, latest_qb.id) = COALESCE(qb.version_group_id, qb.id)
+            AND latest_qb.is_active = 1
+        LEFT JOIN question_choices latest_qc
+            ON latest_qc.question_id = latest_qb.id
+            AND latest_qc.choice_score = gf.score_value
+        LEFT JOIN question_choice_recommendations latest_qcr
+            ON latest_qcr.choice_id = latest_qc.id
+            AND latest_qcr.severity = gf.severity
         WHERE gf.assessment_id = %s
         ORDER BY FIELD(gf.severity, 'critical', 'moderate', 'low'), ad.id
     """, (assessment_id,))

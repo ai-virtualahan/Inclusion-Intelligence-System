@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ admin_title }} | Support Inquiries</title>
+  {% if admin_type == 'super' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/super_dashboard.css') }}">
+  {% else %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/vhan_dashboard.css') }}">
+  {% endif %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/support_inquiries.css') }}">
+</head>
+<body>
+{% if admin_type == 'super' %}
+<div class="top-navbar">
+  <div class="brand">Inclusion Intelligence</div>
+
+  <div class="top-links">
+    <a href="{{ url_for('home') }}">Home</a>
+    <a href="{{ url_for('super_admin.super_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('super_admin.users') }}">Users</a>
+    <a href="{{ url_for('super_admin.reports') }}">Reports</a>
+    <a href="{{ url_for('login.logout') }}">Logout</a>
+  </div>
+</div>
+
+<div class="admin-layout">
+  <aside class="sidebar">
+    <h3>Super Admin</h3>
+    <a href="{{ url_for('super_admin.super_dashboard') }}" class="side-link">Dashboard Overview</a>
+    <a href="{{ url_for('super_admin.organizations') }}" class="side-link">Organizations</a>
+    <a href="{{ url_for('super_admin.assessment_questions') }}" class="side-link">Questionnaires</a>
+    <a href="{{ url_for('super_admin.gap_recommendations') }}" class="side-link">Gap Recommendations</a>
+    <a href="{{ url_for('super_admin.users') }}" class="side-link">Users</a>
+    <a href="{{ url_for('super_admin.reports') }}" class="side-link">Reports</a>
+    <a href="{{ url_for('super_admin.support_inquiries') }}" class="side-link active">Support Inquiries</a>
+    <a href="{{ url_for('super_admin.email_logs') }}" class="side-link">Email Logs</a>
+    <a href="{{ url_for('super_admin.system_settings') }}" class="side-link">System Settings</a>
+  </aside>
+
+  <main class="main-content">
+    <section class="page-header">
+      <h1>Support Inquiries</h1>
+      <p>Review contact form messages and support requests from organizations.</p>
+    </section>
+{% else %}
+<div class="top-navbar">
+  <div class="logo-section">
+    <h2>Inclusion Intelligence</h2>
+  </div>
+
+  <div class="top-nav-links">
+    <a href="{{ url_for('home') }}">Home</a>
+    <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('vhan.organizations') }}">Organizations</a>
+    <a href="{{ url_for('vhan.reports') }}">Reports</a>
+    <a href="{{ url_for('login.logout') }}">Logout</a>
+  </div>
+</div>
+
+<div class="dashboard-container">
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>VHAN Admin</h2>
+        <p>Inclusion Intelligence</p>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard Overview</a>
+        <a href="{{ url_for('vhan.pending_approvals') }}">Pending Approvals</a>
+        <a href="{{ url_for('vhan.organizations') }}">Organizations</a>
+        <a href="{{ url_for('vhan.questionnaires') }}">Questionnaires</a>
+        <a href="{{ url_for('vhan.support_inquiries') }}" class="active">Support Inquiries</a>
+        <a href="{{ url_for('vhan.email_logs') }}">Email Logs</a>
+        <a href="{{ url_for('vhan.reports') }}">Reports & Analytics</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="welcome-banner">
+        <div>
+          <h1>Support Inquiries</h1>
+          <p>Review contact form messages and support requests from organizations.</p>
+        </div>
+      </header>
+{% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <section class="inquiry-summary">
+      <a href="{{ url_for('super_admin.support_inquiries' if admin_type == 'super' else 'vhan.support_inquiries', status='new') }}"
+         class="inquiry-stat">
+        <strong>{{ status_counts.get('new', 0) }}</strong>
+        <span>New</span>
+      </a>
+      <a href="{{ url_for('super_admin.support_inquiries' if admin_type == 'super' else 'vhan.support_inquiries', status='in_progress') }}"
+         class="inquiry-stat">
+        <strong>{{ status_counts.get('in_progress', 0) }}</strong>
+        <span>In Progress</span>
+      </a>
+      <a href="{{ url_for('super_admin.support_inquiries' if admin_type == 'super' else 'vhan.support_inquiries', status='resolved') }}"
+         class="inquiry-stat">
+        <strong>{{ status_counts.get('resolved', 0) }}</strong>
+        <span>Resolved</span>
+      </a>
+    </section>
+
+    <section class="inquiry-toolbar">
+      <form method="GET"
+            action="{{ url_for('super_admin.support_inquiries' if admin_type == 'super' else 'vhan.support_inquiries') }}"
+            class="inquiry-filter-form">
+        <select name="status" aria-label="Filter by status">
+          <option value="" {% if not selected_status %}selected{% endif %}>All Statuses</option>
+          <option value="new" {% if selected_status == 'new' %}selected{% endif %}>New</option>
+          <option value="in_progress" {% if selected_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+          <option value="resolved" {% if selected_status == 'resolved' %}selected{% endif %}>Resolved</option>
+        </select>
+
+        <select name="source" aria-label="Filter by source">
+          <option value="" {% if not selected_source %}selected{% endif %}>All Sources</option>
+          <option value="public" {% if selected_source == 'public' %}selected{% endif %}>Public Contact</option>
+          <option value="organization" {% if selected_source == 'organization' %}selected{% endif %}>Organization Support</option>
+        </select>
+
+        <button type="submit" class="inquiry-button primary">Apply Filters</button>
+      </form>
+    </section>
+
+    <section class="inquiry-list" data-inquiry-list>
+      {% for inquiry in inquiries %}
+        <article class="inquiry-card">
+          <div class="inquiry-card-head">
+            <div>
+              <div class="inquiry-kicker">Inquiry #{{ inquiry.id }} - {{ inquiry.source|replace('_', ' ')|title }}</div>
+              <h2>{{ inquiry.subject }}</h2>
+              <p class="inquiry-preview">{{ inquiry.message }}</p>
+            </div>
+            <span class="inquiry-status status-{{ inquiry.status }}">{{ inquiry.status|replace('_', ' ') }}</span>
+          </div>
+
+          <div class="inquiry-inbox-meta">
+            <span>{{ inquiry.contact_name }}</span>
+            <a href="mailto:{{ inquiry.contact_email }}">{{ inquiry.contact_email }}</a>
+            <span>{{ inquiry.company_name or 'Not linked' }}</span>
+            <span>{{ inquiry.inquiry_type }}</span>
+            <span>{{ inquiry.created_at }}</span>
+          </div>
+
+          <div class="inquiry-message">
+            <span>Full Message</span>
+            <p>{{ inquiry.message }}</p>
+          </div>
+
+          {% if inquiry.email_error %}
+            <div class="inquiry-error">
+              <strong>Email notification error</strong>
+              <p>{{ inquiry.email_error }}</p>
+            </div>
+          {% endif %}
+
+          <div class="inquiry-action-bar">
+            <div class="inquiry-action-context">
+              <span>Category</span>
+              <strong>{{ inquiry.category|replace('_', ' ')|title if inquiry.category else 'Uncategorized' }}</strong>
+            </div>
+            <div class="inquiry-action-context">
+              <span>Last Response</span>
+              <strong>{{ inquiry.last_response_at or 'Not sent' }}</strong>
+            </div>
+            <label class="take-action-control">
+              <span>Take Action</span>
+              <select class="inquiry-action-select" data-action-target="inquiry-actions-{{ inquiry.id }}">
+                <option value="">Choose action</option>
+                <option value="details">Categorize / add notes</option>
+                <option value="profile">Correct registration / profile</option>
+                <option value="response">Send response & resolve</option>
+                <option value="status">Change status only</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="inquiry-workflow" id="inquiry-actions-{{ inquiry.id }}">
+            <form method="POST"
+                  action="{{ url_for('super_admin.update_inquiry_details' if admin_type == 'super' else 'vhan.update_inquiry_details', inquiry_id=inquiry.id) }}"
+                  class="inquiry-action-panel inquiry-detail-form"
+                  data-action-panel="details">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="selected_status" value="{{ selected_status }}">
+              <input type="hidden" name="selected_source" value="{{ selected_source }}">
+
+              <div class="workflow-grid">
+                <label>
+                  <span>Category</span>
+                  <select name="category">
+                    <option value="" {% if not inquiry.category %}selected{% endif %}>Choose category</option>
+                    <option value="registration_correction" {% if inquiry.category == 'registration_correction' %}selected{% endif %}>Registration Correction</option>
+                    <option value="account_access" {% if inquiry.category == 'account_access' %}selected{% endif %}>Account Access</option>
+                    <option value="assessment_question" {% if inquiry.category == 'assessment_question' %}selected{% endif %}>Assessment Question</option>
+                    <option value="scoring_report" {% if inquiry.category == 'scoring_report' %}selected{% endif %}>Scoring / Report</option>
+                    <option value="technical_issue" {% if inquiry.category == 'technical_issue' %}selected{% endif %}>Technical Issue</option>
+                    <option value="general_inquiry" {% if inquiry.category == 'general_inquiry' %}selected{% endif %}>General Inquiry</option>
+                  </select>
+                </label>
+
+                <label>
+                  <span>Status</span>
+                  <select name="status">
+                    <option value="new" {% if inquiry.status == 'new' %}selected{% endif %}>New</option>
+                    <option value="in_progress" {% if inquiry.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="resolved" {% if inquiry.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                  </select>
+                </label>
+              </div>
+
+              <label>
+                <span>Internal Admin Notes</span>
+                <textarea name="admin_notes" rows="3" placeholder="Private notes for VHAN/Admin">{{ inquiry.admin_notes or '' }}</textarea>
+              </label>
+
+              <label>
+                <span>Resolution Message</span>
+                <textarea name="resolution_message" rows="3" placeholder="What was done or what should be sent to the requester">{{ inquiry.resolution_message or '' }}</textarea>
+              </label>
+
+              <button type="submit" class="inquiry-button secondary">Save Details</button>
+            </form>
+
+            <form method="POST"
+                  action="{{ url_for('super_admin.correct_inquiry_profile' if admin_type == 'super' else 'vhan.correct_inquiry_profile', inquiry_id=inquiry.id) }}"
+                  class="inquiry-action-panel profile-correction-form"
+                  data-action-panel="profile">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="selected_status" value="{{ selected_status }}">
+              <input type="hidden" name="selected_source" value="{{ selected_source }}">
+
+              <h3>Correct Registration / Profile Details</h3>
+              <p>Fill only the fields that need correction. Use current email to find an unverified request or approved account.</p>
+
+              <div class="correction-grid">
+                <input type="email" name="current_email" placeholder="Current email to find record" value="{{ inquiry.registered_email or inquiry.contact_email }}">
+                <input type="email" name="work_email" placeholder="Correct work email">
+                <input type="text" name="company_name" placeholder="Company name">
+                <input type="text" name="industry" placeholder="Industry">
+                <input type="text" name="company_size" placeholder="Company size">
+                <input type="text" name="company_number" placeholder="Company number">
+                <input type="text" name="contact_person" placeholder="Contact person">
+                <input type="text" name="position_title" placeholder="Position title">
+                <input type="text" name="contact_number" placeholder="Contact number">
+              </div>
+
+              <button type="submit"
+                      class="inquiry-button primary"
+                      onclick="return confirm('Apply these profile corrections?')">
+                Apply Corrections
+              </button>
+            </form>
+
+            <form method="POST"
+                  action="{{ url_for('super_admin.send_inquiry_response_email' if admin_type == 'super' else 'vhan.send_inquiry_response_email', inquiry_id=inquiry.id) }}"
+                  class="inquiry-action-panel response-form"
+                  data-action-panel="response">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="selected_status" value="{{ selected_status }}">
+              <input type="hidden" name="selected_source" value="{{ selected_source }}">
+
+              <label>
+                <span>Response to Requester</span>
+                <textarea name="response_message" rows="4" placeholder="Write the reply that will be emailed to {{ inquiry.contact_email }}">{{ inquiry.resolution_message or '' }}</textarea>
+              </label>
+
+              <button type="submit"
+                      class="inquiry-button primary"
+                      onclick="return confirm('Send this response email to the requester?')">
+                Send Response & Resolve
+              </button>
+            </form>
+
+            <form method="POST"
+                  action="{{ url_for('super_admin.update_inquiry_status' if admin_type == 'super' else 'vhan.update_inquiry_status', inquiry_id=inquiry.id) }}"
+                  class="inquiry-action-panel status-form"
+                  data-action-panel="status">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="selected_status" value="{{ selected_status }}">
+              <input type="hidden" name="selected_source" value="{{ selected_source }}">
+              <select name="status" aria-label="Set inquiry status">
+                <option value="new" {% if inquiry.status == 'new' %}selected{% endif %}>New</option>
+                <option value="in_progress" {% if inquiry.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                <option value="resolved" {% if inquiry.status == 'resolved' %}selected{% endif %}>Resolved</option>
+              </select>
+              <button type="submit" class="inquiry-button secondary">Update Status</button>
+            </form>
+          </div>
+        </article>
+      {% else %}
+        <div class="empty-inquiries">No support inquiries found.</div>
+      {% endfor %}
+    </section>
+
+{% if admin_type == 'super' %}
+  </main>
+</div>
+{% else %}
+    </main>
+  </div>
+</div>
+{% endif %}
+<script src="{{ url_for('static', filename='js/support_inquiries.js') }}"></script>
+</body>
+</html>

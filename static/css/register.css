@@ -269,6 +269,30 @@ body {
   box-shadow: 0 0 0 4px rgba(21, 158, 154, 0.13);
 }
 
+.input-box input.password-mismatch {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.10);
+}
+
+.input-box input.password-match {
+  border-color: #159e9a;
+}
+
+.password-match-message {
+  min-height: 17px;
+  margin: 4px 4px 0;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.password-match-message.error {
+  color: #b91c1c;
+}
+
+.password-match-message.success {
+  color: #0f766e;
+}
+
 .terms {
   display: flex;
   align-items: flex-start;
