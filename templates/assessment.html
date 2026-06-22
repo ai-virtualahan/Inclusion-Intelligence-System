@@ -14,15 +14,26 @@
             flex:1; min-width:0;
             background:#0B9B8A;
             border-radius:14px;
+            border:0;
             padding:20px 16px 16px;
             cursor:pointer; color:white;
             min-height:115px;
             display:flex; flex-direction:column; justify-content:space-between;
             text-align:center;
+            font:inherit;
             transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
             box-shadow:0 4px 14px rgba(11,155,138,.25);
         }
         .exam-tile:hover { background:#087d6e; transform:translateY(-3px); box-shadow:0 8px 22px rgba(11,155,138,.35); }
+        .exam-tile:focus-visible,
+        .answer-btn:focus-visible,
+        .nav-btn:focus-visible,
+        .submit-all-btn:focus-visible,
+        .imd-print-btn:focus-visible {
+            outline:4px solid rgba(20,184,166,.42);
+            outline-offset:3px;
+            box-shadow:0 0 0 2px #0E2240, 0 0 0 7px rgba(20,184,166,.22);
+        }
         .exam-tile-title { font-size:14px; font-weight:700; line-height:1.3; margin-bottom:8px; }
         .exam-tile-status { font-size:11px; opacity:0.85; margin-bottom:8px; }
         .exam-progress-row { display:flex; align-items:center; gap:8px; }
@@ -131,6 +142,66 @@
             background:rgba(255,255,255,.26);
             transform:translateY(-1px);
         }
+        .imd-report-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+        .imd-insight-grid {
+            display:grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, .82fr);
+            gap:16px;
+            margin-bottom:22px;
+        }
+        .imd-insight-panel,
+        .imd-priority-panel,
+        .imd-roadmap-panel {
+            background:#f8fbff;
+            border:1px solid #dbeafe;
+            border-radius:12px;
+            color:#0E2240;
+            padding:18px 20px;
+        }
+        .imd-roadmap-panel {
+            background:#f1f7ed;
+            border-color:#c7e7bb;
+            margin-bottom:24px;
+        }
+        .imd-panel-kicker {
+            color:#0B9B8A;
+            display:block;
+            font-size:11px;
+            font-weight:800;
+            letter-spacing:.08em;
+            margin-bottom:4px;
+            text-transform:uppercase;
+        }
+        .imd-insight-panel h3,
+        .imd-priority-panel h3,
+        .imd-roadmap-panel h3 {
+            color:#0E2240;
+            font-size:18px;
+            margin:0 0 8px;
+        }
+        .imd-insight-panel p,
+        .imd-roadmap-panel p {
+            color:#334155;
+            line-height:1.55;
+            margin:0;
+        }
+        .imd-priority-panel ul,
+        .imd-roadmap-panel ol {
+            margin:10px 0 0;
+            padding-left:20px;
+        }
+        .imd-priority-panel li,
+        .imd-roadmap-panel li {
+            color:#334155;
+            line-height:1.5;
+            margin:7px 0;
+        }
+        .imd-priority-panel li span {
+            color:#64748b;
+            display:block;
+            font-size:12px;
+            margin-top:2px;
+        }
 
         .imd-section-title {
             font-size:15px; font-weight:700; color:#0E2240;
@@ -232,6 +303,7 @@
         .gap-empty-message { color:#64748b; font-size:13px; margin:0; }
 
         @media (max-width: 700px) {
+            .imd-insight-grid { grid-template-columns:1fr; }
             .gap-dashboard-card { padding:16px; }
             .gap-dashboard-head { align-items:flex-start; flex-direction:column; }
             .gap-counts { justify-content:flex-start; }
@@ -305,23 +377,22 @@
 
     <!-- SIDEBAR -->
     <div class="sidebar">
-        <h3>Inclusion Intelligence System</h3>
         <div class="sidebar-top">
-            <button id="homeBtn" onclick="window.location.href='{{ url_for('home') }}'">Home</button>
-            <button id="dashboardBtn" onclick="showPage('dashboard')">Inclusion Maturity Dashboard</button>
-            <button id="diagnosticBtn" onclick="openDiagnostic()">Inclusion Diagnostic Engine</button>
+            <button type="button" id="homeBtn" onclick="window.location.href='{{ url_for('home') }}'">Home</button>
+            <button type="button" id="dashboardBtn" onclick="showPage('dashboard')">Inclusion Maturity Dashboard</button>
+            <button type="button" id="diagnosticBtn" onclick="openDiagnostic()">Inclusion Diagnostic Engine</button>
             <div id="diagnosticSubNav">
-                <button class="sub-nav-btn" id="subHiring"        onclick="startExamFromSidebar('Hiring')">Hiring System</button>
-                <button class="sub-nav-btn" id="subOnboarding"    onclick="startExamFromSidebar('Onboarding')">Onboarding</button>
-                <button class="sub-nav-btn" id="subAccommodation" onclick="startExamFromSidebar('Accommodation')">Accommodation</button>
-                <button class="sub-nav-btn" id="subRetention"     onclick="startExamFromSidebar('Retention')">Retention</button>
-                <button class="sub-nav-btn" id="subCulture"       onclick="startExamFromSidebar('Culture')">Culture</button>
+                <button type="button" class="sub-nav-btn" id="subHiring"        onclick="startExamFromSidebar('Hiring')">Hiring System</button>
+                <button type="button" class="sub-nav-btn" id="subOnboarding"    onclick="startExamFromSidebar('Onboarding')">Onboarding</button>
+                <button type="button" class="sub-nav-btn" id="subAccommodation" onclick="startExamFromSidebar('Accommodation')">Accommodation</button>
+                <button type="button" class="sub-nav-btn" id="subRetention"     onclick="startExamFromSidebar('Retention')">Retention</button>
+                <button type="button" class="sub-nav-btn" id="subCulture"       onclick="startExamFromSidebar('Culture')">Culture</button>
             </div>
-            <button id="profileBtn" onclick="showPage('profile')">Company Profile</button>
+            <button type="button" id="profileBtn" onclick="showPage('profile')">Company Profile</button>
         </div>
-        <button id="contactBtn" onclick="showPage('contact')">Contact Us</button>
+        <button type="button" id="contactBtn" onclick="showPage('contact')">Contact Us</button>
         <div class="sidebar-bottom">
-            <button id="logoutBtn" onclick="openLogoutModal()">Logout</button>
+            <button type="button" id="logoutBtn" onclick="openLogoutModal()">Logout</button>
         </div>
     </div>
 
@@ -448,7 +519,7 @@ background:rgba(0,0,0,.55);justify-content:center;align-items:center;z-index:999
         <h3>Are you sure you want to logout?</h3>
         <div class="logout-modal-actions">
             <a href="{{ url_for('login.logout') }}" class="logout-confirm-btn">Yes, Logout</a>
-            <button onclick="closeLogoutModal()" class="logout-cancel-btn">No, Stay</button>
+            <button type="button" onclick="closeLogoutModal()" class="logout-cancel-btn">No, Stay</button>
         </div>
     </div>
 </div>

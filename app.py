@@ -1,8 +1,10 @@
 import hmac
 import secrets
+import time
 
 from flask import Flask, abort, flash, render_template, request, redirect, session, url_for, jsonify
 from collections import OrderedDict
+from mysql.connector import Error as MySQLError
 from db import get_db_connection
 from assessment_scoring import compute_assessment_scores
 from datetime import datetime, timedelta
@@ -23,6 +25,9 @@ app = Flask(__name__)
 app.config.from_object('config')
 
 mail.init_app(app)
+
+ASSESSMENT_SUBMIT_MAX_ATTEMPTS = 3
+ASSESSMENT_SUBMIT_RETRY_ERRORS = {1205, 1213}
 
 # Blueprints
 app.register_blueprint(login_bp)
@@ -120,6 +125,30 @@ def assessment_is_locked_for_org(cursor, organization_status):
         organization_status == "suspended"
         and get_bool_setting(cursor, "suspend_lock_assessments", True)
     )
+
+
+def is_retryable_mysql_error(error):
+    return isinstance(error, MySQLError) and getattr(error, "errno", None) in ASSESSMENT_SUBMIT_RETRY_ERRORS
+
+
+def wants_plain_text_response():
+    return request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+
+def assessment_locked_response(lock_title=None, lock_message=None, next_eligible=None, status=403):
+    if wants_plain_text_response():
+        if lock_message:
+            return lock_message, status
+        if next_eligible:
+            return f"Assessment locked until {next_eligible}.", status
+        return "Assessment submission is currently locked.", status
+
+    return render_template(
+        'assessment_locked.html',
+        lock_title=lock_title,
+        lock_message=lock_message,
+        next_eligible=next_eligible
+    ), status
 
 
 def dashboard_url_for_role(role):
@@ -309,15 +338,14 @@ def submit_assessment():
     if organization and assessment_is_locked_for_org(cursor, organization.get("status")):
         cursor.close()
         conn.close()
-        return render_template(
-            'assessment_locked.html',
+        return assessment_locked_response(
             lock_title="Assessment Access Locked",
             lock_message=(
                 "Your organization is currently suspended. Assessment submissions are locked "
                 "until the organization is reactivated by an administrator."
             ),
             next_eligible=None
-        ), 403
+        )
 
     # ── 6-month reassessment lock ─────────────────────────────────────────
     cursor.execute("""
@@ -335,20 +363,11 @@ def submit_assessment():
         if datetime.now() < unlock_date:
             cursor.close()
             conn.close()
-            return render_template('assessment_locked.html',
-                                   next_eligible=unlock_date.strftime("%B %d, %Y"))
+            return assessment_locked_response(
+                next_eligible=unlock_date.strftime("%B %d, %Y")
+            )
 
-    # ── Determine cycle number ────────────────────────────────────────────
-    cursor.execute("""
-        SELECT COUNT(*) AS cnt FROM assessments
-        WHERE organization_id = %s AND status = 'completed'
-    """, (organization_id,))
-    cnt = cursor.fetchone()['cnt']
-    cycle_number = cnt + 1
-    assessment_type = 'baseline' if cycle_number == 1 else 'reassessment'
-
-    cursor2 = conn.cursor()  # non-dict cursor for inserts
-
+    # Validate the posted answers before opening the write transaction.
     try:
         cursor.execute("""
             SELECT id
@@ -362,45 +381,95 @@ def submit_assessment():
             for key in request.form
             if key.startswith("answer_")
         }
+        submitted_answers = sorted(
+            (
+                (key.replace("answer_", ""), selected_choice_id)
+                for key, selected_choice_id in request.form.items()
+                if key.startswith("answer_")
+            ),
+            key=lambda item: int(item[0]) if item[0].isdigit() else item[0]
+        )
 
         if active_question_ids != submitted_question_ids:
             return "Error: Please answer all active assessment questions before submitting.", 400
 
-        cursor2.execute("""
-            INSERT INTO assessments (organization_id, assessment_type, status, cycle_number, started_at)
-            VALUES (%s, %s, 'submitted', %s, CURRENT_TIMESTAMP)
-        """, (organization_id, assessment_type, cycle_number))
-        assessment_id = cursor2.lastrowid
+        validated_answers = []
+        for q_id, selected_choice_id in submitted_answers:
+            cursor.execute("""
+                SELECT qc.choice_score
+                FROM question_choices qc
+                JOIN question_bank qb
+                    ON qc.question_id = qb.id
+                WHERE qc.id = %s
+                  AND qc.question_id = %s
+                  AND qb.is_active = 1
+            """, (selected_choice_id, q_id))
+            row = cursor.fetchone()
+            if not row:
+                return "Error: Invalid answer selected for an active question.", 400
+            validated_answers.append((q_id, selected_choice_id, row["choice_score"]))
 
-        # Save answers
-        for key, selected_choice_id in request.form.items():
-            if key.startswith("answer_"):
-                q_id = key.replace("answer_", "")
+        conn.rollback()
+
+        for attempt in range(ASSESSMENT_SUBMIT_MAX_ATTEMPTS):
+            cursor2 = conn.cursor()
+            try:
+                cursor2.execute("SELECT id FROM organizations WHERE id = %s FOR UPDATE", (organization_id,))
+
                 cursor2.execute("""
-                    SELECT qc.choice_score
-                    FROM question_choices qc
-                    JOIN question_bank qb
-                        ON qc.question_id = qb.id
-                    WHERE qc.id = %s
-                      AND qc.question_id = %s
-                      AND qb.is_active = 1
-                """, (selected_choice_id, q_id))
-                row = cursor2.fetchone()
-                if not row:
-                    conn.rollback()
-                    return "Error: Invalid answer selected for an active question.", 400
+                    SELECT submitted_at FROM assessments
+                    WHERE organization_id = %s AND status = 'completed'
+                    ORDER BY submitted_at DESC LIMIT 1
+                """, (organization_id,))
+                latest_completed = cursor2.fetchone()
+                if latest_completed and latest_completed[0]:
+                    last_date = latest_completed[0]
+                    if isinstance(last_date, str):
+                        last_date = datetime.fromisoformat(last_date)
+                    lock_days = get_int_setting(cursor2, "reassessment_lock_days", 182)
+                    unlock_date = last_date + timedelta(days=lock_days)
+                    if datetime.now() < unlock_date:
+                        conn.rollback()
+                        return assessment_locked_response(
+                            next_eligible=unlock_date.strftime("%B %d, %Y")
+                        )
 
-                score_value = row[0]
                 cursor2.execute("""
-                    INSERT INTO assessment_answers
-                        (assessment_id, question_id, selected_choice_id, score_value, saved_at)
-                    VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
-                """, (assessment_id, q_id, selected_choice_id, score_value))
+                    SELECT COUNT(*) AS cnt FROM assessments
+                    WHERE organization_id = %s AND status = 'completed'
+                """, (organization_id,))
+                cycle_number = cursor2.fetchone()[0] + 1
+                assessment_type = 'baseline' if cycle_number == 1 else 'reassessment'
 
-        # Auto-compute scores
-        compute_assessment_scores(cursor2, assessment_id)
-        conn.commit()
-        return redirect(f'/assessment_result/{assessment_id}')
+                cursor2.execute("""
+                    INSERT INTO assessments (organization_id, assessment_type, status, cycle_number, started_at)
+                    VALUES (%s, %s, 'submitted', %s, CURRENT_TIMESTAMP)
+                """, (organization_id, assessment_type, cycle_number))
+                assessment_id = cursor2.lastrowid
+
+                for q_id, selected_choice_id, score_value in validated_answers:
+                    cursor2.execute("""
+                        INSERT INTO assessment_answers
+                            (assessment_id, question_id, selected_choice_id, score_value, saved_at)
+                        VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+                    """, (assessment_id, q_id, selected_choice_id, score_value))
+
+                compute_assessment_scores(cursor2, assessment_id)
+                conn.commit()
+                return redirect(f'/assessment_result/{assessment_id}')
+            except MySQLError as e:
+                conn.rollback()
+                if is_retryable_mysql_error(e) and attempt < ASSESSMENT_SUBMIT_MAX_ATTEMPTS - 1:
+                    time.sleep(0.2 * (attempt + 1))
+                    continue
+                if is_retryable_mysql_error(e):
+                    return (
+                        "The assessment could not be saved because the database was busy. "
+                        "Please wait a moment and submit again."
+                    ), 503
+                raise
+            finally:
+                cursor2.close()
 
     except Exception as e:
         conn.rollback()
@@ -408,7 +477,6 @@ def submit_assessment():
 
     finally:
         cursor.close()
-        cursor2.close()
         conn.close()
 
 
@@ -424,13 +492,13 @@ def assessment_result(assessment_id):
 
     if role == 'super_admin':
         cursor.execute("""
-            SELECT overall_score, maturity_level
+            SELECT id, overall_score, maturity_level, submitted_at, cycle_number, assessment_type
             FROM assessments
             WHERE id = %s
         """, (assessment_id,))
     else:
         cursor.execute("""
-            SELECT a.overall_score, a.maturity_level
+            SELECT a.id, a.overall_score, a.maturity_level, a.submitted_at, a.cycle_number, a.assessment_type
             FROM assessments a
             JOIN users u
                 ON a.organization_id = u.organization_id
@@ -443,6 +511,15 @@ def assessment_result(assessment_id):
         cursor.close()
         conn.close()
         return "Assessment result not found.", 404
+
+    completed_at = assessment.get("submitted_at")
+    if hasattr(completed_at, "strftime"):
+        assessment["completed_date"] = completed_at.strftime("%B %d, %Y")
+    elif completed_at:
+        assessment["completed_date"] = str(completed_at)
+    else:
+        assessment["completed_date"] = ""
+    assessment["overall_score_value"] = float(assessment.get("overall_score") or 0)
 
     cursor.execute("""
         SELECT ds.score, ds.raw_score, ad.name

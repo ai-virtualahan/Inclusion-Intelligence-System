@@ -89,6 +89,16 @@ body {
   background: #159e9a;
 }
 
+.home-link:focus-visible,
+.btn:focus-visible,
+.terms a:focus-visible,
+.terms input:focus-visible,
+.bottom-text a:focus-visible {
+  outline: 4px solid rgba(21, 158, 154, 0.42);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 7px rgba(21, 158, 154, 0.18);
+}
+
 .logo {
   width: 76px;
   height: 76px;
@@ -266,7 +276,7 @@ body {
 .input-box textarea:focus {
   background: #fff;
   border-color: #159e9a;
-  box-shadow: 0 0 0 4px rgba(21, 158, 154, 0.13);
+  box-shadow: 0 0 0 4px rgba(21, 158, 154, 0.22);
 }
 
 .input-box input.password-mismatch {

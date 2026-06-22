@@ -66,6 +66,51 @@
       margin-bottom: 6px;
     }
 
+    .score-meaning,
+    .roadmap-card {
+      background: #f8fbff;
+      border: 1px solid #dbeafe;
+      border-radius: 8px;
+      margin-top: 22px;
+      padding: 18px 20px;
+    }
+
+    .score-meaning h2,
+    .roadmap-card h2 {
+      color: #072653;
+      font-size: 20px;
+      margin: 0 0 8px;
+    }
+
+    .score-meaning p,
+    .roadmap-card p {
+      color: #475569;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    .roadmap-card {
+      background: #f1f7ed;
+      border-color: #c7e7bb;
+    }
+
+    .roadmap-card ol {
+      margin: 10px 0 0;
+      padding-left: 22px;
+    }
+
+    .roadmap-card li {
+      color: #334155;
+      line-height: 1.5;
+      margin: 8px 0;
+    }
+
+    .result-meta {
+      color: #64748b;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
     .dimension-list {
       display: grid;
       gap: 12px;
@@ -121,6 +166,14 @@
 
     .result-actions button.print-result-btn {
       background: #14b8a6;
+    }
+
+    .result-actions a:focus-visible,
+    .result-actions button:focus-visible,
+    .header-print-btn:focus-visible {
+      outline: 4px solid rgba(20, 184, 166, 0.42);
+      outline-offset: 3px;
+      box-shadow: 0 0 0 2px #ffffff, 0 0 0 7px rgba(20, 184, 166, 0.18);
     }
 
     .header-print-btn {
@@ -312,6 +365,14 @@
         margin: 8mm 0;
       }
 
+      .score-meaning,
+      .roadmap-card {
+        background: none !important;
+        break-inside: avoid;
+        margin-top: 6mm;
+        padding: 0;
+      }
+
       .dimension-row,
       .gap-group-card {
         background: none !important;
@@ -352,8 +413,19 @@
   <main class="result-shell">
     <section class="result-header">
       <div>
-        <h1>Assessment Submitted</h1>
-        <p>Your inclusion maturity assessment has been scored successfully.</p>
+        <h1>Thank You - Assessment Submitted</h1>
+        <p>Your inclusion maturity assessment has been scored successfully. Use the roadmap below to plan the next improvement steps.</p>
+        <p class="result-meta">
+          {% if assessment.completed_date %}
+            Date completed: {{ assessment.completed_date }}
+          {% endif %}
+          {% if assessment.cycle_number %}
+            - Cycle {{ assessment.cycle_number }}
+          {% endif %}
+          {% if assessment.assessment_type %}
+            - {{ assessment.assessment_type|title }}
+          {% endif %}
+        </p>
       </div>
 
       <div class="result-header-actions">
@@ -361,9 +433,43 @@
           <strong>{{ assessment.overall_score or 0 }}</strong>
           <span>{{ assessment.maturity_level or 'Pending' }}</span>
         </div>
-        <button type="button" class="header-print-btn no-print" onclick="printAssessmentResult()">Print Result</button>
+        <button type="button" class="header-print-btn no-print" onclick="printAssessmentResult()">Download / Print Report</button>
       </div>
     </section>
+
+    <section class="score-meaning">
+      <h2>What this score means</h2>
+      {% set score_value = assessment.overall_score_value or 0 %}
+      {% if score_value <= 25 %}
+        <p>Your organization is in the {{ assessment.maturity_level or 'Emerging' }} range. Focus first on critical gaps before expanding to broader improvement work.</p>
+      {% elif score_value <= 50 %}
+        <p>Your organization is in the {{ assessment.maturity_level or 'Developing' }} range. Some practices are present, but several areas still need structure, ownership, and consistency.</p>
+      {% elif score_value <= 75 %}
+        <p>Your organization is in the {{ assessment.maturity_level or 'Advancing' }} range. You are making progress; the next step is closing remaining gaps and documenting repeatable practices.</p>
+      {% elif score_value <= 90 %}
+        <p>Your organization is in the {{ assessment.maturity_level or 'Leading' }} range. Continue strengthening evidence, accountability, and long-term monitoring.</p>
+      {% else %}
+        <p>Your organization is in the {{ assessment.maturity_level or 'Exemplar' }} range. Keep monitoring outcomes and sharing strong practices across the organization.</p>
+      {% endif %}
+    </section>
+
+    {% if gap_groups %}
+      <section class="roadmap-card">
+        <h2>Roadmap / Action Items</h2>
+        <p>Start with these database-based recommendations from your highest-priority gaps.</p>
+        <ol>
+          {% set roadmap = namespace(count=0) %}
+          {% for group in gap_groups %}
+            {% for recommendation in group.recommendations %}
+              {% if roadmap.count < 5 %}
+                <li>{{ recommendation }}</li>
+                {% set roadmap.count = roadmap.count + 1 %}
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+        </ol>
+      </section>
+    {% endif %}
 
     <section class="dimension-list">
       {% for score in scores %}
@@ -430,7 +536,7 @@
     {% endif %}
 
     <div class="result-actions no-print">
-      <button type="button" class="print-result-btn" onclick="printAssessmentResult()">Print Result</button>
+      <button type="button" class="print-result-btn" onclick="printAssessmentResult()">Download / Print Report</button>
       <a href="{{ url_for('home') }}">Home</a>
       <a href="{{ url_for('assessment') }}">Back to Dashboard</a>
       <a class="secondary" href="{{ url_for('login.logout') }}">Logout</a>

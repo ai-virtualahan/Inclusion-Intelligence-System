@@ -50,22 +50,23 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="two-col">
             <div class="input-box">
-              <input type="text" id="fullName" name="full_name" placeholder="Full Name" required>
+              <input type="text" id="fullName" name="full_name" placeholder="Full Name" aria-label="Full Name" required>
             </div>
             <div class="input-box">
-              <input type="text" id="position" name="position" placeholder="Position" required>
+              <input type="text" id="position" name="position" placeholder="Position" aria-label="Position" required>
             </div>
           </div>
 
           <div class="two-col">
             <div class="input-box">
-              <input type="email" id="email" name="work_email" placeholder="Work Email Address" required>
+              <input type="email" id="email" name="work_email" placeholder="Work Email Address" aria-label="Work Email Address" required>
             </div>
             <div class="input-box">
               <input type="tel"
                      id="contactNumber"
                      name="contact_number"
                      placeholder="Contact Number"
+                     aria-label="Contact Number"
                      pattern="^\+?[0-9][0-9\s().-]{8,18}[0-9]$"
                      title="Enter a valid phone number with 10 to 15 digits."
                      required>
@@ -74,10 +75,10 @@
 
           <div class="two-col">
             <div class="input-box">
-              <input type="text" id="companyName" name="company_name" placeholder="Company Name" required>
+              <input type="text" id="companyName" name="company_name" placeholder="Company Name" aria-label="Company Name" required>
             </div>
             <div class="input-box">
-              <select id="companySize" name="company_size" required>
+              <select id="companySize" name="company_size" aria-label="Company Size" required>
                 <option value="" disabled selected>Company Size</option>
                 <option value="1-50 employees">1–50 employees</option>
                 <option value="51-200 employees">51–200 employees</option>
@@ -90,7 +91,7 @@
 
           <div class="two-col">
             <div class="input-box">
-              <select id="industry" name="industry" required>
+              <select id="industry" name="industry" aria-label="Industry" required>
                 <option value="" disabled selected>Industry</option>
                 <option value="Information Technology">Information Technology</option>
                 <option value="Business Process Outsourcing">Business Process Outsourcing</option>
@@ -107,6 +108,7 @@
                      id="companyNumber"
                      name="company_number"
                      placeholder="Company Number"
+                     aria-label="Company Number"
                      pattern="^\+?[0-9][0-9\s().-]{8,18}[0-9]$"
                      title="Enter a valid company number with 10 to 15 digits."
                      required>
@@ -115,13 +117,14 @@
 
           <div class="two-col">
             <div class="input-box">
-              <input type="password" id="password" name="password" placeholder="Password" required>
+              <input type="password" id="password" name="password" placeholder="Password" aria-label="Password" required>
             </div>
             <div class="input-box">
               <input type="password"
                      id="confirmPassword"
                      name="confirm_password"
                      placeholder="Confirm Password"
+                     aria-label="Confirm Password"
                      aria-describedby="passwordMatchMessage"
                      required>
               <p id="passwordMatchMessage" class="password-match-message" aria-live="polite"></p>
@@ -129,7 +132,7 @@
           </div>
 
           <label class="terms">
-            <input type="checkbox" id="terms" name="agree_terms" value="yes" required>
+            <input type="checkbox" id="terms" name="agree_terms" value="yes" aria-label="Confirm organization details and agree to Terms of Use and Privacy Policy" required>
             <span>
               I confirm that the submitted organization details are correct and I agree to the
               <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>
