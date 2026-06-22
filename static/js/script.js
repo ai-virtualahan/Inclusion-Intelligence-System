@@ -13,8 +13,10 @@ const CHOICES = [
 ];
 
 const EXAM_INSTRUCTION = "For each question, select ONE answer that best describes your organization's current state.";
+const ASSESSMENT_ALREADY_SUBMITTED_MESSAGE = "This assessment has already been submitted. Please wait while we process it.";
 const dashboardSeverityFilters = {};
 let latestDashboardData = null;
+let isSubmittingAssessment = false;
 
 function escapeHtml(value) {
     return String(value ?? "")
@@ -65,6 +67,120 @@ function groupGapsByDimension(gaps = []) {
 
 function uniqueTextValues(values) {
     return [...new Set(values.map(value => String(value || "").trim()).filter(Boolean))];
+}
+
+function isAnsweredAnswer(answer) {
+    return answer !== null && answer !== undefined;
+}
+
+function scoreMeaning(score, maturity) {
+    const rounded = Math.round(Number(score) || 0);
+    if (rounded <= 25) {
+        return `Your score is in the ${maturity || "Emerging"} range. Focus first on the highest-risk gaps before expanding to broader improvement work.`;
+    }
+    if (rounded <= 50) {
+        return `Your score is in the ${maturity || "Developing"} range. Some inclusion practices are present, but several areas still need structure and consistency.`;
+    }
+    if (rounded <= 75) {
+        return `Your score is in the ${maturity || "Advancing"} range. You are making solid progress; the next step is closing remaining gaps and documenting repeatable practices.`;
+    }
+    if (rounded <= 90) {
+        return `Your score is in the ${maturity || "Leading"} range. Continue strengthening evidence, accountability, and long-term monitoring.`;
+    }
+    return `Your score is in the ${maturity || "Exemplar"} range. Keep monitoring outcomes and sharing strong practices across the organization.`;
+}
+
+function getPriorityDimensions(dimensions = [], gaps = []) {
+    const gapCounts = gaps.reduce((counts, gap) => {
+        const dimension = gap.dimension || gap.name || "Other";
+        counts[dimension] = (counts[dimension] || 0) + 1;
+        return counts;
+    }, {});
+
+    return [...dimensions]
+        .sort((a, b) => {
+            const gapDelta = (gapCounts[b.name] || 0) - (gapCounts[a.name] || 0);
+            if (gapDelta !== 0) return gapDelta;
+            return Number(a.score || 0) - Number(b.score || 0);
+        })
+        .slice(0, 3)
+        .map(dimension => ({
+            name: dimension.name,
+            score: Math.round(Number(dimension.score) || 0),
+            gapCount: gapCounts[dimension.name] || 0
+        }));
+}
+
+function renderScoreMeaningPanel(score, maturity) {
+    return `
+        <section class="imd-insight-panel">
+            <div>
+                <span class="imd-panel-kicker">Score meaning</span>
+                <h3>What your score means</h3>
+            </div>
+            <p>${escapeHtml(scoreMeaning(score, maturity))}</p>
+        </section>`;
+}
+
+function renderPriorityPanel(dimensions, gaps) {
+    const priorities = getPriorityDimensions(dimensions, gaps);
+    if (!priorities.length) return "";
+
+    return `
+        <section class="imd-priority-panel">
+            <div>
+                <span class="imd-panel-kicker">Areas to improve</span>
+                <h3>Focus on these areas first</h3>
+            </div>
+            <ul>
+                ${priorities.map(priority => `
+                    <li>
+                        <strong>${escapeHtml(priority.name)}</strong>
+                        <span>${priority.score}% score${priority.gapCount ? ` - ${priority.gapCount} gap${priority.gapCount === 1 ? "" : "s"}` : ""}</span>
+                    </li>`).join("")}
+            </ul>
+        </section>`;
+}
+
+function renderActionRoadmap(gaps = []) {
+    const recommendations = uniqueTextValues(
+        gaps
+            .filter(gap => ["critical", "moderate", "low"].includes(gap.severity))
+            .map(gap => gap.recommendation)
+    ).slice(0, 5);
+
+    if (!recommendations.length) {
+        return `
+            <section class="imd-roadmap-panel">
+                <div>
+                    <span class="imd-panel-kicker">Action roadmap</span>
+                    <h3>Recommended next steps</h3>
+                </div>
+                <p>No gap-based recommendations are available yet. Complete the diagnostic assessment to generate action items.</p>
+            </section>`;
+    }
+
+    return `
+        <section class="imd-roadmap-panel">
+            <div>
+                <span class="imd-panel-kicker">Action roadmap</span>
+                <h3>Recommended next steps</h3>
+            </div>
+            <ol>
+                ${recommendations.map(recommendation => `<li>${escapeHtml(recommendation)}</li>`).join("")}
+            </ol>
+        </section>`;
+}
+
+function renderReportActions(assessmentId) {
+    if (!assessmentId) return "";
+
+    return `
+        <div class="imd-report-actions">
+            <button type="button" class="imd-print-btn" onclick="window.location.href='/assessment_result/${assessmentId}'">
+                View / Download Report
+            </button>
+        </div>`;
 }
 
 function renderDashboardGapGroups(gaps) {
@@ -351,7 +467,7 @@ function computeLocalScores() {
 
     DIMENSION_ORDER.forEach(dim => {
         const answers = userAnswers[dim];
-        if (!answers || answers.length !== exams[dim].questions.length || answers.some(a => a === null)) {
+        if (!answers || answers.length !== exams[dim].questions.length || !answers.every(isAnsweredAnswer)) {
             result.dimensions[dim] = null;
             return;
         }
@@ -380,14 +496,14 @@ function computeLocalScores() {
 function getProgress(dim) {
     const answers = userAnswers[dim];
     if (!answers) return 0;
-    const answered = answers.filter(a => a !== null).length;
+    const answered = answers.filter(isAnsweredAnswer).length;
     return Math.round((answered / exams[dim].questions.length) * 100);
 }
 
 function getStatus(dim) {
     const answers = userAnswers[dim];
     if (!answers) return "Not Started";
-    const answered = answers.filter(a => a !== null).length;
+    const answered = answers.filter(isAnsweredAnswer).length;
     if (answered === 0) return "Not Started";
     if (answered === exams[dim].questions.length) return "Completed";
     return "In Progress";
@@ -505,7 +621,7 @@ function renderExamMenu() {
         const prog = getProgress(dim);
         const status = getStatus(dim);
         return `
-            <div class="exam-tile" onclick="startExam('${dim}')">
+            <button type="button" class="exam-tile" onclick="startExam('${dim}')" aria-label="Start ${escapeHtml(exams[dim].title)} assessment. ${prog}% complete.">
                 <div class="exam-tile-title">${exams[dim].title}</div>
                 <div class="exam-tile-status">${status}</div>
                 <div class="exam-progress-row">
@@ -514,7 +630,7 @@ function renderExamMenu() {
                     </div>
                     <span class="exam-pct-label">${prog}%</span>
                 </div>
-            </div>`;
+            </button>`;
     }).join("");
 }
 
@@ -529,8 +645,8 @@ function renderSubmitButton() {
 
     if (scores.isComplete) {
         section.innerHTML = `
-            <button class="submit-all-btn" onclick="submitAssessment()">
-                Submit Assessment to Server
+            <button type="button" class="submit-all-btn" onclick="submitAssessment()" aria-disabled="${isSubmittingAssessment}">
+                ${isSubmittingAssessment ? "Submitted - processing..." : "Submit Assessment to Server"}
             </button>
             <p style="text-align:center;font-size:12px;color:#888;margin-top:8px;">
                 All ${DIMENSION_ORDER.length} dimensions completed. Click to save your assessment.
@@ -585,7 +701,7 @@ function loadQuestion() {
     const canContinue = hasCurrentAnswer();
 
     document.getElementById("questionBox").innerHTML = `
-        <div style="margin-bottom:18px;">
+        <div class="question-card" tabindex="-1" style="margin-bottom:18px;">
             <div style="font-size:13px;color:#888;margin-bottom:8px;">
                 Question ${questionIndex + 1} of ${exam.questions.length}
             </div>
@@ -593,13 +709,16 @@ function loadQuestion() {
                 ${escapeText(qText)}
             </div>
         </div>
+        <div class="answer-group" role="group" aria-label="Answer choices for question ${questionIndex + 1}">
         ${choices.map((c, i) => {
             const currentAnswer = answers[questionIndex];
             const currentChoiceId = getAnswerChoiceId(currentAnswer);
             const sel = currentChoiceId ? currentChoiceId === c.id : getAnswerScore(currentAnswer) === c.score;
             return `
-                <button class="answer-btn${sel?' selected':''}" id="opt${i}"
+                <button type="button" class="answer-btn${sel?' selected':''}" id="opt${i}"
+                    aria-pressed="${sel}"
                     onclick="selectAnswer(${c.score}, ${i}, ${c.id || 'null'})"
+                    onkeydown="handleAnswerKeydown(event, ${i})"
                     style="${sel ? `background:${TEAL};border-color:${TEAL};color:white;` : ''}">
                     <span class="choice-badge" style="background:${sel?'rgba(255,255,255,.25)':'#e0edf3'};color:${sel?'#fff':TEAL};">
                         ${c.letter}
@@ -607,12 +726,18 @@ function loadQuestion() {
                     ${escapeText(c.text)}
                 </button>`;
         }).join("")}
+        </div>
         <div class="nav-buttons">
-            ${questionIndex > 0 ? `<button class="nav-btn" onclick="prevQuestion()">Back</button>` : ''}
-            <button class="nav-btn primary-nav" id="nextQuestionBtn" onclick="nextOrFinish()" ${canContinue ? '' : 'disabled'}>
+            ${questionIndex > 0 ? `<button type="button" class="nav-btn" onclick="prevQuestion()">Back</button>` : ''}
+            <button type="button" class="nav-btn primary-nav" id="nextQuestionBtn" onclick="nextOrFinish()" ${canContinue ? '' : 'disabled'}>
                 ${questionIndex === exam.questions.length - 1 ? 'Finish' : 'Next'}
             </button>
         </div>`;
+
+    requestAnimationFrame(() => {
+        const focusTarget = document.querySelector(".answer-btn.selected") || document.querySelector(".answer-btn");
+        if (focusTarget) focusTarget.focus();
+    });
 }
 
 function selectAnswer(score, optIndex, choiceId = null) {
@@ -626,10 +751,12 @@ function selectAnswer(score, optIndex, choiceId = null) {
         const badge = btn.querySelector(".choice-badge");
         if (i === optIndex) {
             btn.classList.add("selected");
+            btn.setAttribute("aria-pressed", "true");
             btn.style.cssText = `background:${TEAL};border-color:${TEAL};color:white;`;
             if (badge) { badge.style.background = "rgba(255,255,255,.25)"; badge.style.color = "#fff"; }
         } else {
             btn.classList.remove("selected");
+            btn.setAttribute("aria-pressed", "false");
             btn.style.cssText = "";
             if (badge) { badge.style.background = "#e0edf3"; badge.style.color = TEAL; }
         }
@@ -637,6 +764,17 @@ function selectAnswer(score, optIndex, choiceId = null) {
 
     const nextButton = document.getElementById("nextQuestionBtn");
     if (nextButton) nextButton.disabled = false;
+}
+
+function handleAnswerKeydown(event, optIndex) {
+    const choices = getQuestionChoices(exams[currentExam].questions[questionIndex]);
+    if (!["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft"].includes(event.key)) return;
+
+    event.preventDefault();
+    const direction = event.key === "ArrowDown" || event.key === "ArrowRight" ? 1 : -1;
+    const nextIndex = (optIndex + direction + choices.length) % choices.length;
+    const nextButton = document.getElementById(`opt${nextIndex}`);
+    if (nextButton) nextButton.focus();
 }
 
 function nextOrFinish() {
@@ -659,8 +797,33 @@ function finishExam() {
     resetDiagnosticState();
 }
 
+function setAssessmentSubmitting(isSubmitting) {
+    isSubmittingAssessment = isSubmitting;
+    const submitButton = document.querySelector(".submit-all-btn");
+    if (submitButton) {
+        submitButton.setAttribute("aria-disabled", String(isSubmitting));
+        submitButton.textContent = isSubmitting ? "Submitted - processing..." : "Submit Assessment to Server";
+    }
+}
+
+function cleanSubmitErrorMessage(text) {
+    const cleaned = String(text || "")
+        .replace(/<script[\s\S]*?<\/script>/gi, " ")
+        .replace(/<style[\s\S]*?<\/style>/gi, " ")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    return cleaned || "Unable to submit assessment.";
+}
+
 /* == SUBMIT TO BACKEND == */
 function submitAssessment() {
+    if (isSubmittingAssessment) {
+        alert(ASSESSMENT_ALREADY_SUBMITTED_MESSAGE);
+        return;
+    }
+
     if (isAssessmentLocked()) {
         alert(getAssessmentLockMessage());
         renderDiagnosticLockedState();
@@ -698,8 +861,12 @@ function submitAssessment() {
             formData.append('csrf_token', csrfMeta.getAttribute('content'));
         }
 
+        setAssessmentSubmitting(true);
         fetch('/submit_assessment', {
             method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             body: formData
         })
         .then(response => {
@@ -714,16 +881,20 @@ function submitAssessment() {
                     clearLocalStorage();
                     showPage('dashboard');
                 } else {
-                    alert(text || "Unable to submit assessment.");
+                    alert(cleanSubmitErrorMessage(text));
                 }
             });
         })
         .catch(() => {
             alert("Unable to submit assessment. Please check your connection and try again.");
+        })
+        .finally(() => {
+            setAssessmentSubmitting(false);
         });
         return;
     }
 
+    setAssessmentSubmitting(true);
     fetch('/api/submit-assessment', {
         method: 'POST',
         headers: {
@@ -735,8 +906,7 @@ function submitAssessment() {
     .then(r => {
         if (r.status === 404) {
             // API endpoint doesn't exist yet, show local results
-            alert("Assessment saved locally. (Backend API not yet configured)");
-            clearLocalStorage();
+            alert("Assessment is saved on this device. Connect to the server to sync it.");
             showPage('dashboard');
             return null;
         }
@@ -760,6 +930,9 @@ function submitAssessment() {
         // Network error or no backend - show local results
         alert("Assessment saved locally. Connect to server to sync.");
         showPage('dashboard');
+    })
+    .finally(() => {
+        setAssessmentSubmitting(false);
     });
 }
 
@@ -819,11 +992,16 @@ function renderDashboardFromAPI(data) {
             </div>
             <div class="imd-actions">
                 <div class="imd-badge">${latest.maturity}</div>
-                <button type="button" class="imd-print-btn" onclick="window.location.href='/assessment_result/${latest.id}'">
-                    Print Result
-                </button>
+                ${renderReportActions(latest.id)}
             </div>
         </div>`;
+
+    html += `<div class="imd-insight-grid">
+        ${renderScoreMeaningPanel(latest.overall, latest.maturity)}
+        ${renderPriorityPanel(dimensions, gaps || [])}
+    </div>`;
+
+    html += renderActionRoadmap(gaps || []);
 
     // Timeline
     html += renderTimeline(history || [{ cycle: latest.cycle, type: latest.type, date: latest.date, overall: latest.overall }]);
@@ -896,6 +1074,7 @@ function renderDashboardLocal() {
         </div>`;
 
     // Timeline
+    html += renderScoreMeaningPanel(scores.overall, scores.maturity);
     html += renderTimeline([]);
 
     // Dimension cards
