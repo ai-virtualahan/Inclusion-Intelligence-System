@@ -726,7 +726,7 @@ main {
   font-size: 14px;
   font-weight: 500;
   gap: 24px;
-  justify-content: center;
+  justify-content: space-between;
   margin: 0 auto;
   min-height: 62px;
   padding: 18px clamp(20px, 5vw, 72px);
@@ -736,7 +736,7 @@ main {
 .site-footer div {
   display: flex;
   gap: clamp(28px, 6vw, 70px);
-  margin-left: clamp(24px, 14vw, 240px);
+  margin-left: auto;
 }
 
 .site-footer a {

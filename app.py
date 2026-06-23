@@ -167,14 +167,18 @@ def home():
     cursor = conn.cursor(dictionary=True)
 
     cursor.execute("""
-        SELECT COUNT(DISTINCT organization_id) AS users_assessed
+        SELECT COUNT(DISTINCT organization_id) AS organizations_assessed
         FROM assessments
-        WHERE status IN ('submitted', 'completed')
+        WHERE status = 'completed'
     """)
-    users_assessed = cursor.fetchone()['users_assessed']
+    organizations_assessed = cursor.fetchone()['organizations_assessed']
 
-    cursor.execute("SELECT COUNT(*) AS progress_tracked FROM assessments")
-    progress_tracked = cursor.fetchone()['progress_tracked']
+    cursor.execute("""
+        SELECT COUNT(*) AS completed_assessments
+        FROM assessments
+        WHERE status = 'completed'
+    """)
+    completed_assessments = cursor.fetchone()['completed_assessments']
 
     settings = load_system_settings(cursor)
 
@@ -185,8 +189,8 @@ def home():
 
     return render_template(
         'home.html',
-        users_assessed=users_assessed,
-        progress_tracked=progress_tracked,
+        organizations_assessed=organizations_assessed,
+        completed_assessments=completed_assessments,
         support_email=settings["support_email"],
         is_logged_in=is_logged_in,
         dashboard_url=dashboard_url,
