@@ -72,11 +72,12 @@ jobs:
           echo "PR was not merged within timeout — may have conflicts."
           exit 1
 
-      # 4. Redeploy the Koyeb service using the CLI
+     # 4. Redeploy the Koyeb service using the CLI
       - name: Redeploy Koyeb service
         env:
           KOYEB_TOKEN: ${{ secrets.KOYEB_TOKEN }}
         run: |
           curl -fsSL https://raw.githubusercontent.com/koyeb/koyeb-cli/master/install.sh | bash
+          export PATH="/home/runner/.koyeb/bin:$PATH"
           koyeb service redeploy vicarious-kaye/inclusion-intelligence-system \
             --token "$KOYEB_TOKEN"
