@@ -19,7 +19,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          # Check if an open PR already exists
           EXISTING=$(gh pr list \
             --repo ai-virtualahan/Inclusion-Intelligence-System \
             --base main --head dev \
@@ -37,13 +36,12 @@ jobs:
               --head dev \
               --title "chore: sync dev → main" \
               --body "Automated PR triggered by push to dev branch.")
-            # Extract the PR number from the URL
             PR_NUMBER=$(echo "$PR" | grep -oP '(?<=/pull/)\d+')
             echo "Created PR: #$PR_NUMBER"
             echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           fi
 
-      # 2. Enable auto-merge on the PR (squash merge)
+      # 2. Enable auto-merge on the PR
       - name: Enable auto-merge
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
@@ -71,7 +69,7 @@ jobs:
             fi
             sleep 10
           done
-          echo "PR was not merged within timeout. It may have conflicts — skipping redeploy."
+          echo "PR was not merged within timeout — may have conflicts."
           exit 1
 
       # 4. Redeploy the Koyeb service using the CLI
@@ -80,6 +78,5 @@ jobs:
           KOYEB_TOKEN: ${{ secrets.KOYEB_TOKEN }}
         run: |
           curl -fsSL https://raw.githubusercontent.com/koyeb/koyeb-cli/master/install.sh | bash
-          koyeb service redeploy \
-            inclusion-intelligence-system/inclusion-intelligence-system \
+          koyeb service redeploy vicarious-kaye/inclusion-intelligence-system \
             --token "$KOYEB_TOKEN"
