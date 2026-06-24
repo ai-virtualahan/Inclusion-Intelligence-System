@@ -41,38 +41,17 @@ jobs:
             echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           fi
 
-      # 2. Enable auto-merge on the PR
-      - name: Enable auto-merge
+      # 2. Merge the PR directly (no auto-merge, no branch protection needed)
+      - name: Merge PR
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           gh pr merge ${{ steps.create_pr.outputs.pr_number }} \
             --repo ai-virtualahan/Inclusion-Intelligence-System \
             --squash \
-            --auto \
             --delete-branch=false
 
-      # 3. Wait for the PR to actually be merged
-      - name: Wait for PR to merge
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: |
-          for i in $(seq 1 20); do
-            STATE=$(gh pr view ${{ steps.create_pr.outputs.pr_number }} \
-              --repo ai-virtualahan/Inclusion-Intelligence-System \
-              --json state \
-              --jq '.state')
-            echo "PR state: $STATE (attempt $i)"
-            if [ "$STATE" = "MERGED" ]; then
-              echo "PR merged successfully."
-              exit 0
-            fi
-            sleep 10
-          done
-          echo "PR was not merged within timeout — may have conflicts."
-          exit 1
-
-      # 4. Redeploy the Koyeb service using the CLI
+      # 3. Redeploy the Koyeb service using the CLI
       - name: Redeploy Koyeb service
         env:
           KOYEB_TOKEN: ${{ secrets.KOYEB_TOKEN }}
