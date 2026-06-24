@@ -39,7 +39,7 @@ across key dimensions such as hiring, onboarding, accommodation, retention and c
 
     2. Prepare the production database
           Fresh database:
-          Import sql/iis_db.sql only. It already contains migrations 001 through 010.
+          Import sql/iis_db.sql only. It already contains migrations 001 through 007.
 
           Existing database:
           Do not re-import sql/iis_db.sql because the dump drops and recreates tables.
@@ -60,8 +60,6 @@ across key dimensions such as hiring, onboarding, accommodation, retention and c
           For the Contact Us feature, run sql/migrations/008_contact_inquiries.sql.
           To restore scored historical assessments that still have a submitted status,
           run sql/migrations/009_backfill_completed_assessments.sql.
-          To add editable gap analysis and display it separately from recommendations,
-          run sql/migrations/010_gap_definitions.sql.
 
     3. Use a production WSGI server
           Do not run the app with Flask debug mode in production.
