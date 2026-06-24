@@ -84,6 +84,7 @@ def login():
             flash("Your role is inactive. Please contact the administrator.", "warning")
             return redirect(url_for('login.login'))
 
+        session.clear()
         session['user_id'] = user['id']
         session['contact_person'] = user['contact_person']
         session['role'] = access_role

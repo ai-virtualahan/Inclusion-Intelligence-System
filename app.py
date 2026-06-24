@@ -364,7 +364,8 @@ def assessment():
         'assessment.html',
         profile=profile,
         active_exams=active_exams,
-        assessment_lock=assessment_lock
+        assessment_lock=assessment_lock,
+        assessment_storage_namespace=f"user:{user_id}" if user_id else "guest"
     )
 
 
