@@ -78,5 +78,6 @@ jobs:
           KOYEB_TOKEN: ${{ secrets.KOYEB_TOKEN }}
         run: |
           curl -fsSL https://raw.githubusercontent.com/koyeb/koyeb-cli/master/install.sh | bash
+          export PATH="/home/runner/.koyeb/bin:$PATH"
           koyeb service redeploy vicarious-kaye/inclusion-intelligence-system \
             --token "$KOYEB_TOKEN"
