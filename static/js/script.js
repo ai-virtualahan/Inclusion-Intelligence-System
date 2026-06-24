@@ -337,8 +337,9 @@ const DIMENSION_ORDER = [
     ...PREFERRED_DIMENSION_ORDER.filter(dim => exams[dim]),
     ...Object.keys(exams).filter(dim => !PREFERRED_DIMENSION_ORDER.includes(dim))
 ];
-const ANSWER_STORAGE_KEY = "iis_answers";
-const ANSWER_SIGNATURE_KEY = "iis_answers_signature";
+const STORAGE_NAMESPACE = window.IIS_ASSESSMENT_STORAGE_NAMESPACE || "guest";
+const ANSWER_STORAGE_KEY = `iis_answers:${STORAGE_NAMESPACE}`;
+const ANSWER_SIGNATURE_KEY = `iis_answers_signature:${STORAGE_NAMESPACE}`;
 
 /* == STATE == */
 let userAnswers = {};  // { "Hiring": [4,3,2,...], "Onboarding": [...], ... }
@@ -958,7 +959,7 @@ function loadDashboard() {
             if (data.has_data) {
                 renderDashboardFromAPI(data);
             } else {
-                renderDashboardLocal();
+                renderNoServerAssessmentDashboard();
             }
         })
         .catch(() => {
@@ -1041,19 +1042,24 @@ function renderDashboardFromAPI(data) {
     });
 }
 
+function renderNoServerAssessmentDashboard() {
+    const container = document.getElementById("imdContent");
+    container.innerHTML = `
+        <div class="no-data">
+            <div class="big-icon">+</div>
+            <p>No completed assessments yet.</p>
+            <p style="font-size:13px;">Complete all ${DIMENSION_ORDER.length} dimensions in the Diagnostic Engine to see scores here.</p>
+        </div>
+        ${renderTimeline([])}`;
+}
+
 function renderDashboardLocal() {
     const container = document.getElementById("imdContent");
     const scores = computeLocalScores();
 
     // Check for any progress
     if (scores.completedCount === 0) {
-        container.innerHTML = `
-            <div class="no-data">
-                <div class="big-icon">+</div>
-                <p>No completed assessments yet.</p>
-                <p style="font-size:13px;">Complete all 5 dimensions in the Diagnostic Engine to see scores here.</p>
-            </div>
-            ${renderTimeline([])}`;
+        renderNoServerAssessmentDashboard();
         return;
     }
 

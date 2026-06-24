@@ -527,6 +527,7 @@ background:rgba(0,0,0,.55);justify-content:center;align-items:center;z-index:999
 <script>
     window.IIS_ACTIVE_EXAMS = {{ active_exams|tojson }};
     window.IIS_ASSESSMENT_LOCK = {{ assessment_lock|tojson }};
+    window.IIS_ASSESSMENT_STORAGE_NAMESPACE = {{ assessment_storage_namespace|tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
