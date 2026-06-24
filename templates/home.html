@@ -42,9 +42,9 @@
   {% endwith %}
 
   <main>
-    <section class="hero-shell" id="home">
+    <section class="hero-shell" id="home" tabindex="-1" aria-labelledby="home-title">
       <div class="hero-copy">
-        <h1>
+        <h1 id="home-title">
           Track your progress
           <span>Unlock your potential</span>
         </h1>
@@ -59,6 +59,17 @@
                 data-target-url="{{ dashboard_url if is_logged_in else url_for('login.login') }}">
           {{ 'Go Back to Dashboard' if is_logged_in else 'Login to Start Assessment' }}
         </button>
+
+        <nav class="hero-section-links" aria-label="Home page sections">
+          <span>Explore page sections</span>
+          <a href="#about">What is IIS?</a>
+          <a href="#dimensions">Five Inclusion Dimensions</a>
+          <a href="#process">How IIS Works</a>
+          <a href="#maturity">Maturity Levels</a>
+          <a href="#why-iis">Why Organizations Need IIS</a>
+          <a href="#quick-stats">Quick Stats</a>
+          <a href="#contact">Contact Us</a>
+        </nav>
       </div>
 
       <div class="hero-visual">
@@ -66,9 +77,9 @@
       </div>
     </section>
 
-    <section class="info-section split-section" id="about">
+    <section class="info-section split-section" id="about" tabindex="-1" aria-labelledby="about-title">
       <div class="section-title-box">
-        <h2>What is IIS?</h2>
+        <h2 id="about-title">What is IIS?</h2>
       </div>
 
       <div class="section-copy">
@@ -94,8 +105,8 @@
       </div>
     </section>
 
-    <section class="white-section" id="dimensions">
-      <h2>Five Inclusion Dimensions</h2>
+    <section class="white-section" id="dimensions" tabindex="-1" aria-labelledby="dimensions-title">
+      <h2 id="dimensions-title">Five Inclusion Dimensions</h2>
 
       <div class="dimension-grid">
         <article class="image-card">
@@ -130,9 +141,9 @@
       </div>
     </section>
 
-    <section class="info-section process-section" id="process">
+    <section class="info-section process-section" id="process" tabindex="-1" aria-labelledby="process-title">
       <div class="section-title-box">
-        <h2>How IIS Works</h2>
+        <h2 id="process-title">How IIS Works</h2>
       </div>
 
       <div class="process-list">
@@ -194,8 +205,8 @@
       </div>
     </section>
 
-    <section class="white-section" id="maturity">
-      <h2>Inclusion Maturity Levels</h2>
+    <section class="white-section" id="maturity" tabindex="-1" aria-labelledby="maturity-title">
+      <h2 id="maturity-title">Inclusion Maturity Levels</h2>
 
       <div class="maturity-grid">
         <article class="image-card">
@@ -230,9 +241,9 @@
       </div>
     </section>
 
-    <section class="info-section split-section why-section">
+    <section class="info-section split-section why-section" id="why-iis" tabindex="-1" aria-labelledby="why-iis-title">
       <div class="section-title-box">
-        <h2>Why Organizations Need IIS</h2>
+        <h2 id="why-iis-title">Why Organizations Need IIS</h2>
       </div>
 
       <div class="reason-list">
@@ -244,8 +255,8 @@
       </div>
     </section>
 
-    <section class="stats-section" id="quick-stats">
-      <h2>Quick Stats</h2>
+    <section class="stats-section" id="quick-stats" tabindex="-1" aria-labelledby="quick-stats-title">
+      <h2 id="quick-stats-title">Quick Stats</h2>
       <p>A snapshot of our growing community</p>
 
       <div class="stats-grid">
@@ -254,8 +265,8 @@
             <i class="fa-solid fa-users"></i>
           </div>
           <div>
-            <strong>{{ users_assessed }}</strong>
-            <h3>Users Assessed</h3>
+            <strong>{{ organizations_assessed }}</strong>
+            <h3>Organizations Assessed</h3>
             <p>People have completed assessments and shared their insights.</p>
           </div>
         </article>
@@ -265,15 +276,15 @@
             <i class="fa-solid fa-chart-line"></i>
           </div>
           <div>
-            <strong>{{ progress_tracked }}</strong>
-            <h3>Progress Tracked</h3>
-            <p>Assessments completed and progress tracked over time.</p>
+            <strong>{{ completed_assessments }}</strong>
+            <h3>Completed Assessments</h3>
+            <p>Total completed assessment cycles, including reassessments over time.</p>
           </div>
         </article>
       </div>
     </section>
 
-    <section class="contact-section" id="contact">
+    <section class="contact-section" id="contact" tabindex="-1" aria-label="Contact Us">
       <div class="contact-details">
         <p class="contact-eyebrow">Contact Us</p>
         <h2>Virtualahan Inc.</h2>

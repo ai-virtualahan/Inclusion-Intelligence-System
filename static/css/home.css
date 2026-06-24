@@ -237,6 +237,44 @@ main {
   max-width: 660px;
 }
 
+.hero-section-links {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+  max-width: 720px;
+}
+
+.hero-section-links span {
+  color: #eef5ff;
+  flex-basis: 100%;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.hero-section-links a {
+  align-items: center;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 999px;
+  color: var(--white);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  min-height: 36px;
+  padding: 0 13px;
+  text-decoration: none;
+}
+
+.hero-section-links a:hover,
+.hero-section-links a:focus-visible {
+  background: rgba(32,220,205,.18);
+  border-color: var(--aqua);
+  outline: 3px solid rgba(32,220,205,.55);
+  outline-offset: 2px;
+}
+
 .hero-visual {
   background: var(--white);
   border-radius: 26px;
@@ -274,8 +312,26 @@ main {
 .hero-shell,
 .info-section,
 .white-section,
-.stats-section {
+.stats-section,
+.contact-section {
   scroll-margin-top: 96px;
+}
+
+.hero-shell:focus,
+.info-section:focus,
+.white-section:focus,
+.stats-section:focus,
+.contact-section:focus {
+  outline: none;
+}
+
+.hero-shell:focus-visible,
+.info-section:focus-visible,
+.white-section:focus-visible,
+.stats-section:focus-visible,
+.contact-section:focus-visible {
+  outline: 3px solid var(--aqua);
+  outline-offset: -8px;
 }
 
 .info-section {
@@ -670,7 +726,7 @@ main {
   font-size: 14px;
   font-weight: 500;
   gap: 24px;
-  justify-content: center;
+  justify-content: space-between;
   margin: 0 auto;
   min-height: 62px;
   padding: 18px clamp(20px, 5vw, 72px);
@@ -680,7 +736,7 @@ main {
 .site-footer div {
   display: flex;
   gap: clamp(28px, 6vw, 70px);
-  margin-left: clamp(24px, 14vw, 240px);
+  margin-left: auto;
 }
 
 .site-footer a {
