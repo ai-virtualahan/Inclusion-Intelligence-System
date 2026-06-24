@@ -39,6 +39,7 @@ app.register_blueprint(contact_bp)
 
 
 def csrf_token():
+    session.permanent = True
     token = session.get("_csrf_token")
     if not token:
         token = secrets.token_urlsafe(32)
@@ -104,6 +105,10 @@ def protect_post_requests():
     submitted_token = request.headers.get("X-CSRFToken") or request.form.get("csrf_token")
 
     if not expected_token or not submitted_token or not hmac.compare_digest(expected_token, submitted_token):
+        if request.endpoint == "register.submit_registration":
+            session.pop("_csrf_token", None)
+            flash("Your registration form session expired. Please review the form and submit again.", "warning")
+            return redirect(url_for("register.register"))
         abort(400, description="Invalid or missing CSRF token.")
 
     return None
@@ -419,6 +424,9 @@ def submit_assessment():
             cursor2 = conn.cursor()
             try:
                 cursor2.execute("SELECT id FROM organizations WHERE id = %s FOR UPDATE", (organization_id,))
+                if not cursor2.fetchone():
+                    conn.rollback()
+                    return "Error: No organization linked to your account.", 400
 
                 cursor2.execute("""
                     SELECT submitted_at FROM assessments

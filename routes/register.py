@@ -4,7 +4,7 @@ import re
 import secrets
 from datetime import datetime, timedelta
 
-from flask import render_template, request, redirect, url_for, flash
+from flask import make_response, render_template, request, redirect, url_for, flash
 from flask_mail import Message
 from mysql.connector import Error
 from werkzeug.security import generate_password_hash
@@ -95,7 +95,11 @@ def send_verification_email(cursor, recipient_email, contact_person, token):
 
 @register_bp.route('/register')
 def register():
-    return render_template('register.html')
+    response = make_response(render_template('register.html'))
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 @register_bp.route('/verify-email/<token>')
