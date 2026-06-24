@@ -1,0 +1,85 @@
+name: Auto PR dev → main and Redeploy
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  create-pr-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      # 1. Create a PR from dev → main (skip if one already exists)
+      - name: Create pull request dev → main
+        id: create_pr
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          # Check if an open PR already exists
+          EXISTING=$(gh pr list \
+            --repo ai-virtualahan/Inclusion-Intelligence-System \
+            --base main --head dev \
+            --state open \
+            --json number \
+            --jq '.[0].number')
+
+          if [ -n "$EXISTING" ]; then
+            echo "PR already exists: #$EXISTING"
+            echo "pr_number=$EXISTING" >> "$GITHUB_OUTPUT"
+          else
+            PR=$(gh pr create \
+              --repo ai-virtualahan/Inclusion-Intelligence-System \
+              --base main \
+              --head dev \
+              --title "chore: sync dev → main" \
+              --body "Automated PR triggered by push to dev branch.")
+            # Extract the PR number from the URL
+            PR_NUMBER=$(echo "$PR" | grep -oP '(?<=/pull/)\d+')
+            echo "Created PR: #$PR_NUMBER"
+            echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          fi
+
+      # 2. Enable auto-merge on the PR (squash merge)
+      - name: Enable auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh pr merge ${{ steps.create_pr.outputs.pr_number }} \
+            --repo ai-virtualahan/Inclusion-Intelligence-System \
+            --squash \
+            --auto \
+            --delete-branch=false
+
+      # 3. Wait for the PR to actually be merged
+      - name: Wait for PR to merge
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          for i in $(seq 1 20); do
+            STATE=$(gh pr view ${{ steps.create_pr.outputs.pr_number }} \
+              --repo ai-virtualahan/Inclusion-Intelligence-System \
+              --json state \
+              --jq '.state')
+            echo "PR state: $STATE (attempt $i)"
+            if [ "$STATE" = "MERGED" ]; then
+              echo "PR merged successfully."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "PR was not merged within timeout. It may have conflicts — skipping redeploy."
+          exit 1
+
+      # 4. Redeploy the Koyeb service using the CLI
+      - name: Redeploy Koyeb service
+        env:
+          KOYEB_TOKEN: ${{ secrets.KOYEB_TOKEN }}
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/koyeb/koyeb-cli/master/install.sh | bash
+          koyeb service redeploy \
+            inclusion-intelligence-system/inclusion-intelligence-system \
+            --token "$KOYEB_TOKEN"
