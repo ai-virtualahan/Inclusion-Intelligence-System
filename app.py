@@ -47,9 +47,44 @@ def csrf_token():
     return token
 
 
+def public_form_token(form_name):
+    timestamp = str(int(time.time()))
+    nonce = secrets.token_urlsafe(16)
+    payload = f"{form_name}|{timestamp}|{nonce}"
+    signature = hmac.new(
+        app.config["SECRET_KEY"].encode("utf-8"),
+        payload.encode("utf-8"),
+        "sha256"
+    ).hexdigest()
+    return f"{timestamp}:{nonce}:{signature}"
+
+
+def valid_public_form_token(token, form_name):
+    try:
+        timestamp, nonce, signature = (token or "").split(":", 2)
+        token_age = time.time() - int(timestamp)
+    except (TypeError, ValueError):
+        return False
+
+    max_age = app.config.get("REGISTRATION_FORM_TOKEN_LIFETIME_SECONDS", 3600)
+    if token_age < 0 or token_age > max_age:
+        return False
+
+    payload = f"{form_name}|{timestamp}|{nonce}"
+    expected_signature = hmac.new(
+        app.config["SECRET_KEY"].encode("utf-8"),
+        payload.encode("utf-8"),
+        "sha256"
+    ).hexdigest()
+    return hmac.compare_digest(expected_signature, signature)
+
+
 @app.context_processor
 def inject_csrf_token():
-    return {"csrf_token": csrf_token}
+    return {
+        "csrf_token": csrf_token,
+        "public_form_token": public_form_token,
+    }
 
 
 @app.before_request
@@ -104,10 +139,20 @@ def protect_post_requests():
     expected_token = session.get("_csrf_token")
     submitted_token = request.headers.get("X-CSRFToken") or request.form.get("csrf_token")
 
-    if not expected_token or not submitted_token or not hmac.compare_digest(expected_token, submitted_token):
+    session_token_is_valid = (
+        expected_token
+        and submitted_token
+        and hmac.compare_digest(expected_token, submitted_token)
+    )
+    registration_token_is_valid = (
+        request.endpoint == "register.submit_registration"
+        and valid_public_form_token(submitted_token, "registration")
+    )
+
+    if not session_token_is_valid and not registration_token_is_valid:
         if request.endpoint == "register.submit_registration":
             session.pop("_csrf_token", None)
-            flash("Your registration form session expired. Please review the form and submit again.", "warning")
+            flash("Your registration form token expired. Please review the form and submit again.", "warning")
             return redirect(url_for("register.register"))
         abort(400, description="Invalid or missing CSRF token.")
 
