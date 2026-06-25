@@ -457,21 +457,30 @@ def submit_assessment():
         if active_question_ids != submitted_question_ids:
             return "Error: Please answer all active assessment questions before submitting.", 400
 
+        selected_choice_ids = [selected_choice_id for _, selected_choice_id in submitted_answers]
+        choice_placeholders = ", ".join(["%s"] * len(selected_choice_ids))
+        cursor.execute(f"""
+            SELECT
+                qc.id AS choice_id,
+                qc.question_id,
+                qc.choice_score
+            FROM question_choices qc
+            JOIN question_bank qb
+                ON qc.question_id = qb.id
+            WHERE qc.id IN ({choice_placeholders})
+              AND qb.is_active = 1
+        """, tuple(selected_choice_ids))
+        valid_choices = {
+            (str(row["question_id"]), str(row["choice_id"])): row["choice_score"]
+            for row in cursor.fetchall()
+        }
+
         validated_answers = []
         for q_id, selected_choice_id in submitted_answers:
-            cursor.execute("""
-                SELECT qc.choice_score
-                FROM question_choices qc
-                JOIN question_bank qb
-                    ON qc.question_id = qb.id
-                WHERE qc.id = %s
-                  AND qc.question_id = %s
-                  AND qb.is_active = 1
-            """, (selected_choice_id, q_id))
-            row = cursor.fetchone()
-            if not row:
+            score_value = valid_choices.get((str(q_id), str(selected_choice_id)))
+            if score_value is None:
                 return "Error: Invalid answer selected for an active question.", 400
-            validated_answers.append((q_id, selected_choice_id, row["choice_score"]))
+            validated_answers.append((q_id, selected_choice_id, score_value))
 
         conn.rollback()
 
@@ -514,12 +523,14 @@ def submit_assessment():
                 """, (organization_id, assessment_type, cycle_number))
                 assessment_id = cursor2.lastrowid
 
-                for q_id, selected_choice_id, score_value in validated_answers:
-                    cursor2.execute("""
-                        INSERT INTO assessment_answers
-                            (assessment_id, question_id, selected_choice_id, score_value, saved_at)
-                        VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
-                    """, (assessment_id, q_id, selected_choice_id, score_value))
+                cursor2.executemany("""
+                    INSERT INTO assessment_answers
+                        (assessment_id, question_id, selected_choice_id, score_value, saved_at)
+                    VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+                """, [
+                    (assessment_id, q_id, selected_choice_id, score_value)
+                    for q_id, selected_choice_id, score_value in validated_answers
+                ])
 
                 compute_assessment_scores(cursor2, assessment_id)
                 conn.commit()

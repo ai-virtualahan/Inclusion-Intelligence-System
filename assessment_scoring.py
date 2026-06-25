@@ -355,6 +355,7 @@ def compute_assessment_scores(cursor, assessment_id):
     """, (assessment_id,))
     answer_rows = cursor.fetchall()
 
+    gap_candidates = []
     for row in answer_rows:
         question_id = row_value(row, "question_id", 0)
         selected_choice_id = row_value(row, "selected_choice_id", 1)
@@ -372,15 +373,77 @@ def compute_assessment_scores(cursor, assessment_id):
         else:
             continue
 
-        gap_definition, recommendation = choice_guidance_for_answer(
-            cursor,
-            selected_choice_id,
-            severity
-        )
-        if not recommendation:
-            recommendation = recommendation_for_question(cursor, dimension_name, question_id)
+        gap_candidates.append({
+            "question_id": question_id,
+            "selected_choice_id": selected_choice_id,
+            "score_value": score_value,
+            "dimension_id": dimension_id,
+            "question_text": question_text,
+            "dimension_name": dimension_name,
+            "severity": severity,
+        })
 
-        cursor.execute("""
+    guidance_by_choice = {}
+    if gap_candidates:
+        selected_choice_ids = sorted({candidate["selected_choice_id"] for candidate in gap_candidates})
+        choice_placeholders = ", ".join(["%s"] * len(selected_choice_ids))
+        cursor.execute(f"""
+            SELECT choice_id, severity, gap_definition, recommendation_text
+            FROM question_choice_recommendations
+            WHERE choice_id IN ({choice_placeholders})
+              AND severity IN ('critical', 'moderate', 'low')
+            ORDER BY id ASC
+        """, tuple(selected_choice_ids))
+        for row in cursor.fetchall():
+            key = (
+                row_value(row, "choice_id", 0),
+                row_value(row, "severity", 1),
+            )
+            if key not in guidance_by_choice:
+                guidance_by_choice[key] = (
+                    row_value(row, "gap_definition", 2) or "",
+                    row_value(row, "recommendation_text", 3) or "",
+                )
+
+    cursor.execute("""
+        SELECT id, dimension_id, COALESCE(version_group_id, id) AS version_group_id
+        FROM question_bank
+        ORDER BY dimension_id, version_group_id
+    """)
+    question_index_by_id = {}
+    dimension_group_order = {}
+    for row in cursor.fetchall():
+        question_id = row_value(row, "id", 0)
+        dimension_id = row_value(row, "dimension_id", 1)
+        version_group_id = row_value(row, "version_group_id", 2)
+        group_order = dimension_group_order.setdefault(dimension_id, [])
+        if version_group_id not in group_order:
+            group_order.append(version_group_id)
+        question_index_by_id[question_id] = group_order.index(version_group_id)
+
+    gap_flag_rows = []
+    for candidate in gap_candidates:
+        guidance_key = (candidate["selected_choice_id"], candidate["severity"])
+        gap_definition, recommendation = guidance_by_choice.get(guidance_key, ("", ""))
+        if not recommendation:
+            question_index = question_index_by_id.get(candidate["question_id"], 0)
+            recommendations = RECOMMENDATIONS.get(candidate["dimension_name"], [])
+            recommendation = recommendations[question_index] if question_index < len(recommendations) else ""
+
+        gap_flag_rows.append((
+            assessment_id,
+            candidate["dimension_id"],
+            candidate["question_id"],
+            candidate["selected_choice_id"],
+            candidate["score_value"],
+            candidate["severity"],
+            candidate["question_text"],
+            gap_definition,
+            recommendation,
+        ))
+
+    if gap_flag_rows:
+        cursor.executemany("""
             INSERT INTO gap_flags (
                 assessment_id,
                 dimension_id,
@@ -393,17 +456,7 @@ def compute_assessment_scores(cursor, assessment_id):
                 recommendation_text
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (
-            assessment_id,
-            dimension_id,
-            question_id,
-            selected_choice_id,
-            score_value,
-            severity,
-            question_text,
-            gap_definition,
-            recommendation
-        ))
+        """, gap_flag_rows)
 
     cursor.execute("""
         UPDATE assessments
