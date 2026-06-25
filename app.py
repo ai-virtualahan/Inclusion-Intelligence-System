@@ -185,6 +185,15 @@ def wants_plain_text_response():
     return request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
 
+@app.errorhandler(500)
+def handle_internal_server_error(error):
+    original_error = getattr(error, "original_exception", None)
+    if request.endpoint == "submit_assessment" and wants_plain_text_response():
+        app.logger.exception("Unhandled assessment submission error")
+        return f"Error: {original_error or error}", 500
+    return error
+
+
 def assessment_locked_response(lock_title=None, lock_message=None, next_eligible=None, status=403):
     if wants_plain_text_response():
         if lock_message:
