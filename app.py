@@ -81,9 +81,15 @@ def valid_public_form_token(token, form_name):
 
 @app.context_processor
 def inject_csrf_token():
+    current_user_dashboard_url = (
+        dashboard_url_for_role(session.get("role"))
+        if session.get("user_id")
+        else None
+    )
     return {
         "csrf_token": csrf_token,
         "public_form_token": public_form_token,
+        "current_user_dashboard_url": current_user_dashboard_url,
     }
 
 

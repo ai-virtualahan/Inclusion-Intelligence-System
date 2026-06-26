@@ -5,6 +5,9 @@
     <span class="user-chevron" aria-hidden="true">v</span>
   </summary>
   <div class="user-menu-dropdown">
+    {% if current_user_dashboard_url %}
+      <a href="{{ current_user_dashboard_url }}">Dashboard</a>
+    {% endif %}
     <a href="{{ url_for('login.logout') }}">Log out</a>
   </div>
 </details>
