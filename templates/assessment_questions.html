@@ -147,38 +147,110 @@
             </td>
 
             <td>
-              <div class="question-actions">
-                <button type="button"
-                        class="action-btn secondary-btn"
-                        id="manageQuestion{{ q.id }}"
-                        data-question-id="{{ q.id }}"
-                        data-question-number="{{ q.question_number }}"
-                        data-question-version="{{ q.version }}"
-                        data-question-text='{{ (q.question_text or "")|tojson }}'
-                        onclick="openChoicesModalFromButton(this)">
+              <details class="question-menu">
+                <summary class="action-btn secondary-btn question-menu-toggle">
                   Manage
-                </button>
+                </summary>
 
-                {% if q.is_active %}
-                  <form action="{{ url_for('super_admin.deactivate_question', question_id=q.id) }}" method="POST" class="inline-form">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit"
-                            class="action-btn suspend-btn"
-                            onclick="return confirm('Deactivate this question version? It will no longer appear in assessments.')">
-                      Inactivate
+                <div class="question-menu-dropdown">
+                  <button type="button"
+                          class="question-menu-item"
+                          id="manageQuestion{{ q.id }}"
+                          data-question-id="{{ q.id }}"
+                          data-question-number="{{ q.question_number }}"
+                          data-question-version="{{ q.version }}"
+                          data-question-text='{{ (q.question_text or "")|tojson }}'
+                          onclick="openChoicesModalFromButton(this, 'same_version')">
+                    Edit
+                  </button>
+
+                  <button type="button"
+                          class="question-menu-item"
+                          data-question-id="{{ q.id }}"
+                          data-question-number="{{ q.question_number }}"
+                          data-question-version="{{ q.version }}"
+                          data-question-text='{{ (q.question_text or "")|tojson }}'
+                          onclick="openChoicesModalFromButton(this, 'new_version')">
+                    Add new version
+                  </button>
+
+                  <div class="question-menu-separator"></div>
+
+                  {% if q.version_1_id %}
+                    {% if q.version_1_is_active %}
+                      <form action="{{ url_for('super_admin.deactivate_question', question_id=q.version_1_id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit"
+                                class="question-menu-item danger"
+                                onclick="return confirm('Deactivate Version 1? It will no longer appear in assessments.')">
+                          Deactivate Version 1
+                        </button>
+                      </form>
+                    {% else %}
+                      <form action="{{ url_for('super_admin.activate_question', question_id=q.version_1_id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit"
+                                class="question-menu-item"
+                                onclick="return confirm('Activate Version 1? Other versions of this question will be inactivated.')">
+                          Activate Version 1
+                        </button>
+                      </form>
+                    {% endif %}
+                  {% else %}
+                    <button type="button" class="question-menu-item" disabled>
+                      Version 1 unavailable
                     </button>
-                  </form>
-                {% else %}
-                  <form action="{{ url_for('super_admin.activate_question', question_id=q.id) }}" method="POST" class="inline-form">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit"
-                            class="action-btn reactivate-btn"
-                            onclick="return confirm('Activate this question version? Other versions of this question will be inactivated.')">
-                      Activate
+                  {% endif %}
+
+                  {% if q.version_2_id %}
+                    {% if q.version_2_is_active %}
+                      <form action="{{ url_for('super_admin.deactivate_question', question_id=q.version_2_id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit"
+                                class="question-menu-item danger"
+                                onclick="return confirm('Deactivate Version 2? It will no longer appear in assessments.')">
+                          Deactivate Version 2
+                        </button>
+                      </form>
+                    {% else %}
+                      <form action="{{ url_for('super_admin.activate_question', question_id=q.version_2_id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit"
+                                class="question-menu-item"
+                                onclick="return confirm('Activate Version 2? Other versions of this question will be inactivated.')">
+                          Activate Version 2
+                        </button>
+                      </form>
+                    {% endif %}
+                  {% else %}
+                    <button type="button" class="question-menu-item" disabled>
+                      Version 2 unavailable
                     </button>
-                  </form>
-                {% endif %}
-              </div>
+                  {% endif %}
+
+                  <div class="question-menu-separator"></div>
+
+                  {% if q.group_active_count %}
+                    <form action="{{ url_for('super_admin.deactivate_question_group_versions', version_group_id=q.version_group_id) }}" method="POST">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit"
+                              class="question-menu-item danger"
+                              onclick="return confirm('Deactivate all versions for this question? No version from this question will appear in assessments.')">
+                        Deactivate all versions
+                      </button>
+                    </form>
+                  {% else %}
+                    <form action="{{ url_for('super_admin.activate_latest_question_version', version_group_id=q.version_group_id) }}" method="POST">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit"
+                              class="question-menu-item"
+                              onclick="return confirm('Activate the latest version for this question?')">
+                        Activate latest version
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
+              </details>
             </td>
           </tr>
           {% else %}

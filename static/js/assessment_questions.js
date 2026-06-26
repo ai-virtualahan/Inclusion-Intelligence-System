@@ -18,14 +18,15 @@ function parseJsonDatasetValue(value) {
   }
 }
 
-function openChoicesModalFromButton(button) {
+function openChoicesModalFromButton(button, openMode = "") {
   currentQuestionNumber = button.dataset.questionNumber;
   openChoicesModal(
     button.dataset.questionId,
     parseJsonDatasetValue(button.dataset.questionText),
     {
       questionNumber: button.dataset.questionNumber,
-      version: button.dataset.questionVersion
+      version: button.dataset.questionVersion,
+      openMode
     }
   );
 }
@@ -64,6 +65,9 @@ function openChoicesModal(questionId, questionText, meta = {}) {
       currentChoices = data.choices || [];
       renderChoicesTable();
       document.getElementById("choicesModal").style.display = "flex";
+      if (meta.openMode) {
+        requestAnimationFrame(() => startQuestionEdit(meta.openMode));
+      }
     });
 }
 
