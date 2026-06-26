@@ -23,11 +23,15 @@
     </nav>
 
     <div class="header-actions">
-      <button class="login-btn"
-              type="button"
-              data-target-url="{{ dashboard_url if is_logged_in else url_for('login.login') }}">
-        <span>{{ 'Dashboard' if is_logged_in else 'Login' }}</span>
-      </button>
+      {% if is_logged_in %}
+        {% include 'partials/user_menu.html' %}
+      {% else %}
+        <button class="login-btn"
+                type="button"
+                data-target-url="{{ url_for('login.login') }}">
+          <span>Login</span>
+        </button>
+      {% endif %}
     </div>
   </header>
 
