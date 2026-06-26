@@ -783,6 +783,44 @@ def assessment_questions():
             qb.is_active,
             COALESCE(qb.version_group_id, qb.id) AS version_group_id,
             (
+                SELECT qv1.id
+                FROM question_bank qv1
+                WHERE COALESCE(qv1.version_group_id, qv1.id) = COALESCE(qb.version_group_id, qb.id)
+                  AND COALESCE(qv1.version, 1) = 1
+                ORDER BY qv1.id DESC
+                LIMIT 1
+            ) AS version_1_id,
+            (
+                SELECT COALESCE(qv1.is_active, 0)
+                FROM question_bank qv1
+                WHERE COALESCE(qv1.version_group_id, qv1.id) = COALESCE(qb.version_group_id, qb.id)
+                  AND COALESCE(qv1.version, 1) = 1
+                ORDER BY qv1.id DESC
+                LIMIT 1
+            ) AS version_1_is_active,
+            (
+                SELECT qv2.id
+                FROM question_bank qv2
+                WHERE COALESCE(qv2.version_group_id, qv2.id) = COALESCE(qb.version_group_id, qb.id)
+                  AND COALESCE(qv2.version, 1) = 2
+                ORDER BY qv2.id DESC
+                LIMIT 1
+            ) AS version_2_id,
+            (
+                SELECT COALESCE(qv2.is_active, 0)
+                FROM question_bank qv2
+                WHERE COALESCE(qv2.version_group_id, qv2.id) = COALESCE(qb.version_group_id, qb.id)
+                  AND COALESCE(qv2.version, 1) = 2
+                ORDER BY qv2.id DESC
+                LIMIT 1
+            ) AS version_2_is_active,
+            (
+                SELECT COUNT(*)
+                FROM question_bank qba
+                WHERE COALESCE(qba.version_group_id, qba.id) = COALESCE(qb.version_group_id, qb.id)
+                  AND COALESCE(qba.is_active, 0) = 1
+            ) AS group_active_count,
+            (
                 SELECT COUNT(DISTINCT COALESCE(qb2.version_group_id, qb2.id))
                 FROM question_bank qb2
                 WHERE qb2.dimension_id = qb.dimension_id
@@ -1328,6 +1366,81 @@ def deactivate_question(question_id):
         conn.close()
 
     return assessment_questions_redirect_without_modal()
+
+
+@super_admin_bp.route('/super-admin/question-group/<int:version_group_id>/activate-latest', methods=['POST'])
+def activate_latest_question_version(version_group_id):
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""
+            SELECT id
+            FROM question_bank
+            WHERE COALESCE(version_group_id, id) = %s
+            ORDER BY COALESCE(version, 1) DESC, id DESC
+            LIMIT 1
+        """, (version_group_id,))
+        latest_question = cursor.fetchone()
+
+        if not latest_question:
+            flash("Question version group not found.", "danger")
+            return assessment_questions_redirect_without_modal()
+
+        cursor.execute("""
+            UPDATE question_bank
+            SET is_active = 0,
+                version_group_id = %s
+            WHERE COALESCE(version_group_id, id) = %s
+        """, (version_group_id, version_group_id))
+        cursor.execute("""
+            UPDATE question_bank
+            SET is_active = 1,
+                version_group_id = %s
+            WHERE id = %s
+        """, (version_group_id, latest_question['id']))
+
+        conn.commit()
+        flash("Latest question version activated.", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to activate latest question version: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return assessment_questions_redirect_without_modal()
+
+
+@super_admin_bp.route('/super-admin/question-group/<int:version_group_id>/deactivate-all', methods=['POST'])
+def deactivate_question_group_versions(version_group_id):
+    if session.get('role') != 'super_admin':
+        return redirect(url_for('login.login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""
+            UPDATE question_bank
+            SET is_active = 0,
+                version_group_id = %s
+            WHERE COALESCE(version_group_id, id) = %s
+        """, (version_group_id, version_group_id))
+        conn.commit()
+        flash("All versions for this question were deactivated.", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unable to deactivate all question versions: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return assessment_questions_redirect_without_modal()
+
 
 @super_admin_bp.route('/super-admin/question/<int:question_id>/edit', methods=['POST'])
 def edit_question(question_id):
