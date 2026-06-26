@@ -24,11 +24,9 @@
         const rect = wrapper.getBoundingClientRect();
         const hasHorizontalOverflow = wrapper.scrollWidth > wrapper.clientWidth + 1;
         const crossesViewport = rect.top < viewportHeight - 24 && rect.bottom > 24;
-        const nativeScrollbarBelowViewport = rect.bottom > viewportHeight - 8;
         return isVisible(wrapper)
           && hasHorizontalOverflow
-          && crossesViewport
-          && nativeScrollbarBelowViewport;
+          && crossesViewport;
       });
 
     if (!candidates.length) return null;

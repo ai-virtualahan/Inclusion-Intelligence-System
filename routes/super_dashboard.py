@@ -725,6 +725,8 @@ def assessment_questions():
 
     selected_dimension = request.args.get('dimension_id')
     selected_question_status = request.args.get('question_status', 'all')
+    if selected_question_status not in {'all', 'active', 'inactive', 'version_1', 'version_2'}:
+        selected_question_status = 'all'
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -744,13 +746,13 @@ def assessment_questions():
         params.append(selected_dimension)
 
     if selected_question_status == 'active':
-        filters.append("qb.is_active = 1")
+        filters.append("COALESCE(qb.is_active, 0) = 1")
     elif selected_question_status == 'inactive':
-        filters.append("qb.is_active = 0")
+        filters.append("COALESCE(qb.is_active, 0) = 0")
     elif selected_question_status == 'version_1':
-        filters.append("qb.version = 1")
+        filters.append("COALESCE(qb.version, 1) = 1")
     elif selected_question_status == 'version_2':
-        filters.append("qb.version = 2")
+        filters.append("COALESCE(qb.version, 1) = 2")
 
     where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
 
