@@ -3,6 +3,7 @@ import re
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request
 from werkzeug.security import generate_password_hash
 from datetime import datetime
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from db import get_db_connection
 from flask_mail import Message
 from extensions import mail
@@ -31,6 +32,23 @@ from settings_utils import (
 )
 
 super_admin_bp = Blueprint('super_admin', __name__)
+
+
+def assessment_questions_redirect_without_modal():
+    target_url = request.referrer or url_for('super_admin.assessment_questions')
+    parts = urlsplit(target_url)
+    query = [
+        (key, value)
+        for key, value in parse_qsl(parts.query, keep_blank_values=True)
+        if key != "open_question_id"
+    ]
+    return redirect(urlunsplit((
+        parts.scheme,
+        parts.netloc,
+        parts.path,
+        urlencode(query),
+        parts.fragment
+    )))
 
 
 def make_role_key(role_label):
@@ -1282,7 +1300,7 @@ def activate_question(question_id):
         cursor.close()
         conn.close()
 
-    return redirect(request.referrer or url_for('super_admin.assessment_questions'))
+    return assessment_questions_redirect_without_modal()
 
 
 @super_admin_bp.route('/super-admin/question/<int:question_id>/deactivate', methods=['POST'])
@@ -1309,7 +1327,7 @@ def deactivate_question(question_id):
         cursor.close()
         conn.close()
 
-    return redirect(request.referrer or url_for('super_admin.assessment_questions'))
+    return assessment_questions_redirect_without_modal()
 
 @super_admin_bp.route('/super-admin/question/<int:question_id>/edit', methods=['POST'])
 def edit_question(question_id):
