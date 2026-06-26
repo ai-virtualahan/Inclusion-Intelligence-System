@@ -1,0 +1,10 @@
+<details class="user-menu">
+  <summary class="user-menu-toggle">
+    <span class="user-avatar">{{ (session.get('contact_person') or 'User')[:1]|upper }}</span>
+    <span class="user-name">{{ session.get('contact_person') or 'User' }}</span>
+    <span class="user-chevron" aria-hidden="true">v</span>
+  </summary>
+  <div class="user-menu-dropdown">
+    <a href="{{ url_for('login.logout') }}">Log out</a>
+  </div>
+</details>

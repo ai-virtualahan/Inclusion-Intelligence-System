@@ -16,7 +16,7 @@
     <a href="{{ url_for('vhan.vhan_dashboard') }}">Dashboard</a>
     <a href="{{ url_for('vhan.organizations') }}">Organizations</a>
     <a href="{{ url_for('vhan.reports') }}">Reports</a>
-    <a href="{{ url_for('login.logout') }}">Logout</a>
+    {% include 'partials/user_menu.html' %}
   </div>
 </div>
 

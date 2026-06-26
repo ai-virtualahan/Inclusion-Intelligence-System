@@ -563,6 +563,132 @@ button,
   }
 }
 
+.user-menu {
+  display: inline-block;
+  position: relative;
+  margin-left: 20px;
+  vertical-align: middle;
+}
+
+.top-nav-links .user-menu {
+  margin-left: 0;
+}
+
+.user-menu-toggle {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 8px;
+  list-style: none;
+  max-width: 240px;
+  min-height: 38px;
+  padding: 6px 12px 6px 7px;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.user-menu-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.user-menu-toggle:hover,
+.user-menu[open] .user-menu-toggle,
+.user-menu-toggle:focus-visible {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.34);
+  outline: none;
+}
+
+.user-avatar {
+  align-items: center;
+  background: #0b9b8a;
+  border-radius: 999px;
+  color: #ffffff;
+  display: inline-flex;
+  flex: 0 0 26px;
+  font-size: 12px;
+  font-weight: 800;
+  height: 26px;
+  justify-content: center;
+  text-transform: uppercase;
+  width: 26px;
+}
+
+.user-name {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-chevron {
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0.86;
+}
+
+.user-menu-dropdown {
+  background: #ffffff;
+  border: 1px solid #dbe5f0;
+  border-radius: 8px;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.16);
+  min-width: 150px;
+  opacity: 0;
+  padding: 6px;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  transform: translateY(-4px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  z-index: 300;
+}
+
+.user-menu[open] .user-menu-dropdown {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.user-menu-dropdown a {
+  border-radius: 6px;
+  color: #0e2240 !important;
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 !important;
+  padding: 10px 12px;
+  text-decoration: none;
+}
+
+.user-menu-dropdown a:hover,
+.user-menu-dropdown a:focus-visible {
+  background: #eef6f5;
+  color: #087d6e !important;
+  outline: none;
+}
+
+@media (max-width: 720px) {
+  .user-menu {
+    margin-left: 0;
+  }
+
+  .user-menu-toggle {
+    max-width: 180px;
+  }
+
+  .user-name {
+    max-width: 96px;
+  }
+}
+
 @media print {
   body {
     font-size: 10pt !important;
