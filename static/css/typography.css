@@ -165,16 +165,18 @@ td,
 }
 
 .floating-table-scrollbar {
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.98);
   border: 1px solid #cbd5e1;
   border-radius: 6px;
   bottom: 8px;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+  cursor: pointer;
   display: none;
-  height: 18px;
-  overflow-x: auto;
-  overflow-y: hidden;
+  height: 22px;
+  padding: 4px;
   position: fixed;
+  touch-action: none;
+  user-select: none;
   z-index: 1000;
 }
 
@@ -182,8 +184,39 @@ td,
   display: block;
 }
 
-.floating-table-scrollbar-content {
-  height: 1px;
+.floating-table-scrollbar:focus-visible {
+  outline: 3px solid rgba(20, 184, 166, 0.3);
+  outline-offset: 2px;
+}
+
+.floating-table-scrollbar-track {
+  background: #e2e8f0;
+  border-radius: 999px;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.floating-table-scrollbar-thumb {
+  background: #64748b;
+  border-radius: 999px;
+  cursor: grab;
+  height: 100%;
+  left: 0;
+  min-width: 48px;
+  position: absolute;
+  top: 0;
+  will-change: transform;
+}
+
+.floating-table-scrollbar.is-dragging .floating-table-scrollbar-thumb {
+  cursor: grabbing;
+}
+
+.floating-table-scrollbar:hover .floating-table-scrollbar-thumb,
+.floating-table-scrollbar:focus-visible .floating-table-scrollbar-thumb {
+  background: #475569;
 }
 
 @media print {
