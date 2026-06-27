@@ -41,14 +41,14 @@ jobs:
             echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           fi
 
-      # 2. Merge the PR directly (no auto-merge, no branch protection needed)
+      # 2. Preserve source commit ancestry so future dev syncs remain mergeable.
       - name: Merge PR
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           gh pr merge ${{ steps.create_pr.outputs.pr_number }} \
             --repo ai-virtualahan/Inclusion-Intelligence-System \
-            --squash \
+            --merge \
             --delete-branch=false
 
       # 3. Redeploy the Koyeb service using the CLI
