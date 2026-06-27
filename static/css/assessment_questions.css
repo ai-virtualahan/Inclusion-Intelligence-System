@@ -354,6 +354,11 @@
 .question-menu {
   display: inline-block;
   min-width: 190px;
+  position: relative;
+}
+
+.question-menu[open] {
+  z-index: 30;
 }
 
 .question-menu-toggle {
@@ -388,10 +393,14 @@
   display: none;
   flex-direction: column;
   gap: 4px;
+  left: 0;
   margin-top: 8px;
   padding: 6px;
+  position: absolute;
   text-align: left;
+  top: 100%;
   width: 100%;
+  z-index: 30;
 }
 
 .question-menu[open] .question-menu-dropdown {
